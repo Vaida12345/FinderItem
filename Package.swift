@@ -5,21 +5,19 @@ import PackageDescription
 
 let package = Package(
     name: "FinderItem",
-    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
-    products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "FinderItem",
-            targets: ["FinderItem"]),
-    ],
-    targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "FinderItem"),
-        .testTarget(
-            name: "FinderItemTests",
-            dependencies: ["FinderItem"]
-        ),
-    ]
+    platforms: [
+        .macOS(.v13),
+        .iOS(.v16),
+        .watchOS(.v9),
+        .tvOS(.v16)
+    ], products: [
+        .library(name: "FinderItem", targets: ["FinderItem"])
+    ], dependencies: [
+        .package(name: "GraphicsKit",
+                 path: "~/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Projects/Packages/GraphicsKit")
+    ], targets: [
+        .target(name: "CComponent"),
+        .target(name: "FinderItem", dependencies: ["CComponent", "GraphicsKit"]),
+        .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
+    ], swiftLanguageVersions: [.v6]
 )
