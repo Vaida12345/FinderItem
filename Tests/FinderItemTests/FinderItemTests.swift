@@ -8,9 +8,10 @@
 
 #if canImport(Testing)
 @testable
-import Stratum
+import FinderItem
 import Testing
 import Foundation
+import GraphicsKit
 
 
 extension Tag {
@@ -138,8 +139,8 @@ struct FinderItemTests {
             try folder.appending(path: "image.png").load(.image)
         }
         #expect(try folder.icon()?.data() == FinderItem.temporaryDirectory.load(.icon()).data())
-        #expect(try folder.load(.icon(size: .square(256))) != nil)
-        #expect(try await folder.load(.preview(size: .square(256))) != nil)
+        #expect(try folder.load(.icon(size: .square(256))).isValid)
+        #expect(try await folder.load(.preview(size: .square(256))).isValid)
         
         try folder.remove()
     }
@@ -150,10 +151,10 @@ struct FinderItemTests {
         try folder.makeDirectory()
         
         let file = folder.appending(path: "file.txt")
-        #expect(try file.isFile)
+        #expect(file.isFile)
         try "12345".write(to: file)
-        #expect(try file.isFile)
-        #expect(try file.exists)
+        #expect(file.isFile)
+        #expect(file.exists)
         
         #expect(throws: FinderItem.FileError.cannotWrite(reason: .fileExists)) {
             try file.makeDirectory()
@@ -162,18 +163,18 @@ struct FinderItemTests {
         let anotherFile = folder.appending(path: "file Copy.txt")
         
         try file.copy(to: anotherFile)
-        #expect(try anotherFile.exists)
+        #expect(anotherFile.exists)
         
         try "1".write(to: anotherFile)
         try file.copy(to: anotherFile)
-        #expect(try file.contentsEqual(to: anotherFile))
+        #expect(file.contentsEqual(to: anotherFile))
         
         let subdir = folder.appending(path: "folder")
         try file.copy(to: subdir.appending(path: "file.txt"))
-        #expect(try subdir.appending(path: "file.txt").exists)
+        #expect(subdir.appending(path: "file.txt").exists)
         
         try folder.clear()
-        #expect(try folder.exists)
+        #expect(folder.exists)
         #expect(try Array(folder.children(range: .enumeration.withSystemHidden)).isEmpty)
         
         try folder.remove()
@@ -185,7 +186,7 @@ struct FinderItemTests {
         
         let file = folder.appending(path: "A/B/C/D/.E/.file.txt")
         try file.generateDirectory()
-        #expect(try file.enclosingFolder.exists)
+        #expect(file.enclosingFolder.exists)
         
         try "1".write(to: file)
         
@@ -241,6 +242,32 @@ struct FinderItemTests {
         #expect(file.relativePath(to: folder) == "file.txt")
         
         try folder.remove()
+    }
+    
+}
+
+
+private extension BinaryInteger {
+    
+    /// The raw data that made up the binary integer.
+    var data: Data {
+        withUnsafePointer(to: self) { pointer in
+            pointer.withMemoryRebound(to: UInt8.self, capacity: bitWidth / 8) { pointer in
+                Data(bytes: pointer, count: bitWidth / 8)
+            }
+        }
+    }
+    
+    /// Creates a integer using the given data.
+    ///
+    /// - Note: If the width of `data` is greater than `Self.max`, if `self` is fixed width, the result is truncated.
+    init(data: Data) {
+        let tuple = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
+        defer { tuple.deallocate() }
+        
+        data.copyBytes(to: tuple, count: data.count)
+        
+        self = tuple.withMemoryRebound(to: Self.self, capacity: 1) { $0.pointee }
     }
     
 }
