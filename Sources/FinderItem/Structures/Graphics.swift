@@ -1,6 +1,6 @@
 //
 //  FI + GraphicsKit.swift
-//  The Stratum Module
+//  The FinderItem Module
 //
 //  Created by Vaida on 6/15/24.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

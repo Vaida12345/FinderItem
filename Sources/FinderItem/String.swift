@@ -1,6 +1,6 @@
 //
 //  FinderItem + String.swift
-//  The Stratum Module
+//  The FinderItem Module
 //
 //  Created by Vaida on 2024/3/23.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

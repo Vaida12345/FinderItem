@@ -1,6 +1,6 @@
 //
 //  FinderItem + ChildrenIterator.swift
-//  The Stratum Module
+//  The FinderItem Module
 //
 //  Created by Vaida on 7/25/22.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

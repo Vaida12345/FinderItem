@@ -1,6 +1,6 @@
 //
 //  Data Extensions.swift
-//  The Stratum Module - Extended Functionalities
+//  The FinderItem Module - Extended Functionalities
 //
 //  Created by Vaida on 2023/12/29.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

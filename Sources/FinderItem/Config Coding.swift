@@ -1,6 +1,6 @@
 //
 //  FinderItem + Configurable Coding.swift
-//  The Stratum Module
+//  The FinderItem Module
 //
 //  Created by Vaida on 6/25/23.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

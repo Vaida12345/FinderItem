@@ -1,6 +1,6 @@
 //
 //  Codable Extensions.swift
-//  The Stratum Module - Extended Functionalities
+//  The FinderItem Module - Extended Functionalities
 //
 //  Created by Vaida on 8/18/22.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

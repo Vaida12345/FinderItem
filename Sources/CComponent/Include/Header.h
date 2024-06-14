@@ -1,6 +1,6 @@
 //
 //  Header.h
-//  The Stratum Module - C Component
+//  The FinderItem Module - C Component
 //
 //  Created by Vaida on 6/6/23.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.

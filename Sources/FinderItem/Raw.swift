@@ -1,6 +1,6 @@
 //
 //  FinderItem + RawRepresentable.swift
-//  The Stratum Module
+//  The FinderItem Module
 //
 //  Created by Vaida on 6/22/22.
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.
