@@ -6,7 +6,6 @@
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.
 //
 
-
 import GraphicsKit
 import SwiftUI
 

@@ -114,7 +114,7 @@ extension FinderItem {
         }
     }
     
-    public enum AccessFilePromptError: GenericError {
+    public enum AccessFilePromptError: _GenericError {
         case moduleResponse(NSApplication.ModalResponse)
         
         public var title: String {

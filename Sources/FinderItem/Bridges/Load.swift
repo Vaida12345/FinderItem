@@ -52,7 +52,7 @@ public extension FinderItem {
     }
     
     /// One of the possible errors thrown by ``FinderItem/load(_:)-163we``, ``FinderItem/load(_:)-9a4yw``.
-    enum LoadError: GenericError {
+    enum LoadError: _GenericError {
         
         /// The API returned `nil`.
         ///

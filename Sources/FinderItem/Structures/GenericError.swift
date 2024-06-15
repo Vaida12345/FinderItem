@@ -45,7 +45,7 @@ import Foundation
 /// - ``localizedDescription``
 /// - ``errorDescription``
 /// - ``failureReason``
-public protocol GenericError: LocalizedError, CustomStringConvertible, Equatable {
+public protocol _GenericError: LocalizedError, CustomStringConvertible, Equatable {
     
     /// The error description, shown as the title in `AlertManager`.
     var title: String { get }
@@ -56,7 +56,7 @@ public protocol GenericError: LocalizedError, CustomStringConvertible, Equatable
 }
 
 
-extension GenericError {
+extension _GenericError {
     
     public var description: String {
         "\(title): \(message)"

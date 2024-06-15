@@ -51,7 +51,7 @@ extension FinderItem {
     /// ### Error Information
     /// - ``title``
     /// - ``message``
-    public struct FileError: GenericError, Equatable {
+    public struct FileError: _GenericError, Equatable {
         
         /// The error code.
         ///
@@ -362,7 +362,7 @@ extension FinderItem {
         }
         
         /// The error caused by ``parse(_:)``.
-        public enum ParseError: GenericError {
+        public enum ParseError: _GenericError {
             case unknownPattern(key: String, value: String)
             case noAssociatedURL
             
