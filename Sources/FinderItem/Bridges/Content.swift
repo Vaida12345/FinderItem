@@ -68,8 +68,10 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - image: The image indicating the new icon for the item.
+    ///
+    /// - Tip: This function is async to present blocking.
     @inlinable
-    func setIcon(image: NSImage) {
+    func setIcon(image: NSImage) async {
         guard self.exists else { return }
         NSWorkspace.shared.setIcon(image, forFile: self.path, options: .init())
     }
