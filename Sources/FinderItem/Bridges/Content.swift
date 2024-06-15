@@ -75,7 +75,7 @@ public extension FinderItem {
     }
     
     /// Reveals the current file in finder.
-    @available(*, deprecated, renamed: "reveal")
+    @MainActor @available(*, deprecated, renamed: "reveal")
     @inlinable
     func revealInFinder() {
         try? self.reveal()
@@ -86,7 +86,7 @@ public extension FinderItem {
     /// Reveals the current file in finder.
     ///
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for both macOS and iOS.
-    @inlinable
+    @MainActor @inlinable
     func reveal() throws {
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
