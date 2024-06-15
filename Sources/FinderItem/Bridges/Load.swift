@@ -20,7 +20,7 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// For a list of available options, please refer to <doc:FinderItemLoad>.
+    /// This is a variant of ``load(_:)-163we``
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
     ///
@@ -31,11 +31,47 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// For a list of available options, please refer to <doc:FinderItemLoad>.
-    ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
     ///
     /// - Bug: Currently always throws, will be fixed in Swift 6.0.
+    ///
+    /// ## Topics
+    ///
+    /// ### The Loading Calls
+    ///
+    /// These methods also provides the way to load the content.
+    ///
+    /// - ``FinderItem/load(_:)-9a4yw``
+    /// - ``FinderItem/load(_:format:)``
+    ///
+    ///
+    /// ### The Contents
+    ///
+    /// - ``FinderItem/LoadableContent/data``
+    /// - ``FinderItem/LoadableContent/resourceBytes``
+    /// - ``FinderItem/LoadableContent/lines``
+    ///
+    /// ### The Media
+    ///
+    /// - ``FinderItem/LoadableContent/image``
+    /// - ``FinderItem/LoadableContent/icon(size:)``
+    /// - ``FinderItem/AsyncLoadableContent/preview(size:)``
+    ///
+    /// ### The Representation
+    ///
+    /// - ``FinderItem/LoadableContent/fileWrapper(options:)``
+    ///
+    /// ### Errors
+    ///
+    /// - ``FinderItem/LoadError``
+    ///
+    ///
+    /// ### The Structures
+    ///
+    /// You should not interact with these structures directly, only the static properties and methods listed above.
+    ///
+    /// - ``FinderItem/LoadableContent``
+    /// - ``FinderItem/AsyncLoadableContent``
     func load<T>(_ type: FinderItem.LoadableContent<T>) throws -> T {
         try type.contentLoader(self)
     }
@@ -75,7 +111,7 @@ extension FinderItem {
     
     /// An loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-163we``. For a list of available options, please refer to <doc:FinderItemLoad>.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-163we``.
     public struct LoadableContent<Result> {
         
         fileprivate let contentLoader: (FinderItem) throws -> Result
@@ -90,7 +126,7 @@ extension FinderItem {
     
     /// An asynchronous loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-9a4yw``. For a list of available options, please refer to <doc:FinderItemLoad>.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-9a4yw``.
     public struct AsyncLoadableContent<Result> {
         
         fileprivate let contentLoader: (FinderItem) async throws -> Result
