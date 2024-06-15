@@ -23,17 +23,13 @@ public extension FinderItem {
     /// This is a variant of ``load(_:)-163we``
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
-    ///
-    /// - Bug: Currently always throws, will be fixed in Swift 6.0.
-    func load<T>(_ type: FinderItem.AsyncLoadableContent<T>) async throws -> T {
+    func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
     }
     
     /// Loads the data to the expected `type`.
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
-    ///
-    /// - Bug: Currently always throws, will be fixed in Swift 6.0.
     ///
     /// ## Topics
     ///
@@ -72,7 +68,7 @@ public extension FinderItem {
     ///
     /// - ``FinderItem/LoadableContent``
     /// - ``FinderItem/AsyncLoadableContent``
-    func load<T>(_ type: FinderItem.LoadableContent<T>) throws -> T {
+    func load<T, E>(_ type: FinderItem.LoadableContent<T, E>) throws(E) -> T where E: Error {
         try type.contentLoader(self)
     }
     
@@ -112,12 +108,12 @@ extension FinderItem {
     /// An loadable property that constrains the value.
     ///
     /// You do not call this structure directly, you should use ``FinderItem/load(_:)-163we``.
-    public struct LoadableContent<Result> {
+    public struct LoadableContent<Result, Failure> where Failure: Error {
         
-        fileprivate let contentLoader: (FinderItem) throws -> Result
+        fileprivate let contentLoader: (FinderItem) throws(Failure) -> Result
         
         
-        fileprivate init(contentLoader: @escaping (_ source: FinderItem) throws -> Result) {
+        fileprivate init(contentLoader: @escaping (_ source: FinderItem) throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
         
@@ -127,12 +123,12 @@ extension FinderItem {
     /// An asynchronous loadable property that constrains the value.
     ///
     /// You do not call this structure directly, you should use ``FinderItem/load(_:)-9a4yw``.
-    public struct AsyncLoadableContent<Result> {
+    public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
-        fileprivate let contentLoader: (FinderItem) async throws -> Result
+        fileprivate let contentLoader: (FinderItem) async throws(Failure) -> Result
         
         
-        fileprivate init(contentLoader: @escaping (_ source: FinderItem) async throws -> Result) {
+        fileprivate init(contentLoader: @escaping (_ source: FinderItem) async throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
         
@@ -144,8 +140,8 @@ extension FinderItem {
 public extension FinderItem.LoadableContent {
     
     /// Returns the image at the location, if exists.
-    static var image: FinderItem.LoadableContent<NativeImage> {
-        .init { source in
+    static var image: FinderItem.LoadableContent<NativeImage, FinderItem.LoadError> {
+        .init { (source: FinderItem) throws(FinderItem.LoadError) -> NativeImage in
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let image = NativeImage(contentsOf: source.url) {
                 return image
@@ -172,8 +168,8 @@ public extension FinderItem.LoadableContent {
     ///   - size: The size of the image.
     ///
     /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
-    static func icon(size: CGSize? = nil) -> FinderItem.LoadableContent<NativeImage> {
-        .init { source in
+    static func icon(size: CGSize? = nil) -> FinderItem.LoadableContent<NativeImage, FinderItem.LoadError> {
+        .init { (source: FinderItem) throws(FinderItem.LoadError) -> NativeImage in
             guard source.exists else { throw FinderItem.LoadError.encounteredNil }
             let icons = NSWorkspace.shared.icon(forFile: source.path)
             
@@ -198,7 +194,7 @@ public extension FinderItem.LoadableContent {
     ///
     /// - Parameters:
     ///   - options: Option flags for reading the node located at url.
-    static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper> {
+    static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper, any Error> {
         .init { source in
             try FileWrapper(url: source.url, options: options)
         }
@@ -213,7 +209,7 @@ import AVFoundation
 public extension FinderItem.LoadableContent {
     
     /// Loads the `AVAsset` at the source.
-    static var avasset: FinderItem.LoadableContent<AVURLAsset> {
+    static var avasset: FinderItem.LoadableContent<AVURLAsset, Never> {
         .init { source in
             AVURLAsset(url: source.url)
         }
@@ -226,7 +222,7 @@ public extension FinderItem.LoadableContent {
 public extension FinderItem.LoadableContent {
     
     /// Loads the data at the source.
-    static var data: FinderItem.LoadableContent<Data> {
+    static var data: FinderItem.LoadableContent<Data, any Error> {
         .init { source in
             try Data(contentsOf: source.url)
         }
@@ -234,7 +230,7 @@ public extension FinderItem.LoadableContent {
     
     /// Loads the data at source as async bytes.
     @available(macOS 12.0, *)
-    static var resourceBytes: FinderItem.AsyncLoadableContent<URL.AsyncBytes> {
+    static var resourceBytes: FinderItem.AsyncLoadableContent<URL.AsyncBytes, Never> {
         .init { source in
             source.url.resourceBytes
         }
@@ -242,7 +238,7 @@ public extension FinderItem.LoadableContent {
     
     /// Loads the data at source as async lines.
     @available(macOS 12.0, *)
-    static var lines: FinderItem.AsyncLoadableContent<AsyncLineSequence<URL.AsyncBytes>> {
+    static var lines: FinderItem.AsyncLoadableContent<AsyncLineSequence<URL.AsyncBytes>, Never> {
         .init { source in
             source.url.lines
         }
@@ -253,7 +249,7 @@ public extension FinderItem.LoadableContent {
 public extension FinderItem.LoadableContent {
     
     /// Loads the string at the source.
-    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String> {
+    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, any Error> {
         .init { source in
             try String(at: source, encoding: encoding)
         }
@@ -282,7 +278,7 @@ public extension FinderItem.AsyncLoadableContent {
     ///   - size: The size of the image.
     ///
     /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
-    static func preview(size: CGSize) -> FinderItem.AsyncLoadableContent<NativeImage> {
+    static func preview(size: CGSize) -> FinderItem.AsyncLoadableContent<NativeImage, any Error> {
         .init { source in
             guard source.exists else { throw FinderItem.LoadError.encounteredNil }
             do {

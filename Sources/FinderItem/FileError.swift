@@ -136,6 +136,9 @@ extension FinderItem {
             /// The error code indicating the an intermediate file does not exist.
             case intermediateFileNotExist
             
+            /// The error code indicating failure in parsing such value. This is a programming error
+            case parseError(ParseError)
+            
             
             /// The reason for the failure to unmount.
             public enum UnmountFailureReason: Sendable {
@@ -199,6 +202,8 @@ extension FinderItem {
                 "Unable to write to \"\(source.name)\""
             case .intermediateFileNotExist:
                 "An intermediate file does not exist"
+            case let .parseError(error):
+                error.title
             }
         }
         
@@ -265,6 +270,9 @@ extension FinderItem {
                 
             case .intermediateFileNotExist:
                 "No such file or directory for an intermediate file of \"\(source)\"."
+                
+            case let .parseError(error):
+                error.title
             }
         }
         
@@ -291,14 +299,14 @@ extension FinderItem {
         /// - Parameters:
         ///   - error: The source error
         ///
-        /// - throws: ``ParseError``
+        /// - throws: ``FileError``
         ///
         /// ## Topics
         /// ### Potential Error
-        /// - ``ParseError``
-        public static func parse(_ error: some Error) throws -> FileError {
+        /// - ``FileError``
+        public static func parse(_ error: some Error) throws(FileError) -> FileError {
             let error = error as NSError
-            guard let url = (error.userInfo[NSURLErrorKey] as? String) ?? (error.userInfo["NSDestinationFilePath"] as? String) ?? (error.userInfo["NSFilePath"] as? String) else { throw ParseError.noAssociatedURL }
+            guard let url = (error.userInfo[NSURLErrorKey] as? String) ?? (error.userInfo["NSDestinationFilePath"] as? String) ?? (error.userInfo["NSFilePath"] as? String) else { throw FileError(code: .parseError(ParseError.noAssociatedURL), source: .homeDirectory) }
             let source = FinderItem(at: url)
             
             return switch error.domain {
@@ -353,16 +361,16 @@ extension FinderItem {
                     FileError(code: .cannotWrite(reason: .volumeReadOnly), source: source)
                     
                 default: 
-                    throw ParseError.unknownPattern(key: "code", value: error.code.description + " (\(error.description))")
+                    throw FileError(code: .parseError(ParseError.unknownPattern(key: "code", value: error.code.description + " (\(error.description))")), source: .homeDirectory)
                 }
                 
             default:
-                throw ParseError.unknownPattern(key: "domain", value: error.domain)
+                throw FileError(code: .parseError(ParseError.unknownPattern(key: "domain", value: error.domain)), source: .homeDirectory)
             }
         }
         
         /// The error caused by ``parse(_:)``.
-        public enum ParseError: _GenericError {
+        public enum ParseError: Sendable, _GenericError {
             case unknownPattern(key: String, value: String)
             case noAssociatedURL
             

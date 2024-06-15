@@ -22,7 +22,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - range: the range for finding children.
     @inline(__always)
-    func children(range: ChildrenOption) throws -> FinderItemChildren {
+    func children(range: ChildrenOption) throws(FileError) -> FinderItemChildren {
         try FinderItemChildren(options: range, parent: self)
     }
     

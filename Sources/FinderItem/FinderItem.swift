@@ -335,7 +335,7 @@ public extension FinderItem {
     /// ### The Resulting Structure
     /// - ``FileType-swift.struct``
     var fileType: FileType {
-        get throws {
+        get throws(FileError) {
             do {
                 let sourceKeys: Set<URLResourceKey> = [.isRegularFileKey, .isDirectoryKey, .isApplicationKey, .isAliasFileKey, .isPackageKey, .isHiddenKey, .isSymbolicLinkKey]
                 let resourceValues = try self.url.resourceValues(forKeys: sourceKeys)
@@ -359,7 +359,7 @@ public extension FinderItem {
     /// The `UTType` of the file.
     @inline(__always)
     var contentType: UTType? {
-        get throws {
+        get throws(FileError) {
             do {
                 return try url.resourceValues(forKeys: [.contentTypeKey]).contentType
             } catch {
@@ -480,7 +480,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - destination: The ``FinderItem`` where the current item is copied to.
     @inlinable
-    func copy(to destination: FinderItem) throws {
+    func copy(to destination: FinderItem) throws(FileError) {
         do {
             if !destination.enclosingFolder.exists {
                 try destination.enclosingFolder.makeDirectory()
@@ -499,7 +499,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - item: The file URL at which to create the new symbolic link. The last path component of the URL issued as the name of the link.
     @inlinable
-    func createSymbolicLink(at item: FinderItem) throws {
+    func createSymbolicLink(at item: FinderItem) throws(FileError) {
         do {
             try FileManager.default.createSymbolicLink(at: item.url, withDestinationURL: self.url)
         } catch {
@@ -511,7 +511,7 @@ public extension FinderItem {
     ///
     /// - Note: This was done by enumerating and deleting each child.
     @inlinable
-    func clear() throws {
+    func clear() throws(FileError) {
         do {
             for child in try self.children(range: .contentsOfDirectory.withSystemHidden) {
                 try child.remove()
@@ -546,7 +546,7 @@ public extension FinderItem {
     ///
     /// - SeeAlso: To generate the directory *smartly*, ``generateDirectory()``
     @inlinable
-    func makeDirectory() throws {
+    func makeDirectory() throws(FileError) {
         guard !self.exists else {
             if self.isFile {
                 throw FileError(code: .cannotWrite(reason: .fileExists), source: self)
@@ -569,7 +569,7 @@ public extension FinderItem {
     ///
     /// - SeeAlso: To generate the directory robustly, ``makeDirectory()``
     @inlinable
-    func generateDirectory() throws {
+    func generateDirectory() throws(FileError) {
         let targetIsFolder = self.url.hasDirectoryPath
         if targetIsFolder {
             try self.makeDirectory()
@@ -583,7 +583,7 @@ public extension FinderItem {
     /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
     ///
     /// - Note: This method was designed to fit the situation when there would be multiple files of the same name at a location.
-    func generateOutputPath() throws {
+    func generateOutputPath() throws(FileError) {
         guard self.exists else { try self.enclosingFolder.makeDirectory(); return }
         
         var counter = 2
@@ -622,7 +622,7 @@ public extension FinderItem {
     /// Moves the current item to trash.
     ///
     /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
-    func moveToTrash() throws {
+    func moveToTrash() throws(FileError) {
         do {
             var newURL: NSURL?
             try FileManager.default.trashItem(at: self.url, resultingItemURL: &newURL)
@@ -642,7 +642,7 @@ public extension FinderItem {
     ///   - url: The destination `url`.
     ///
     /// - Note: The destination is overwritten.
-    func move(to url: URL) throws {
+    func move(to url: URL) throws(FileError) {
         do {
             try FinderItem(at: url).removeIfExists()
             try FileManager.default.moveItem(at: self.url, to: url)
@@ -658,7 +658,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - path: The destination `path`.
-    func move(to path: String) throws {
+    func move(to path: String) throws(FileError) {
         try self.move(to: URL(filePath: path))
     }
     
@@ -692,7 +692,7 @@ public extension FinderItem {
     /// Remove the file.
     @available(*, deprecated, renamed: "remove")
     @inlinable
-    func removeFile() throws {
+    func removeFile() throws(FileError) {
         try self.remove()
     }
     
@@ -700,7 +700,7 @@ public extension FinderItem {
     ///
     /// - Note: Although the file is removed, the ``url`` remains unchanged.
     @inlinable
-    func remove() throws {
+    func remove() throws(FileError) {
         do {
             try FileManager.default.removeItem(at: self.url)
         } catch {
@@ -711,7 +711,7 @@ public extension FinderItem {
     /// Remove the file if it exists.
     @available(*, deprecated, renamed: "removeIfExists")
     @inlinable
-    func removeFileIfExists() throws {
+    func removeFileIfExists() throws(FileError) {
         try self.removeIfExists()
     }
     
@@ -719,7 +719,7 @@ public extension FinderItem {
     ///
     /// - Note: Although the file is removed, the ``url`` remains unchanged.
     @inlinable
-    func removeIfExists() throws {
+    func removeIfExists() throws(FileError) {
         guard self.exists else { return }
         try self.remove()
     }
@@ -741,7 +741,7 @@ public extension FinderItem {
     ///   - newName: The ``name`` for the file.
     ///
     /// - Note: The destination is overwritten.
-    func rename(with newName: String) throws {
+    func rename(with newName: String) throws(FileError) {
         try self.move(to: self.enclosingFolder.appending(path: newName).url)
     }
     

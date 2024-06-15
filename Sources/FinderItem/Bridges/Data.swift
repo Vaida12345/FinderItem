@@ -35,7 +35,7 @@ public extension Data {
     }
     
     /// The mode for writing
-    enum Mode {
+    enum Mode: Sendable {
         
         /// The normal mode, with error thrown if file exists.
         case normal

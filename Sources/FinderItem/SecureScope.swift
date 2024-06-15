@@ -23,7 +23,7 @@ extension FinderItem {
     /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
     ///
     /// You need to obtain security scope for items that are created using ``FinderItem/init(from:configuration:)``.
-    public func tryAccessSecurityScope() throws {
+    public func tryAccessSecurityScope() throws(FileError) {
         guard self.url.startAccessingSecurityScopedResource() else { throw FinderItem.FileError(code: .cannotRead(reason: .noPermission), source: self) }
     }
     

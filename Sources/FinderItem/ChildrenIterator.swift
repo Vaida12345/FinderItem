@@ -26,7 +26,7 @@ public struct FinderItemChildren: Sequence {
     }
     
     
-    internal init(options: FinderItem.ChildrenOption, parent: FinderItem) throws {
+    internal init(options: FinderItem.ChildrenOption, parent: FinderItem) throws(FinderItem.FileError) {
         guard parent.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: parent) }
         
         self.options = options

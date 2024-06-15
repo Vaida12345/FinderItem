@@ -21,7 +21,7 @@ public extension FinderItem {
     ///
     /// - Note: Examples include data files, configuration files, templates.
     static var applicationSupportDirectory: FinderItem {
-        get throws {
+        get throws(FileError) {
             let item = FinderItem(_url: .homeDirectory.appending(path: "Library/Application Support/", directoryHint: .isDirectory))
             if !item.exists { try item.makeDirectory() }
             return item

@@ -87,7 +87,7 @@ public extension FinderItem {
     ///
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for both macOS and iOS.
     @MainActor @inlinable
-    func reveal() throws {
+    func reveal() throws(FileError) {
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
