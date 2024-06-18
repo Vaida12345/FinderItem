@@ -206,12 +206,14 @@ public extension FinderItem.LoadableContent {
 #if canImport(AVFoundation)
 import AVFoundation
 
-public extension FinderItem.LoadableContent {
+public extension FinderItem.AsyncLoadableContent {
     
     /// Loads the `AVAsset` at the source.
-    static var avasset: FinderItem.LoadableContent<AVURLAsset, Never> {
+    static var avAsset: FinderItem.AsyncLoadableContent<AVURLAsset?, Never> {
         .init { source in
-            AVURLAsset(url: source.url)
+            let asset = AVURLAsset(url: source.url)
+            guard (try? await asset.load(.isReadable)) ?? false else { return nil }
+            return asset
         }
     }
     
