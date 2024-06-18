@@ -133,6 +133,33 @@ extension FinderItem {
 }
 
 
+extension Sequence<FinderItem> {
+    /// In an app that has adopted App Sandbox, makes the resource pointed to by a security-scoped URL available to the app.
+    ///
+    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessSecurityScope()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
+    ///
+    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    ///
+    /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
+    ///
+    /// You need to obtain security scope for items that are created using ``FinderItem/init(from:configuration:)``.
+    public func tryAccessSecurityScope() throws(FinderItem.FileError) {
+        for i in self {
+            try i.tryAccessSecurityScope()
+        }
+    }
+    
+    /// In an app that adopts App Sandbox, revokes access to the resource pointed to by a security-scoped URL.
+    ///
+    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    public func stopAccessSecurityScope() {
+        for i in self {
+            self.stopAccessSecurityScope()
+        }
+    }
+}
+
+
 /// Access and performs `action` on the resource that is outside the sandbox of the App.
 ///
 /// Given a `FinderItem` created by resolving a bookmark data created with security scope, make the resource referenced by the `item` accessible to the process.
