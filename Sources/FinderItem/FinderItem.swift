@@ -409,13 +409,13 @@ public extension FinderItem {
     ///   - url: The absolute ``url``.
     @inline(__always)
     convenience init(at url: URL) {
-        self.init(_url: url.standardizedFileURL)
+        self.init(_url: url)
     }
     
     /// Creates the `FinderItem` without standardizing its url.
     @inline(__always)
     internal convenience init(_path: String, directoryHint: URL.DirectoryHint) {
-        self.init(_url: URL(filePath: _path, directoryHint: directoryHint))
+        self.init(_url: URL(filePath: _path, directoryHint: directoryHint).standardizedFileURL)
     }
     
     /// Creates an instance with an absolute path.

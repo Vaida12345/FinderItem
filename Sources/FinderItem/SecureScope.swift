@@ -154,7 +154,7 @@ extension Sequence<FinderItem> {
     /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
     public func stopAccessSecurityScope() {
         for i in self {
-            self.stopAccessSecurityScope()
+            i.stopAccessSecurityScope()
         }
     }
 }

@@ -36,7 +36,7 @@ public struct FinderItemChildren: Sequence {
     
     public typealias Element = FinderItem
     
-    public struct Iterator: IteratorProtocol {
+    public final class Iterator: IteratorProtocol {
         
         private let options: FinderItem.ChildrenOption
         private let stream: UnsafeMutablePointer<FTS>
@@ -45,13 +45,9 @@ public struct FinderItemChildren: Sequence {
         
         fileprivate init(item: FinderItem, range options: FinderItem.ChildrenOption) {
             self.options = options
-            
             var path = item.path
-            if path.hasSuffix("/") {
-                path.removeLast()
-            }
             
-            let _stream = FileManager.default._fileSystemRepresentation(withPath: path) { fsRep in
+            let _stream = try! FileManager.default._fileSystemRepresentation(withPath: path) { fsRep in
                 let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>.allocate(capacity: 2)
                 defer { ps.deallocate() }
                 ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
@@ -63,17 +59,29 @@ public struct FinderItemChildren: Sequence {
             self.current = fts_read(stream) // consume self
         }
         
+        deinit {
+            fts_close(stream)
+        }
         
-        public mutating func next() -> FinderItem? {
+        public var level: Int {
+            Int(current?.pointee.fts_level ?? 0)
+        }
+        
+        
+        public func next() -> FinderItem? {
             self.current = fts_read(stream)
             guard let current else { return nil }
             
             // determine if the `current` should be skipped.
             guard (current.pointee.fts_name != Iterator.dotASCIIValue) || options.contains(.reference.withHidden) else {
+                if Int32(current.pointee.fts_info) == FTS_D { // if is dir, skip contents
+                    self.skipDescendants()
+                }
                 return self.next()
             }
             
             let itemName = FileManager.default.string(withFileSystemRepresentation: &current.pointee.fts_name, length: Int(current.pointee.fts_namelen))
+            print(itemName)
             guard (itemName != ".DS_Store" && itemName != "Icon\r") || options.contains(.reference.withSystemHidden) else {
                 return self.next()
             }
@@ -129,22 +137,28 @@ public struct FinderItemChildren: Sequence {
 }
 
 
+// Reimport from swift-corelib-foundation
 private extension FileManager {
     
-    func _fileSystemRepresentation<ResultType>(withPath path: String, _ body: (UnsafePointer<CChar>) -> ResultType) -> ResultType {
+    func __fileSystemRepresentation(withPath path: String) throws -> UnsafePointer<CChar> {
         let len = CFStringGetMaximumSizeOfFileSystemRepresentation(path as CFString)
-        assert(len != kCFNotFound)
-        
-        let buf = UnsafeMutablePointer<CChar>.allocate(capacity: len)
-        buf.initialize(repeating: 0, count: len)
-        defer {
+        if len != kCFNotFound {
+            let buf = UnsafeMutablePointer<CChar>.allocate(capacity: len)
+            buf.initialize(repeating: 0, count: len)
+            
+            if CFStringGetFileSystemRepresentation(path as CFString, buf, len) {
+                return UnsafePointer(buf)
+            }
             buf.deinitialize(count: len)
             buf.deallocate()
         }
-        
-        assert(CFStringGetFileSystemRepresentation(path as NSString, buf, len))
-        
-        return body(buf)
+        throw NSError(domain: NSCocoaErrorDomain, code: CocoaError.fileReadInvalidFileName.rawValue, userInfo: [NSFilePathErrorKey: path])
+    }
+    
+    func _fileSystemRepresentation<ResultType>(withPath path: String, _ body: (UnsafePointer<CChar>) throws -> ResultType) throws -> ResultType {
+        let fsRep = try __fileSystemRepresentation(withPath: path)
+        defer { fsRep.deallocate() }
+        return try body(fsRep)
     }
     
 }
