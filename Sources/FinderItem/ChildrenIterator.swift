@@ -81,7 +81,6 @@ public struct FinderItemChildren: Sequence {
             }
             
             let itemName = FileManager.default.string(withFileSystemRepresentation: &current.pointee.fts_name, length: Int(current.pointee.fts_namelen))
-            print(itemName)
             guard (itemName != ".DS_Store" && itemName != "Icon\r") || options.contains(.reference.withSystemHidden) else {
                 return self.next()
             }
