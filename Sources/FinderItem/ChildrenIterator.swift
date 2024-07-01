@@ -45,7 +45,7 @@ public struct FinderItemChildren: Sequence {
         
         fileprivate init(item: FinderItem, range options: FinderItem.ChildrenOption) {
             self.options = options
-            var path = item.path
+            let path = item.path
             
             let _stream = try! FileManager.default._fileSystemRepresentation(withPath: path) { fsRep in
                 let ps = UnsafeMutablePointer<UnsafeMutablePointer<Int8>?>.allocate(capacity: 2)
