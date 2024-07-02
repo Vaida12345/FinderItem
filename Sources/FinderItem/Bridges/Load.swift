@@ -143,8 +143,8 @@ extension FinderItem {
 public extension FinderItem.LoadableContent {
     
     /// Returns the image at the location, if exists.
-    static var image: FinderItem.LoadableContent<NativeImage, FinderItem.LoadError> {
-        .init { (source: FinderItem) throws(FinderItem.LoadError) -> NativeImage in
+    static var image: FinderItem.LoadableContent<NativeImage, any Error> {
+        .init { (source: FinderItem) throws -> NativeImage in
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
             if let image = NativeImage(contentsOf: source.url) {
                 return image
@@ -156,7 +156,7 @@ public extension FinderItem.LoadableContent {
             if let image = NativeImage(data: data) {
                 return image
             } else {
-                throw FinderItem.LoadError.encounteredNil
+                throw FinderItem.LoadError.encounteredNil(name: source.name)
             }
 #endif
         }
