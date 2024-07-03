@@ -162,6 +162,13 @@ public extension FinderItem.LoadableContent {
         }
     }
     
+    /// Returns the image at the location, if exists.
+    static var cgImage: FinderItem.LoadableContent<CGImage, any Error> {
+        .init { (source: FinderItem) throws -> CGImage in
+            try self.image.contentLoader(source).cgImage!
+        }
+    }
+    
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Returns the icon at the location.
     ///
