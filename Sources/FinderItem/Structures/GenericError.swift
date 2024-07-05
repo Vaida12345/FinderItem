@@ -59,7 +59,11 @@ public protocol _GenericError: LocalizedError, CustomStringConvertible, Equatabl
 extension _GenericError {
     
     public var description: String {
-        "\(title): \(message)"
+        if !message.isEmpty {
+            "\(title): \(message)"
+        } else {
+            title
+        }
     }
     
     /// - Invariant: This is inherited from `GenericError.description`

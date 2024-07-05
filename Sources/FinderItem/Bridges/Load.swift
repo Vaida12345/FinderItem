@@ -94,12 +94,12 @@ public extension FinderItem {
         public var title: String {
             switch self {
             case .encounteredNil(let name):
-                "Load \(name) resulted in failure."
+                "Load \(name) resulted in failure"
             }
         }
         
         public var message: String {
-            "The API returned `nil`, no further information was given."
+            ""
         }
     }
     
@@ -145,20 +145,20 @@ public extension FinderItem.LoadableContent {
     /// Returns the image at the location, if exists.
     static var image: FinderItem.LoadableContent<NativeImage, any Error> {
         .init { (source: FinderItem) throws -> NativeImage in
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let image = NativeImage(contentsOf: source.url) {
-                return image
-            } else {
-                throw FinderItem.LoadError.encounteredNil(name: source.name)
+            do {
+                let data = try Data(at: source)
+                if let image = NativeImage(data: data) {
+                    return image
+                } else {
+                    throw FinderItem.LoadError.encounteredNil(name: source.name)
+                }
+            } catch {
+                if let error = try? FinderItem.FileError.parse(error) {
+                    throw error
+                } else {
+                    throw error
+                }
             }
-#elseif canImport(UIKit)
-            let data = try Data(at: source)
-            if let image = NativeImage(data: data) {
-                return image
-            } else {
-                throw FinderItem.LoadError.encounteredNil(name: source.name)
-            }
-#endif
         }
     }
     

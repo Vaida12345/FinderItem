@@ -330,7 +330,7 @@ extension FinderItem {
                 case NSFileReadInvalidFileNameError: 
                     FileError(code: .cannotRead(reason: .invalidFileName), source: source)
                 case NSFileReadNoPermissionError:
-                    FileError(code: .cannotRead(reason: .tooLarge), source: source)
+                    FileError(code: .cannotRead(reason: .noPermission), source: source)
                 case NSFileReadNoSuchFileError:
                     FileError(code: .cannotRead(reason: .noSuchFile), source: source)
                 case NSFileReadTooLargeError:
