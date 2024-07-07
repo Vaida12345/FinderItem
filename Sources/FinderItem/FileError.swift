@@ -369,6 +369,20 @@ extension FinderItem {
             }
         }
         
+        /// Parses an error, or throw the argument.
+        ///
+        /// - Parameters:
+        ///   - error: The source error
+        ///
+        /// - throws: The argument.
+        public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
+            do {
+                return try parse(arg)
+            } catch {
+                throw arg
+            }
+        }
+        
         /// The error caused by ``parse(_:)``.
         public enum ParseError: Sendable, _GenericError {
             case unknownPattern(key: String, value: String)

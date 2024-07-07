@@ -56,7 +56,11 @@ public extension CGImage {
     ///   - format: The format of the image, pass `nil` to auto infer from the extension name of `destination`.
     ///   - quality: The image compression quality.
     func write(to destination: FinderItem, format: NativeImage.ImageFormatOption? = nil, quality: CGFloat = 1) throws {
-        try self.write(to: destination.url, format: format, quality: quality)
+        do {
+            try self.write(to: destination.url, format: format, quality: quality)
+        } catch {
+            throw try FinderItem.FileError.parse(orThrow: error)
+        }
     }
     
 }
