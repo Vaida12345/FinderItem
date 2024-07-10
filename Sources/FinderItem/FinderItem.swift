@@ -739,10 +739,11 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - newName: The ``name`` for the file.
+    ///   - keepExtension: If `true`, the extension would be appended at the end of `newName`.
     ///
     /// - Note: The destination is overwritten.
-    func rename(with newName: String) throws(FileError) {
-        try self.move(to: self.enclosingFolder.appending(path: newName).url)
+    func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
+        try self.move(to: self.enclosingFolder.appending(path: newName + (keepExtension ? "." + self.extension : "")).url)
     }
     
     /// Returns a new instance with the path of its child.
