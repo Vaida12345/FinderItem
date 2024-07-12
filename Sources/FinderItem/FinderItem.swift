@@ -743,6 +743,10 @@ public extension FinderItem {
     ///
     /// - Note: The destination is overwritten.
     func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
+        guard !newName.isEmpty else {
+            fatalError("Attempting to rename the file with an empty name.")
+        }
+        
         try self.move(to: self.enclosingFolder.appending(path: newName + (keepExtension ? "." + self.extension : "")).url)
     }
     
