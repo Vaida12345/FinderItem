@@ -644,7 +644,6 @@ public extension FinderItem {
     /// - Note: The destination is overwritten.
     func move(to url: URL) throws(FileError) {
         do {
-            try FinderItem(at: url).removeIfExists()
             try FileManager.default.moveItem(at: self.url, to: url)
             self.url = url
         } catch {
