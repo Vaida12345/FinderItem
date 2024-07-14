@@ -747,7 +747,19 @@ public extension FinderItem {
             fatalError("Attempting to rename the file with an empty name.")
         }
         
-        try self.move(to: self.enclosingFolder.appending(path: newName + (keepExtension ? "." + self.extension : "")).url)
+        let extensionName: String
+        if keepExtension {
+            let _extension = self.extension
+            if _extension.isEmpty {
+                extensionName = ""
+            } else {
+                extensionName = "." + _extension
+            }
+        } else {
+            extensionName = ""
+        }
+        
+        try self.move(to: self.enclosingFolder.appending(path: newName + extensionName).url)
     }
     
     /// Returns a new instance with the path of its child.
