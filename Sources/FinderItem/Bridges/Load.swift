@@ -89,12 +89,12 @@ public extension FinderItem {
         /// The API returned `nil`.
         ///
         /// No further information was given by the API.
-        case encounteredNil(name: String)
+        case encounteredNil(name: String, type: String)
         
         public var title: String {
             switch self {
-            case .encounteredNil(let name):
-                "Load \(name) resulted in failure"
+            case let .encounteredNil(name, type):
+                "Load \(name) as \(type) resulted in failure"
             }
         }
         
@@ -150,7 +150,7 @@ public extension FinderItem.LoadableContent {
                 if let image = NativeImage(data: data) {
                     return image
                 } else {
-                    throw FinderItem.LoadError.encounteredNil(name: source.name)
+                    throw FinderItem.LoadError.encounteredNil(name: source.name, type: "image")
                 }
             } catch {
                 if let error = try? FinderItem.FileError.parse(error) {
@@ -178,9 +178,9 @@ public extension FinderItem.LoadableContent {
     ///   - size: The size of the image.
     ///
     /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
-    static func icon(size: CGSize? = nil) -> FinderItem.LoadableContent<NativeImage, FinderItem.LoadError> {
-        .init { (source: FinderItem) throws(FinderItem.LoadError) -> NativeImage in
-            guard source.exists else { throw FinderItem.LoadError.encounteredNil(name: source.name) }
+    static func icon(size: CGSize? = nil) -> FinderItem.LoadableContent<NativeImage, any Error> {
+        .init { (source: FinderItem) throws -> NativeImage in
+            guard source.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: source) }
             let icons = NSWorkspace.shared.icon(forFile: source.path)
             
             guard let size else { return icons }
@@ -190,7 +190,7 @@ public extension FinderItem.LoadableContent {
                let scaled = image.resized(to: image.size.aspectRatio(.fit, in: size)) {
                 return NativeImage(cgImage: scaled)
             } else {
-                throw FinderItem.LoadError.encounteredNil(name: source.name)
+                throw FinderItem.LoadError.encounteredNil(name: source.name, type: "icon")
             }
         }
     }
@@ -292,7 +292,7 @@ public extension FinderItem.AsyncLoadableContent {
     /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
     static func preview(size: CGSize) -> FinderItem.AsyncLoadableContent<NativeImage, any Error> {
         .init { source in
-            guard source.exists else { throw FinderItem.LoadError.encounteredNil(name: source.name) }
+            guard source.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: source) }
             do {
                 return try await generateImage(type: .thumbnail, url: source.url, size: size).0
             } catch {
