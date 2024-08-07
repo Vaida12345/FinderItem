@@ -19,5 +19,5 @@ let package = Package(
         .target(name: "CComponent"),
         .target(name: "FinderItem", dependencies: ["CComponent", "GraphicsKit"]),
         .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
-    ], swiftLanguageVersions: [.v6]
+    ], swiftLanguageModes: [.v5]
 )
