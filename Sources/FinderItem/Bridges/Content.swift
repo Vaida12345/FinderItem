@@ -30,6 +30,7 @@ public extension FinderItem {
     /// Returns the icon at the location, if exists.
     ///
     /// The return value is `nil` if the files doesn't exist, or, there is no tiff representation behind.
+    @available(*, deprecated, message: "Please use \"load(.icon(_:))\" instead.")
     func icon(size: CGSize? = nil) -> NSImage? {
         guard self.exists else { return nil }
         if let size {
@@ -51,6 +52,7 @@ public extension FinderItem {
     
 #if canImport(GraphicsKit)
     /// Returns the image at the location, if exists.
+    @available(*, deprecated, message: "Please use \"load(.image)\" instead.")
     @inlinable
     func image() -> NativeImage? {
         NativeImage(at: self.url)
@@ -138,6 +140,7 @@ public extension FinderItem {
     /// Generate the preview image for the given `FinderItem`.
     ///
     /// - Note: The pixel size of image is `size` \* `scale`.
+    @available(*, deprecated, message: "Please use \"load(.preview(_:))\" instead.")
     func preview(size: CGSize, scale: CGFloat = 2) async throws -> NativeImage {
         do {
             return try await generateImage(type: .thumbnail, url: url, size: size, scale: scale).0

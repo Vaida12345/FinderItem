@@ -41,23 +41,23 @@ import UniformTypeIdentifiers
 ///
 /// You would still need to call ``FinderItem/tryAccessSecurityScope()`` before and after accessing the file.
 ///
-/// - Experiment: It seems you can only call ``FinderItem/tryAccessSecurityScope()`` on the *original* file, not the ones derived /// using, for example, ``FinderItem/appending(path:directoryHint:)``. This would mean that to access a child folder, you need to /// access the security scope of its parent.
+/// - Experiment: It seems you can only call ``FinderItem/tryAccessSecurityScope()`` on the *original* file, not the ones derived using, for example, ``FinderItem/appending(path:directoryHint:)``. This would mean that to access a child folder, you need to access the security scope of its parent.
 ///
-/// Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access /// the contents of Downloads folder created by ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. /// Then, you can access the contents by persisting its bookmark data.
+/// Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access the contents of Downloads folder created by ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. Then, you can access the contents by persisting its bookmark data.
 ///
-/// However, with `com.apple.security.files.downloads.read-write`, it seems you do not need to start security scope to access its /// contents. However, you would still need the bookmark data obtained from the dialog.
+/// However, with `com.apple.security.files.downloads.read-write`, it seems you do not need to start security scope to access its contents. However, you would still need the bookmark data obtained from the dialog.
 ///
 ///
 /// ### Bookmarks
 ///
-/// To preserve the access to the security scope, you need to use ``FinderItem/bookmarkData(options:)``. This function returns the /// bookmark data that can be used to create the url with the security scope.
+/// To preserve the access to the security scope, you need to use ``FinderItem/bookmarkData(options:)``. This function returns the bookmark data that can be used to create the url with the security scope.
 ///
-/// To create `FinderItem` from the bookmark, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``. On return, /// `bookmarkDataIsStale` serves as an indicator of whether the persisted bookmark data needs to be updated.
+/// To create `FinderItem` from the bookmark, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``. On return, `bookmarkDataIsStale` serves as an indicator of whether the persisted bookmark data needs to be updated.
 ///
 ///
 /// ### Ask user for permissions
 ///
-/// With `com.apple.security.files.user-selected.read-write`, you could ask users for files using `fileImporter`, or `NSPenal`. /// FinderItem also offers integrated streamline of asking for permission and storing the bookmark. To read more, see /// ``FinderItem/tryPromptAccessFile()``.
+/// With `com.apple.security.files.user-selected.read-write`, you could ask users for files using `fileImporter`, or `NSPenal`. FinderItem also offers integrated streamline of asking for permission and storing the bookmark. To read more, see ``FinderItem/tryPromptAccessFile()``.
 ///
 ///
 /// ## Topics
@@ -307,7 +307,7 @@ public extension FinderItem {
     ///
     /// This method would consult the file system for the nature of the file. If the file does not exist, it would fall back to `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     ///
-    /// - Returns: `false` if the file does not exists.
+    /// - Returns: If the file does not exist, it is inferred from the ``url``.
     @inline(__always)
     var isDirectory: Bool {
         (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? self.url.hasDirectoryPath
@@ -317,7 +317,7 @@ public extension FinderItem {
     ///
     /// This method would consult the file system for the nature of the file. If the file does not exist, it would fall back to `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     ///
-    /// - Returns: `false` if the file does not exists.
+    /// - Returns: If the file does not exist, it is inferred from the ``url``.
     @inline(__always)
     var isFile: Bool {
         (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? !self.url.hasDirectoryPath
@@ -351,19 +351,19 @@ public extension FinderItem {
                 
                 return types
             } catch {
-                throw try FileError.parse(error)
+                throw FileError.parse(error)
             }
         }
     }
     
     /// The `UTType` of the file.
     @inline(__always)
-    var contentType: UTType? {
+    var contentType: UTType {
         get throws(FileError) {
             do {
-                return try url.resourceValues(forKeys: [.contentTypeKey]).contentType
+                return try url.resourceValues(forKeys: [.contentTypeKey]).contentType!
             } catch {
-                throw try FileError.parse(error)
+                throw FileError.parse(error)
             }
         }
     }
@@ -415,7 +415,7 @@ public extension FinderItem {
     /// Creates the `FinderItem` without standardizing its url.
     @inline(__always)
     internal convenience init(_path: String, directoryHint: URL.DirectoryHint) {
-        self.init(_url: URL(filePath: _path, directoryHint: directoryHint).standardizedFileURL)
+        self.init(_url: URL(filePath: _path, directoryHint: directoryHint))
     }
     
     /// Creates an instance with an absolute path.
@@ -447,7 +447,7 @@ public extension FinderItem {
     ///   - directoryHint: An indication of whether the given path is an directory. This would effect the `hasDirectoryPath` value of the underlining ``url``.
     @inlinable
     convenience init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
-        self.init(at: URL(filePath: path, directoryHint: directoryHint))
+        self.init(at: URL(filePath: path, directoryHint: directoryHint).standardizedFileURL)
     }
     
     /// Creates an instance with a provider.
@@ -490,7 +490,7 @@ public extension FinderItem {
             
             try FileManager.default.copyItem(at: self.url, to: destination.url)
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -503,7 +503,7 @@ public extension FinderItem {
         do {
             try FileManager.default.createSymbolicLink(at: item.url, withDestinationURL: self.url)
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -517,7 +517,7 @@ public extension FinderItem {
                 try child.remove()
             }
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -559,7 +559,7 @@ public extension FinderItem {
             try FileManager.default.createDirectory(at: self.url, withIntermediateDirectories: true)
             // no need for the loops, `withIntermediateDirectories` does all the works
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -629,7 +629,7 @@ public extension FinderItem {
             guard let url = newURL else { return }
             self.url = url as URL
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
 #endif
@@ -648,7 +648,7 @@ public extension FinderItem {
             try FileManager.default.moveItem(at: self.url, to: url)
             self.url = url
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -704,7 +704,7 @@ public extension FinderItem {
         do {
             try FileManager.default.removeItem(at: self.url)
         } catch {
-            throw try FileError.parse(error)
+            throw FileError.parse(error)
         }
     }
     
@@ -742,6 +742,7 @@ public extension FinderItem {
     ///   - keepExtension: If `true`, the extension would be appended at the end of `newName`.
     ///
     /// - Note: The destination is overwritten.
+    @inlinable
     func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
         guard !newName.isEmpty else {
             fatalError("Attempting to rename the file with an empty name.")
@@ -760,6 +761,24 @@ public extension FinderItem {
         }
         
         try self.move(to: self.enclosingFolder.appending(path: newName + extensionName).url)
+    }
+    
+    /// Returns the ``FinderItem`` that refers to the location specified by resolving an alias file.
+    ///
+    /// If the url argument doesn’t refer to an alias file (as defined by the ``fileType-swift.property``, ``FileType-swift.struct/alias`` property), the returned item is the same as `self`.
+    ///
+    /// This method throws an error in the following cases:
+    /// - The url argument is unreachable.
+    /// - The original file or directory is unknown or unreachable.
+    /// - The original file or directory is on a volume that the system can’t locate or can’t mount.
+    ///
+    /// This method doesn’t support the `withSecurityScope` option.
+    func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
+        do {
+            return try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
+        } catch {
+            throw FileError.parse(error)
+        }
     }
     
     /// Returns a new instance with the path of its child.
@@ -914,7 +933,9 @@ public extension FinderItem {
         public static let package      = FileType(rawValue: 1 << 4)
         /// determining whether the resource is normally not displayed to users
         public static let hidden       = FileType(rawValue: 1 << 5)
-        /// determining whether the resource is a symbolic link
+        /// determining whether the resource is a symbolic link.
+        ///
+        /// Compared to alias, symbolic link is a lower-level feature, often used in terminal operations, pointing directly to the target file's path
         public static let symbolicLink = FileType(rawValue: 1 << 5)
         
         public init(rawValue: Int) {

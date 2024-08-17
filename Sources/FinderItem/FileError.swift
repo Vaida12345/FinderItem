@@ -74,10 +74,8 @@ extension FinderItem {
         /// The file that caused the error.
         public let source: FinderItem
         
-        /// An additional info field.
-        ///
-        /// This should only provide some trivial messages. Hence it is not exposed to the public API. As the purpose of this structure is to enforce type-safety.
-        private let additionalInfo: [String: String]
+        /// The unparsed original error.
+        public let underlyingError: (any Error)?
         
         
         public static func == (lhs: FileError, rhs: FileError) -> Bool {
@@ -87,23 +85,62 @@ extension FinderItem {
         
         /// Indicates the ``Code-swift.enum/cannotUnmount(reason:)`` error.
         ///
+        /// The return value only serves as a way to compare. For example,
+        ///
+        /// ```swift
+        /// if fileError == .cannotRead(reason: .noSuchFile) {
+        ///     ...
+        /// }
+        /// ```
+        ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
         public static func cannotUnmount(reason: Code.UnmountFailureReason) -> FileError {
-            FileError(code: .cannotUnmount(reason: reason), source: .homeDirectory)
+            FileError(code: .cannotUnmount(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
         
         /// Indicates the ``Code-swift.enum/cannotRead(reason:)`` error.
         ///
+        /// The return value only serves as a way to compare. For example,
+        ///
+        /// ```swift
+        /// if fileError == .cannotRead(reason: .noSuchFile) {
+        ///     ...
+        /// }
+        /// ```
+        ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
         public static func cannotRead(reason: Code.ReadFailureReason) -> FileError {
-            FileError(code: .cannotRead(reason: reason), source: .homeDirectory)
+            FileError(code: .cannotRead(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
         
         /// Indicates the ``Code-swift.enum/cannotWrite(reason:)`` error.
         ///
+        /// The return value only serves as a way to compare. For example,
+        ///
+        /// ```swift
+        /// if fileError == .cannotRead(reason: .noSuchFile) {
+        ///     ...
+        /// }
+        /// ```
+        ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
         public static func cannotWrite(reason: Code.WriteFailureReason) -> FileError {
-            FileError(code: .cannotWrite(reason: reason), source: .homeDirectory)
+            FileError(code: .cannotWrite(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
+        }
+        
+        /// Indicates the ``Code-swift.enum/unknown`` error.
+        ///
+        /// The return value only serves as a way to compare. For example,
+        ///
+        /// ```swift
+        /// if fileError == .cannotRead(reason: .noSuchFile) {
+        ///     ...
+        /// }
+        /// ```
+        ///
+        /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
+        public static func unknown() -> FileError {
+            FileError(code: .unknown, source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
         
         
@@ -136,8 +173,10 @@ extension FinderItem {
             /// The error code indicating the an intermediate file does not exist.
             case intermediateFileNotExist
             
-            /// The error code indicating failure in parsing such value. This is a programming error
-            case parseError(ParseError)
+            /// The error code indicating failure in parsing such value.
+            ///
+            /// In this case, the ``FileError/source`` is always the home directory.
+            case unknown
             
             
             /// The reason for the failure to unmount.
@@ -202,14 +241,17 @@ extension FinderItem {
                 "Unable to write to \"\(source.name)\""
             case .intermediateFileNotExist:
                 "An intermediate file does not exist"
-            case let .parseError(error):
-                error.title
+            case .unknown:
+                (underlyingError as? NSError)?.localizedDescription ?? "(unknown)"
             }
         }
         
-        /// The message of the error.
         public var message: String {
-            switch code {
+            if let underlyingError = underlyingError as? CocoaError {
+                return underlyingError.localizedDescription
+            }
+            
+            return switch code {
             case let .cannotUnmount(reason):
                 switch reason {
                 case .busy:
@@ -225,11 +267,7 @@ extension FinderItem {
                 case .corruptFile:
                     "The file \"\(source)\" is corrupted or in a bad format."
                 case .inapplicableStringEncoding:
-                    if let errorKey = additionalInfo[NSStringEncodingErrorKey] {
-                        "The file \"\(source)\" employs an inapplicable string encoding of \(errorKey)."
-                    } else {
-                        "The file \"\(source)\" employs an inapplicable string encoding."
-                    }
+                    "The file \"\(source)\" employs an inapplicable string encoding."
                 case .invalidFileName:
                     "The file path \"\(source)\" possesses an invalid filename."
                 case .noPermission:
@@ -249,11 +287,7 @@ extension FinderItem {
                 case .fileExists:
                     "The file \"\(source)\" already exists."
                 case .inapplicableStringEncoding:
-                    if let errorKey = additionalInfo[NSStringEncodingErrorKey] {
-                        "The file \"\(source)\" employs an inapplicable string encoding of \(errorKey)."
-                    } else {
-                        "The file \"\(source)\" employs an inapplicable string encoding."
-                    }
+                    "The file \"\(source)\" employs an inapplicable string encoding."
                 case .invalidFileName:
                     "The file path \"\(source)\" possesses an invalid filename."
                 case .noPermission:
@@ -271,26 +305,16 @@ extension FinderItem {
             case .intermediateFileNotExist:
                 "No such file or directory for an intermediate file of \"\(source)\"."
                 
-            case let .parseError(error):
-                error.title
+            case .unknown:
+                "(unknown)"
             }
         }
         
-        /// Creates a file error.
-        ///
-        /// - Parameters:
-        ///   - code: An error code.
-        ///   - source: The file that caused the error.
-        public init(code: Code, source: FinderItem) {
-            self.code = code
-            self.source = source
-            self.additionalInfo = [:]
-        }
         
-        private init(code: Code, source: FinderItem, additionalInfo: [String: String]) {
+        public init(code: Code, source: FinderItem, underlyingError: Error? = nil) {
             self.code = code
             self.source = source
-            self.additionalInfo = additionalInfo
+            self.underlyingError = underlyingError
         }
         
         
@@ -299,73 +323,65 @@ extension FinderItem {
         /// - Parameters:
         ///   - error: The source error
         ///
-        /// - throws: ``FileError``
-        ///
         /// ## Topics
         /// ### Potential Error
         /// - ``FileError``
-        public static func parse(_ error: some Error) throws(FileError) -> FileError {
-            let error = error as NSError
-            guard let url = (error.userInfo[NSURLErrorKey] as? String) ?? (error.userInfo["NSDestinationFilePath"] as? String) ?? (error.userInfo["NSFilePath"] as? String) else { throw FileError(code: .parseError(ParseError.noAssociatedURL), source: .homeDirectory) }
+        public static func parse(_ error: some Error) -> FileError {
+            guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
+            guard let url = error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             let source = FinderItem(at: url)
             
-            return switch error.domain {
-            case NSCocoaErrorDomain:
-                switch error.code {
+            return switch error.code {
                 // File Errors
-                case NSFileNoSuchFileError:
-                    FileError(code: .intermediateFileNotExist, source: source)
+            case .fileNoSuchFile:
+                FileError(code: .intermediateFileNotExist, source: source, underlyingError: error)
 #if os(macOS)
-                case NSFileManagerUnmountBusyError:
-                    FileError(code: .cannotUnmount(reason: .busy), source: source)
-                case NSFileManagerUnmountUnknownError:
-                    FileError(code: .cannotUnmount(reason: .unknown), source: source)
+            case .fileManagerUnmountBusy:
+                FileError(code: .cannotUnmount(reason: .busy), source: source, underlyingError: error)
+            case .fileManagerUnmountUnknown:
+                FileError(code: .cannotUnmount(reason: .unknown), source: source, underlyingError: error)
 #endif
-                    
+                
                 // File Reading Errors
-                case NSFileReadCorruptFileError: 
-                    FileError(code: .cannotRead(reason: .corruptFile), source: source)
-                case NSFileReadInapplicableStringEncodingError: 
-                    FileError(code: .cannotRead(reason: .inapplicableStringEncoding), source: source, additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String])
-                case NSFileReadInvalidFileNameError: 
-                    FileError(code: .cannotRead(reason: .invalidFileName), source: source)
-                case NSFileReadNoPermissionError:
-                    FileError(code: .cannotRead(reason: .noPermission), source: source)
-                case NSFileReadNoSuchFileError:
-                    FileError(code: .cannotRead(reason: .noSuchFile), source: source)
-                case NSFileReadTooLargeError:
-                    FileError(code: .cannotRead(reason: .tooLarge), source: source)
-                case NSFileReadUnknownError:
-                    FileError(code: .cannotRead(reason: .unknown), source: source)
-                case NSFileReadUnknownStringEncodingError:
-                    FileError(code: .cannotRead(reason: .unknownStringEncoding), source: source)
-                case NSFileReadUnsupportedSchemeError:
-                    FileError(code: .cannotRead(reason: .unsupportedScheme), source: source)
-                    
+            case .fileReadCorruptFile:
+                FileError(code: .cannotRead(reason: .corruptFile), source: source, underlyingError: error)
+            case .fileReadInapplicableStringEncoding:
+                FileError(code: .cannotRead(reason: .inapplicableStringEncoding), source: source, underlyingError: error) // , additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String]
+            case .fileReadInvalidFileName:
+                FileError(code: .cannotRead(reason: .invalidFileName), source: source, underlyingError: error)
+            case .fileReadNoPermission:
+                FileError(code: .cannotRead(reason: .noPermission), source: source, underlyingError: error)
+            case .fileReadNoSuchFile:
+                FileError(code: .cannotRead(reason: .noSuchFile), source: source, underlyingError: error)
+            case .fileReadTooLarge:
+                FileError(code: .cannotRead(reason: .tooLarge), source: source, underlyingError: error)
+            case .fileReadUnknown:
+                FileError(code: .cannotRead(reason: .unknown), source: source, underlyingError: error)
+            case .fileReadUnknownStringEncoding:
+                FileError(code: .cannotRead(reason: .unknownStringEncoding), source: source, underlyingError: error)
+            case .fileReadUnsupportedScheme:
+                FileError(code: .cannotRead(reason: .unsupportedScheme), source: source, underlyingError: error)
+                
                 // File Writing Errors
-                case NSFileWriteFileExistsError:
-                    FileError(code: .cannotWrite(reason: .fileExists), source: source)
-                case NSFileWriteInapplicableStringEncodingError:
-                    FileError(code: .cannotWrite(reason: .inapplicableStringEncoding), source: source, additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String])
-                case NSFileWriteInvalidFileNameError:
-                    FileError(code: .cannotWrite(reason: .invalidFileName), source: source)
-                case NSFileWriteNoPermissionError:
-                    FileError(code: .cannotWrite(reason: .noPermission), source: source)
-                case NSFileWriteOutOfSpaceError:
-                    FileError(code: .cannotWrite(reason: .outOfSpace), source: source)
-                case NSFileWriteUnknownError:
-                    FileError(code: .cannotWrite(reason: .unknown), source: source)
-                case NSFileWriteUnsupportedSchemeError:
-                    FileError(code: .cannotWrite(reason: .unsupportedScheme), source: source)
-                case NSFileWriteVolumeReadOnlyError:
-                    FileError(code: .cannotWrite(reason: .volumeReadOnly), source: source)
-                    
-                default: 
-                    throw FileError(code: .parseError(ParseError.unknownPattern(key: "code", value: error.code.description + " (\(error.description))")), source: .homeDirectory)
-                }
+            case .fileWriteFileExists:
+                FileError(code: .cannotWrite(reason: .fileExists), source: source, underlyingError: error)
+            case .fileWriteInapplicableStringEncoding:
+                FileError(code: .cannotWrite(reason: .inapplicableStringEncoding), source: source, underlyingError: error) // , additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String]
+            case .fileWriteInvalidFileName:
+                FileError(code: .cannotWrite(reason: .invalidFileName), source: source, underlyingError: error)
+            case .fileWriteNoPermission:
+                FileError(code: .cannotWrite(reason: .noPermission), source: source, underlyingError: error)
+            case .fileWriteOutOfSpace:
+                FileError(code: .cannotWrite(reason: .outOfSpace), source: source, underlyingError: error)
+            case .fileWriteUnknown:
+                FileError(code: .cannotWrite(reason: .unknown), source: source, underlyingError: error)
+            case .fileWriteUnsupportedScheme:
+                FileError(code: .cannotWrite(reason: .unsupportedScheme), source: source, underlyingError: error)
+            case .fileWriteVolumeReadOnly:
+                FileError(code: .cannotWrite(reason: .volumeReadOnly), source: source, underlyingError: error)
                 
             default:
-                throw FileError(code: .parseError(ParseError.unknownPattern(key: "domain", value: error.domain)), source: .homeDirectory)
+                FileError(code: .unknown, source: source, underlyingError: error)
             }
         }
         
@@ -376,29 +392,11 @@ extension FinderItem {
         ///
         /// - throws: The argument.
         public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
-            do {
-                return try parse(arg)
-            } catch {
+            let error = parse(arg)
+            if error == .unknown() {
                 throw arg
-            }
-        }
-        
-        /// The error caused by ``parse(_:)``.
-        public enum ParseError: Sendable, _GenericError {
-            case unknownPattern(key: String, value: String)
-            case noAssociatedURL
-            
-            public var title: String {
-                "Failed to parse FinderItem.FileError from an error"
-            }
-            
-            public var message: String {
-                switch self {
-                case .unknownPattern(let key, let value):
-                    "Unknown \(key): \(value)."
-                case .noAssociatedURL:
-                    "No url associated with the given error."
-                }
+            } else {
+                return error
             }
         }
         

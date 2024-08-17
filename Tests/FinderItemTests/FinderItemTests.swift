@@ -28,7 +28,7 @@ struct FinderItemTests {
         #expect((FinderItem(at: "/Users/vaida/Desktop").path == "/Users/vaida/Desktop/"))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop").userFriendlyDescription == "~/Desktop/"))
-        #expect((FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Animation").userFriendlyDescription == "iCloud Drive/DataBase/Animation/"))
+        #expect((FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase").userFriendlyDescription == "iCloud Drive/DataBase/"))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop").enclosingFolder.path == FinderItem(at: "/Users/vaida/").path))
         
@@ -124,7 +124,7 @@ struct FinderItemTests {
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }).withHidden)).count == 4)
         
         // set icon
-        folder.setIcon(image: image)
+        await folder.setIcon(image: image)
         try #expect(Array(folder.children(range: .contentsOfDirectory.withSystemHidden)).count == 5)
         
         try folder.remove()
@@ -135,7 +135,7 @@ struct FinderItemTests {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         
-        #expect(throws: FinderItem.LoadError.encounteredNil) {
+        #expect(throws: FinderItem.FileError.self) {
             try folder.appending(path: "image.png").load(.image)
         }
         #expect(try folder.icon()?.data() == FinderItem.temporaryDirectory.load(.icon()).data())

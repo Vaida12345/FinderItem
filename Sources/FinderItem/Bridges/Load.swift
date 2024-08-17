@@ -94,7 +94,7 @@ public extension FinderItem {
         public var title: String {
             switch self {
             case let .encounteredNil(name, type):
-                "Load \(name) as \(type) resulted in failure"
+                "Load file \(name) as \(type) resulted in failure"
             }
         }
         
@@ -153,11 +153,7 @@ public extension FinderItem.LoadableContent {
                     throw FinderItem.LoadError.encounteredNil(name: source.name, type: "image")
                 }
             } catch {
-                if let error = try? FinderItem.FileError.parse(error) {
-                    throw error
-                } else {
-                    throw error
-                }
+                throw FinderItem.FileError.parse(error)
             }
         }
     }
