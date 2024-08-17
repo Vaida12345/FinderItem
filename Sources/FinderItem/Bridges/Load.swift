@@ -20,16 +20,16 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// This is a variant of ``load(_:)-163we``
+    /// This is a variant of ``load(_:)-7spks``
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil(name:type:)``.
     func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
     }
     
     /// Loads the data to the expected `type`.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil``.
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil(name:type:)``.
     ///
     /// ## Topics
     ///
@@ -37,7 +37,7 @@ public extension FinderItem {
     ///
     /// These methods also provides the way to load the content.
     ///
-    /// - ``FinderItem/load(_:)-9a4yw``
+    /// - ``FinderItem/load(_:)-1vmco``
     /// - ``FinderItem/load(_:format:)``
     ///
     ///

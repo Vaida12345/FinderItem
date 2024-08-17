@@ -113,13 +113,13 @@ import UniformTypeIdentifiers
 ///
 /// ### File Path Operations
 /// - ``appending(path:directoryHint:)``
-/// - ``rename(with:)``
+/// - ``rename(with:keepExtension:)``
 /// - ``relativePath(to:)``
 /// - ``replacingExtension(with:)``
 ///
 /// ### Working with Finder
 /// - ``reveal()``
-/// - ``open(configuration:)``
+/// - ``open(configuration:)-2z4y9``
 ///
 /// ### Working with folder
 /// - ``children(range:)``
@@ -254,7 +254,7 @@ public extension FinderItem {
     /// > item.name // "file.txt"
     /// > ```
     ///
-    /// - seeAlso: ``rename(with:)``, ``stem``, ``extension``
+    /// - seeAlso: ``rename(with:keepExtension:)``, ``stem``, ``extension``
     @inline(__always)
     var name: String {
         self.url.lastPathComponent
@@ -271,7 +271,7 @@ public extension FinderItem {
     /// > item.extension // "txt"
     /// > ```
     ///
-    /// - SeeAlso: ``rename(with:)``.
+    /// - SeeAlso: ``rename(with:keepExtension:)``.
     @inlinable
     var `extension`: String {
         self.url.pathExtension
@@ -290,7 +290,7 @@ public extension FinderItem {
     ///
     /// - Invariant: The stem is considered as the part before the extension. For example, stem of `file.tar.gz` is `file.tar`. The connotation of ``stem``, `.` and ``extension`` is always ``name``.
     ///
-    /// - SeeAlso: ``rename(with:)``, ``extension``, ``name``
+    /// - SeeAlso: ``rename(with:keepExtension:)``, ``extension``, ``name``
     @inlinable
     var stem: String {
         let name = self.name

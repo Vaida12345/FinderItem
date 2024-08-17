@@ -45,7 +45,7 @@ extension FinderItem {
     /// - ``source``
     ///
     /// ### Initializers
-    /// - ``init(code:source:)``
+    /// - ``init(code:source:underlyingError:)``
     /// - ``parse(_:)``
     ///
     /// ### Error Information
@@ -93,7 +93,7 @@ extension FinderItem {
         /// }
         /// ```
         ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
+        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
         public static func cannotUnmount(reason: Code.UnmountFailureReason) -> FileError {
             FileError(code: .cannotUnmount(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -108,7 +108,7 @@ extension FinderItem {
         /// }
         /// ```
         ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
+        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
         public static func cannotRead(reason: Code.ReadFailureReason) -> FileError {
             FileError(code: .cannotRead(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -123,7 +123,7 @@ extension FinderItem {
         /// }
         /// ```
         ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
+        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
         public static func cannotWrite(reason: Code.WriteFailureReason) -> FileError {
             FileError(code: .cannotWrite(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -138,7 +138,7 @@ extension FinderItem {
         /// }
         /// ```
         ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:)`` instead.
+        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
         public static func unknown() -> FileError {
             FileError(code: .unknown, source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -175,7 +175,7 @@ extension FinderItem {
             
             /// The error code indicating failure in parsing such value.
             ///
-            /// In this case, the ``FileError/source`` is always the home directory.
+            /// In this case, the `source` is always the home directory.
             case unknown
             
             
@@ -322,10 +322,6 @@ extension FinderItem {
         ///
         /// - Parameters:
         ///   - error: The source error
-        ///
-        /// ## Topics
-        /// ### Potential Error
-        /// - ``FileError``
         public static func parse(_ error: some Error) -> FileError {
             guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             guard let url = error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
@@ -388,9 +384,9 @@ extension FinderItem {
         /// Parses an error, or throw the argument.
         ///
         /// - Parameters:
-        ///   - error: The source error
+        ///   - arg: The source error
         ///
-        /// - throws: The argument.
+        /// - throws: The argument when parsing failed.
         public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
             let error = parse(arg)
             if error == .unknown() {
