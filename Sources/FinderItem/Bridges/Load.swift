@@ -88,10 +88,15 @@ public extension FinderItem {
         /// No further information was given by the API.
         case encounteredNil(name: String, type: String)
         
+        /// Is a directory instead of file
+        case notAFile
+        
         public var title: String {
             switch self {
             case let .encounteredNil(name, type):
                 "Load file \(name) as \(type) resulted in failure"
+            case .notAFile:
+                "The given item is not a file"
             }
         }
         
