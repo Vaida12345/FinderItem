@@ -10,10 +10,7 @@ import Foundation
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 #endif
-#if !os(tvOS) && !os(watchOS)
-import QuickLookThumbnailing
-#endif
-import GraphicsKit
+import Essentials
 
 
 public extension FinderItem {
@@ -84,7 +81,7 @@ public extension FinderItem {
     }
     
     /// One of the possible errors thrown by ``FinderItem/load(_:)-163we``, ``FinderItem/load(_:)-9a4yw``.
-    enum LoadError: _GenericError {
+    enum LoadError: GenericError {
         
         /// The API returned `nil`.
         ///
@@ -113,10 +110,10 @@ extension FinderItem {
     /// You do not call this structure directly, you should use ``FinderItem/load(_:)-163we``.
     public struct LoadableContent<Result, Failure> where Failure: Error {
         
-        fileprivate let contentLoader: (FinderItem) throws(Failure) -> Result
+        public let contentLoader: (FinderItem) throws(Failure) -> Result
         
         
-        fileprivate init(contentLoader: @escaping (_ source: FinderItem) throws(Failure) -> Result) {
+        public init(contentLoader: @escaping (_ source: FinderItem) throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
         
@@ -128,69 +125,15 @@ extension FinderItem {
     /// You do not call this structure directly, you should use ``FinderItem/load(_:)-9a4yw``.
     public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
-        fileprivate let contentLoader: (FinderItem) async throws(Failure) -> Result
+        public let contentLoader: (FinderItem) async throws(Failure) -> Result
         
         
-        fileprivate init(contentLoader: @escaping (_ source: FinderItem) async throws(Failure) -> Result) {
+        public init(contentLoader: @escaping (_ source: FinderItem) async throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
         
     }
     
-}
-
-
-public extension FinderItem.LoadableContent {
-    
-    /// Returns the image at the location, if exists.
-    static var image: FinderItem.LoadableContent<NativeImage, any Error> {
-        .init { (source: FinderItem) throws -> NativeImage in
-            do {
-                let data = try Data(at: source)
-                if let image = NativeImage(data: data) {
-                    return image
-                } else {
-                    throw FinderItem.LoadError.encounteredNil(name: source.name, type: "image")
-                }
-            } catch {
-                throw FinderItem.FileError.parse(error)
-            }
-        }
-    }
-    
-    /// Returns the image at the location, if exists.
-    static var cgImage: FinderItem.LoadableContent<CGImage, any Error> {
-        .init { (source: FinderItem) throws -> CGImage in
-            try self.image.contentLoader(source).cgImage!
-        }
-    }
-    
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Returns the icon at the location.
-    ///
-    /// The resulting image is scaled down to the required `size`.
-    ///
-    /// - Parameters:
-    ///   - size: The size of the image.
-    ///
-    /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
-    static func icon(size: CGSize? = nil) -> FinderItem.LoadableContent<NativeImage, any Error> {
-        .init { (source: FinderItem) throws -> NativeImage in
-            guard source.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: source) }
-            let icons = NSWorkspace.shared.icon(forFile: source.path)
-            
-            guard let size else { return icons }
-            
-            if let first = icons.representations.first(where: { CGFloat($0.pixelsHigh) >= size.height && CGFloat($0.pixelsWide) >= size.width }),
-               let image = first.cgImage(forProposedRect: nil, context: nil, hints: nil),
-               let scaled = image.resized(to: image.size.aspectRatio(.fit, in: size)) {
-                return NativeImage(cgImage: scaled)
-            } else {
-                throw FinderItem.LoadError.encounteredNil(name: source.name, type: "icon")
-            }
-        }
-    }
-#endif
 }
 
 
@@ -262,45 +205,5 @@ public extension FinderItem.LoadableContent {
             try String(at: source, encoding: encoding)
         }
     }
-    
-}
-
-
-
-public extension FinderItem.AsyncLoadableContent {
-    
-#if !os(tvOS) && !os(watchOS)
-    private static func generateImage(type: QLThumbnailGenerator.Request.RepresentationTypes, url: URL, size: CGSize) async throws -> (NativeImage, QLThumbnailRepresentation.RepresentationType) {
-        let result = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: .init(fileAt: url, size: size, scale: 1, representationTypes: type))
-        
-#if os(macOS)
-        return (result.nsImage, result.type)
-#elseif os(iOS) || os(visionOS)
-        return (result.uiImage, result.type)
-#endif
-    }
-    
-    /// Generate the preview image for the given source.
-    ///
-    /// - Parameters:
-    ///   - size: The size of the image.
-    ///
-    /// - Returns: If the file does not exist, or no representations larger than `size`, returns nil.
-    static func preview(size: CGSize) -> FinderItem.AsyncLoadableContent<NativeImage, any Error> {
-        .init { source in
-            guard source.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: source) }
-            do {
-                return try await generateImage(type: .thumbnail, url: source.url, size: size).0
-            } catch {
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-                do {
-                    return try source.load(.icon(size: size))
-                } catch {}
-#endif
-                return try await generateImage(type: .icon, url: source.url, size: size).0
-            }
-        }
-    }
-#endif
     
 }

@@ -8,6 +8,7 @@
 
 import Foundation
 import Darwin
+import Essentials
 
 
 extension FinderItem {
@@ -51,7 +52,7 @@ extension FinderItem {
     /// ### Error Information
     /// - ``title``
     /// - ``message``
-    public struct FileError: _GenericError, Equatable {
+    public struct FileError: GenericError, Equatable {
         
         /// The error code.
         ///

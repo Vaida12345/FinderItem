@@ -25,31 +25,6 @@ import QuickLookThumbnailing
 
 public extension FinderItem {
     
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    
-    /// Returns the icon at the location, if exists.
-    ///
-    /// The return value is `nil` if the files doesn't exist, or, there is no tiff representation behind.
-    @available(*, deprecated, message: "Please use \"load(.icon(_:))\" instead.")
-    func icon(size: CGSize? = nil) -> NSImage? {
-        guard self.exists else { return nil }
-        if let size {
-            let scale: CGFloat = 2
-            if let icon = self.icon(),
-               let first = icon.representations.first(where: { CGFloat($0.pixelsHigh) >= size.height * scale && CGFloat($0.pixelsWide) >= size.width * scale }),
-               let image = first.cgImage(forProposedRect: nil, context: nil, hints: nil),
-               let scaled = image.resized(to: image.size.aspectRatio(.fit, in: size.scaled(by: scale))) {
-                return NativeImage(cgImage: scaled)
-            } else {
-                return nil
-            }
-        } else {
-            return NSWorkspace.shared.icon(forFile: self.path)
-        }
-        
-    }
-#endif
-    
 #if canImport(GraphicsKit)
     /// Returns the image at the location, if exists.
     @available(*, deprecated, message: "Please use \"load(.image)\" instead.")
@@ -123,35 +98,6 @@ public extension FinderItem {
         }
         
         try await self.open(configuration: .init())
-    }
-#endif
-    
-#if !os(tvOS) && !os(watchOS)
-    private func generateImage(type: QLThumbnailGenerator.Request.RepresentationTypes, url: URL, size: CGSize, scale: CGFloat = 2) async throws -> (NativeImage, QLThumbnailRepresentation.RepresentationType) {
-        let result = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: .init(fileAt: url, size: size, scale: scale, representationTypes: type))
-        
-#if os(macOS)
-        return (result.nsImage, result.type)
-#elseif os(iOS) || os(visionOS)
-        return (result.uiImage, result.type)
-#endif
-    }
-    
-    /// Generate the preview image for the given `FinderItem`.
-    ///
-    /// - Note: The pixel size of image is `size` \* `scale`.
-    @available(*, deprecated, message: "Please use \"load(.preview(_:))\" instead.")
-    func preview(size: CGSize, scale: CGFloat = 2) async throws -> NativeImage {
-        do {
-            return try await generateImage(type: .thumbnail, url: url, size: size, scale: scale).0
-        } catch {
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-            if let icon = self.icon(size: size) {
-                return icon
-            }
-#endif
-            return try await generateImage(type: .icon, url: url, size: size, scale: scale).0
-        }
     }
 #endif
     

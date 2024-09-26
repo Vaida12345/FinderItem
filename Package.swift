@@ -13,11 +13,11 @@ let package = Package(
     ], products: [
         .library(name: "FinderItem", targets: ["FinderItem"])
     ], dependencies: [
-        .package(name: "GraphicsKit",
-                 path: "~/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Projects/Packages/GraphicsKit")
+        .package(name: "Essentials",
+                 path: "~/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Projects/Packages/Essentials")
     ], targets: [
         .target(name: "CComponent"),
-        .target(name: "FinderItem", dependencies: ["CComponent", "GraphicsKit"]),
+        .target(name: "FinderItem", dependencies: ["CComponent", "Essentials"]),
         .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
     ], swiftLanguageModes: [.v5]
 )

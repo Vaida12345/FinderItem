@@ -10,6 +10,7 @@ import Foundation
 #if os(macOS)
 import AppKit
 #endif
+import Essentials
 
 
 extension FinderItem {
@@ -133,7 +134,7 @@ extension FinderItem {
         }
     }
     
-    public enum AccessFilePromptError: _GenericError {
+    public enum AccessFilePromptError: GenericError {
         case moduleResponse(NSApplication.ModalResponse)
         
         public var title: String {

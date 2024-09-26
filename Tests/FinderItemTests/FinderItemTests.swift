@@ -11,7 +11,6 @@
 import FinderItem
 import Testing
 import Foundation
-import GraphicsKit
 
 
 extension Tag {
@@ -98,10 +97,10 @@ struct FinderItemTests {
         #expect(try subdir.appending(path: "data").load(.data) == value.data)
         
         // add hidden file
-        let image = NativeImage(systemSymbolName: "cat", accessibilityDescription: nil)!
-        try image.write(to: folder.appending(path: ".image.png"))
-        #expect(try folder.appending(path: ".image.png").load(.image).data() == image.data())
-        #expect(try folder.appending(path: ".image.png").contentType!.conforms(to: .png))
+        let text = "123"
+        try text.write(to: folder.appending(path: ".image.png"))
+        #expect(try folder.appending(path: ".image.png").load(.string()).data() == text.data())
+        #expect(try folder.appending(path: ".image.png").contentType.conforms(to: .text))
         
         // add hidden dir
         let hiddendir = folder.appending(path: ".hidden")
@@ -122,10 +121,6 @@ struct FinderItemTests {
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in true }).withHidden)).count == 6)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { $0.name == "Folder" }).withHidden)).count == 5)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }).withHidden)).count == 4)
-        
-        // set icon
-        await folder.setIcon(image: image)
-        try #expect(Array(folder.children(range: .contentsOfDirectory.withSystemHidden)).count == 5)
         
         try folder.remove()
     }
