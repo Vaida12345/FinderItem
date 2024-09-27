@@ -14,25 +14,9 @@ import UIKit
 #else
 import Foundation
 #endif
-#if canImport(GraphicsKit)
-import GraphicsKit
-#endif
-
-#if !os(tvOS) && !os(watchOS)
-import QuickLookThumbnailing
-#endif
 
 
 public extension FinderItem {
-    
-#if canImport(GraphicsKit)
-    /// Returns the image at the location, if exists.
-    @available(*, deprecated, message: "Please use \"load(.image)\" instead.")
-    @inlinable
-    func image() -> NativeImage? {
-        NativeImage(at: self.url)
-    }
-#endif
     
     /// Returns the itemProvider at the location, if exists.
     @inlinable
