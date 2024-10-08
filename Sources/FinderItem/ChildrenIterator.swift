@@ -95,7 +95,7 @@ public struct FinderItemChildren: Sequence {
                     self.skipDescendants()
                 } else if let exploreDescendantsPredicate = options.exploreDescendantsPredicate { // skip if exits `exploreDescendantsPredicate`, and not explore
                     let filePath = FileManager.default.string(withFileSystemRepresentation: current.pointee.fts_path, length: Int(current.pointee.fts_pathlen))
-                    item = FinderItem(_path: filePath, directoryHint: .isDirectory)
+                    item = FinderItem(at: filePath, directoryHint: .isDirectory)
                     
                     if !exploreDescendantsPredicate(item!) {
                         self.skipDescendants()
@@ -109,7 +109,7 @@ public struct FinderItemChildren: Sequence {
                 
                 let filePath = FileManager.default.string(withFileSystemRepresentation: current.pointee.fts_path, length: Int(current.pointee.fts_pathlen))
                 
-                return item ?? FinderItem(_path: filePath, directoryHint: .notDirectory)
+                return item ?? FinderItem(at: filePath, directoryHint: .notDirectory)
                 
             // directory cannot read, error return, undefined
             case FTS_DNR, FTS_ERR, FTS_NS:

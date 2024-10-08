@@ -409,7 +409,7 @@ public extension FinderItem {
     ///   - url: The absolute ``url``.
     @inline(__always)
     convenience init(at url: URL) {
-        self.init(_url: url)
+        self.init(_url: url.standardizedFileURL)
     }
     
     /// Creates the `FinderItem` without standardizing its url.
