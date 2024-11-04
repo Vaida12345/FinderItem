@@ -840,6 +840,28 @@ public extension FinderItem {
         return self.enclosingFolder.appending(path: name.isEmpty ? self.stem : self.stem + "." + name)
     }
     
+    /// Returns a new instance with the path by replacing the stem with the new value.
+    ///
+    /// > Example:
+    /// >
+    /// > ```swift
+    /// > let item = FinderItem(at: "file.txt")
+    /// > item.replacingExtension(with: "text") // "text.txt"
+    /// > ```
+    ///
+    /// - Precondition: `stem` cannot be empty. This is an intentional design. To form a hidden file, use ``enclosingFolder`` in conjunction with ``appending(path:directoryHint:)``.
+    ///
+    /// - invariant: This does not include any file operations.
+    ///
+    /// - Parameters:
+    ///   - stem: The new stem name.
+    @inlinable
+    func replacingStem(with stem: some StringProtocol) -> FinderItem {
+        let name = stem as? String ?? String(stem)
+        let ext = self.extension
+        return self.enclosingFolder.appending(path: ext.isEmpty ? name : name + "." + ext)
+    }
+    
     /// Returns a new instance with the path by replacing the extension with the new value.
     ///
     /// > Example:
