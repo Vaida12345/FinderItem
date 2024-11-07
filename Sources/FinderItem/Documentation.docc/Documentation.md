@@ -16,6 +16,7 @@ It abstracts over many structures, including `FileManager`, `URL`, `FilePath`, a
 - File operations including ``FinderItem/FinderItem/copy(to:)``,  ``FinderItem/FinderItem/move(to:)-8seqh``, ``FinderItem/FinderItem/remove()``.
 - ``FinderItem/FinderItem/open(configuration:)`` or ``FinderItem/FinderItem/reveal()`` files
 - Get sorted children as a stream using ``FinderItem/FinderItem/children(range:)``.
+- Fully incorporate Swift6.0 & *typed throws*. All errors are parsed as ``FinderItem/FinderItem/FileError``.
 
 
 ## Getting Started

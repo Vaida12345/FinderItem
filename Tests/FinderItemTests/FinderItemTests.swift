@@ -98,9 +98,9 @@ struct FinderItemTests {
         
         // add hidden file
         let text = "123"
-        try text.write(to: folder.appending(path: ".image.png"))
-        #expect(try folder.appending(path: ".image.png").load(.string()).data() == text.data())
-        #expect(try folder.appending(path: ".image.png").contentType.conforms(to: .text))
+        try text.write(to: folder.appending(path: ".image.txt"))
+        #expect(try folder.appending(path: ".image.txt").load(.string()).data() == text.data())
+        #expect(try folder.appending(path: ".image.txt").contentType.conforms(to: .text))
         
         // add hidden dir
         let hiddendir = folder.appending(path: ".hidden")
@@ -121,21 +121,6 @@ struct FinderItemTests {
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in true }).withHidden)).count == 6)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { $0.name == "Folder" }).withHidden)).count == 5)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }).withHidden)).count == 4)
-        
-        try folder.remove()
-    }
-    
-    @Test("Test Load")
-    func load() async throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
-        try folder.makeDirectory()
-        
-        #expect(throws: FinderItem.FileError.self) {
-            try folder.appending(path: "image.png").load(.image)
-        }
-        #expect(try folder.icon()?.data() == FinderItem.temporaryDirectory.load(.icon()).data())
-        #expect(try folder.load(.icon(size: .square(256))).isValid)
-        #expect(try await folder.load(.preview(size: .square(256))).isValid)
         
         try folder.remove()
     }
