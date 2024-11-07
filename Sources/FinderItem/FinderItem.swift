@@ -69,7 +69,7 @@ import UniformTypeIdentifiers
 ///
 /// ### Loading contents
 ///
-/// - ``load(_:)-163we``
+/// - ``load(_:)-7spks``
 ///
 /// ### Inspecting an item
 /// - ``exists``
@@ -88,12 +88,6 @@ import UniformTypeIdentifiers
 /// - ``contentType``
 /// - ``contentsEqual(to:)``
 /// - ``setIcon(image:)``
-/// - ``icon(size:)``
-/// - ``preview(size:scale:)``
-///
-/// ### Accessing contents of item
-/// - ``itemProvider()``
-/// - ``image()``
 ///
 /// ### Inspecting a file
 /// - ``isFile``
@@ -103,8 +97,8 @@ import UniformTypeIdentifiers
 ///
 /// ### File Operations
 /// - ``copy(to:)``
-/// - ``move(to:)-86edj``
-/// - ``move(to:)-9nixl``
+/// - ``move(to:)-3wp1t``
+/// - ``move(to:)-8seqh``
 /// - ``moveToTrash()``
 /// - ``remove()``
 /// - ``removeIfExists()``
@@ -115,11 +109,12 @@ import UniformTypeIdentifiers
 /// - ``appending(path:directoryHint:)``
 /// - ``rename(with:keepExtension:)``
 /// - ``relativePath(to:)``
+/// - ``replacingStem(with:)``
 /// - ``replacingExtension(with:)``
 ///
 /// ### Working with Finder
 /// - ``reveal()``
-/// - ``open(configuration:)-2z4y9``
+/// - ``open(configuration:)``
 ///
 /// ### Working with folder
 /// - ``children(range:)``

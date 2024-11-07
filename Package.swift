@@ -13,8 +13,7 @@ let package = Package(
     ], products: [
         .library(name: "FinderItem", targets: ["FinderItem"])
     ], dependencies: [
-        .package(name: "Essentials",
-                 path: "~/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Projects/Packages/Essentials")
+        .package(url: "https://github.com/Vaida12345/Essentials", from: "1.0.0")
     ], targets: [
         .target(name: "CComponent"),
         .target(name: "FinderItem", dependencies: ["CComponent", "Essentials"]),

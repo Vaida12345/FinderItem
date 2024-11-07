@@ -1,4 +1,4 @@
-# ``FinderItem``
+# The FinderItem
 
 The FinderItem Package.
 
@@ -34,3 +34,4 @@ You can add this framework as a dependency to your Xcode project by clicking Fil
 ```
 https://github.com/Vaida12345/FinderItem
 ```
+

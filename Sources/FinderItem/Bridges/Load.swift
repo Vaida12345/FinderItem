@@ -44,12 +44,6 @@ public extension FinderItem {
     /// - ``FinderItem/LoadableContent/resourceBytes``
     /// - ``FinderItem/LoadableContent/lines``
     ///
-    /// ### The Media
-    ///
-    /// - ``FinderItem/LoadableContent/image``
-    /// - ``FinderItem/LoadableContent/icon(size:)``
-    /// - ``FinderItem/AsyncLoadableContent/preview(size:)``
-    ///
     /// ### The Representation
     ///
     /// - ``FinderItem/LoadableContent/fileWrapper(options:)``
@@ -80,7 +74,7 @@ public extension FinderItem {
         try self.load(.data).decoded(type: T.self, format: format)
     }
     
-    /// One of the possible errors thrown by ``FinderItem/load(_:)-163we``, ``FinderItem/load(_:)-9a4yw``.
+    /// One of the possible errors thrown by ``FinderItem/load(_:)-1vmco``, ``FinderItem/load(_:)-7spks``.
     enum LoadError: GenericError {
         
         /// The API returned `nil`.
@@ -112,7 +106,7 @@ extension FinderItem {
     
     /// An loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-163we``.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-7spks``.
     public struct LoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) throws(Failure) -> Result
@@ -127,7 +121,7 @@ extension FinderItem {
     
     /// An asynchronous loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-9a4yw``.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-1vmco``.
     public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) async throws(Failure) -> Result

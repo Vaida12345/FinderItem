@@ -64,15 +64,9 @@ public extension FinderItem {
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
     /// Opens the current file.
     @inlinable
-    func open(configuration: NSWorkspace.OpenConfiguration) async throws {
-        try await NSWorkspace.shared.open(url, configuration: configuration)
-    }
-    
-    /// Opens the current file.
-    @inlinable
     func open(configuration: NSWorkspace.OpenConfiguration? = nil) async throws {
         if self.extension == "app" {
-            try await NSWorkspace.shared.openApplication(at: self.url, configuration: .init())
+            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration ?? .init())
             return
         } else if self.isDirectory {
             if self.extension == "xcodeproj" {
@@ -81,7 +75,7 @@ public extension FinderItem {
             }
         }
         
-        try await self.open(configuration: .init())
+        try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration ?? .init())
     }
 #endif
     

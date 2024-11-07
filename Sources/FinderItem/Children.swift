@@ -13,6 +13,8 @@ public extension FinderItem {
     
     /// Returns the sorted children of the folder.
     ///
+    /// - Note: The children are sorted by their name, using `kCFCompareNumerically | kCFCompareWidthInsensitive`.
+    ///
     /// - Warning: The contents of packages are ignored.
     ///
     /// - Returns: If `self` is not a folder, the returned value is `[]`.
