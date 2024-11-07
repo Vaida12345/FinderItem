@@ -36,9 +36,6 @@ You can add this framework as a dependency to your Xcode project by clicking Fil
 https://github.com/Vaida12345/FinderItem
 ```
 
-https://vaida12345.github.io/FinderItem/documentation/finderitem/
-
-
 ## Documentation
 
 This package uses [DocC](https://www.swift.org/documentation/docc/) for documentation. [View on Github Pages](https://vaida12345.github.io/FinderItem/documentation/finderitem/)
