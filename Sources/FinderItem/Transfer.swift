@@ -17,7 +17,9 @@ extension FinderItem: Transferable {
     public static var transferRepresentation: some TransferRepresentation {
         ProxyRepresentation(exporting: \.url, importing: FinderItem.init)
         FileRepresentation(importedContentType: .data, shouldAttemptToOpenInPlace: true) { received in // import type cannot be `item`, otherwise it would attempt to copy any file (folder) dragged into `dragDestination`.
-            guard !received.isOriginalFile else { return FinderItem(at: received.file) }
+            guard !received.isOriginalFile else {
+                return FinderItem(_url: received.file)
+            }
             let copy = FinderItem.temporaryDirectory.appending(path: received.file.lastPathComponent)
             try copy.removeIfExists()
             
