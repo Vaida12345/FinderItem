@@ -43,6 +43,7 @@ public extension FinderItem {
     /// - ``FinderItem/LoadableContent/data``
     /// - ``FinderItem/LoadableContent/resourceBytes``
     /// - ``FinderItem/LoadableContent/lines``
+    /// - ``FinderItem/LoadableContent/string(encoding:)``
     ///
     /// ### The Representation
     ///

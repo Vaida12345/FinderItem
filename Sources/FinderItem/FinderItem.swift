@@ -36,6 +36,7 @@ import UniformTypeIdentifiers
 /// - `folder/file.txt` indicates the `file.txt` inside `folder`.
 /// - `folder:file.txt` indicates the `folder/file.txt` file.
 ///
+///
 /// ## Secure Scope
 ///
 /// When a user-selected file needs to be retained for future use, the permission to read it is typically revoked. To counter this issue, a bookmark is necessary. `FinderItem` facilitates this process through the `CodableWithConfiguration` system. Instead of employing the standard encoding approach used with `Codable`, one should utilize `configuration`.
