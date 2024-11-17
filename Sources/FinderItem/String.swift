@@ -12,7 +12,7 @@ import Foundation
 extension FinderItem: ExpressibleByStringInterpolation {
     
     /// This is an convenience initializer for ``FinderItem/init(at:directoryHint:)``.
-    public convenience init(stringLiteral value: String) {
+    public init(stringLiteral value: String) {
         self.init(at: value)
     }
     

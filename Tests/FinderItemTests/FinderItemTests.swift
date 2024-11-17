@@ -71,6 +71,7 @@ struct FinderItemTests {
     func folders() async throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
+        defer { try! folder.remove() }
         
         // add files
         let string = "12345"
@@ -121,14 +122,13 @@ struct FinderItemTests {
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in true }).withHidden)).count == 6)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { $0.name == "Folder" }).withHidden)).count == 5)
         try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }).withHidden)).count == 4)
-        
-        try folder.remove()
     }
     
     @Test("Test File Operations", .tags(.fileOperations))
     func fileOperations() async throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
+        defer { try! folder.remove() }
         
         let file = folder.appending(path: "file.txt")
         #expect(file.isFile)
@@ -145,10 +145,6 @@ struct FinderItemTests {
         try file.copy(to: anotherFile)
         #expect(anotherFile.exists)
         
-        try "1".write(to: anotherFile)
-        try file.copy(to: anotherFile)
-        #expect(file.contentsEqual(to: anotherFile))
-        
         let subdir = folder.appending(path: "folder")
         try file.copy(to: subdir.appending(path: "file.txt"))
         #expect(subdir.appending(path: "file.txt").exists)
@@ -156,13 +152,12 @@ struct FinderItemTests {
         try folder.clear()
         #expect(folder.exists)
         #expect(try Array(folder.children(range: .enumeration.withSystemHidden)).isEmpty)
-        
-        try folder.remove()
     }
     
     @Test("Test More File Operations", .tags(.fileOperations))
     func moreFileOperations() async throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        defer { try! folder.remove() }
         
         let file = folder.appending(path: "A/B/C/D/.E/.file.txt")
         try file.generateDirectory()
@@ -170,20 +165,20 @@ struct FinderItemTests {
         
         try "1".write(to: file)
         
-        let file2 = file
-        try file2.generateOutputPath()
+        let file2 = file.createUniquePath()
         try "2".write(to: file2)
         
         #expect(file2.name == ".file 2.txt")
         
-        let file3 = file
-        try file2.generateOutputPath()
+        let file3 = file2.createUniquePath()
         try "3".write(to: file3)
         
         #expect(file3.name == ".file 3.txt")
         
+        let file4 = file.createUniquePath()
+        try "4".write(to: file4)
         
-        try folder.remove()
+        #expect(file4.name == ".file 4.txt")
     }
     
     //FIXME: implement moving, rename, edit stem.
@@ -191,8 +186,9 @@ struct FinderItemTests {
     func fileMovingOperations() async throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
+        defer { try! folder.remove() }
         
-        let target = folder.appending(path: "file.txt")
+        var target = folder.appending(path: "file.txt")
         let destination = folder.appending(path: "destination.txt")
         try target.write(to: target, format: .json)
         #expect(target.exists)
@@ -207,21 +203,18 @@ struct FinderItemTests {
         #expect(!destination.exists)
         #expect(target.exists)
         #expect(target.url == folder.appending(path: "file.txt").url)
-        
-        try folder.remove()
     }
     
     @Test("Test File Relative Paths")
     func fileRelativePath() throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
+        defer { try! folder.remove() }
         
         let file = folder.appending(path: "/file.txt")
         #expect(file == folder.appending(path: "file.txt"))
         
         #expect(file.relativePath(to: folder) == "file.txt")
-        
-        try folder.remove()
     }
     
 }

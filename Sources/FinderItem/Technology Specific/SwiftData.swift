@@ -6,6 +6,9 @@
 //  Copyright © 2019 - 2024 Vaida. All rights reserved.
 //
 
+/*
+ ValueTransformer cannot handle struct.
+ 
 #if canImport(SwiftData)
 import Foundation
 import SwiftData
@@ -73,3 +76,4 @@ extension FinderItem {
 }
 
 #endif
+*/

@@ -15,7 +15,7 @@ extension FinderItem: Transferable {
     ///
     /// On dragged, the *original* file is used. Which means that one file can only be dragged once.
     public static var transferRepresentation: some TransferRepresentation {
-        ProxyRepresentation(exporting: \.url, importing: FinderItem.init)
+        ProxyRepresentation(exporting: \.url, importing: { FinderItem(_url: $0) })
         FileRepresentation(importedContentType: .data, shouldAttemptToOpenInPlace: true) { received in // import type cannot be `item`, otherwise it would attempt to copy any file (folder) dragged into `dragDestination`.
             guard !received.isOriginalFile else {
                 return FinderItem(_url: received.file)

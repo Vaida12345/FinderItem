@@ -325,7 +325,7 @@ extension FinderItem {
         ///   - error: The source error
         public static func parse(_ error: some Error) -> FileError {
             guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
-            guard let url = error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
+            guard let url = (error.userInfo["NSDestinationFilePath"] as? String).map({ URL(fileURLWithPath: $0) }) ?? error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             let source = FinderItem(at: url)
             
             return switch error.code {

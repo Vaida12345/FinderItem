@@ -35,7 +35,6 @@ extension FinderItem {
         self.url.stopAccessingSecurityScopedResource()
     }
     
-#if os(macOS)
     /// Returns bookmark data for the URL, created with specified options.
     public func bookmarkData(options: URL.BookmarkCreationOptions = [.withSecurityScope]) throws -> Data {
         try self.url.bookmarkData(options: options)
@@ -47,29 +46,11 @@ extension FinderItem {
     ///   - resolvingBookmarkData: The bookmark data
     ///   - options: The options for resolving such data, `.withSecurityScope` for default.
     ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
-    public convenience init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = [.withSecurityScope], bookmarkDataIsStale: inout Bool) throws {
+    public init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = [.withSecurityScope], bookmarkDataIsStale: inout Bool) throws {
         var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: resolvingBookmarkData, options: options, bookmarkDataIsStale: &bookmarkDataIsStale)
         self.init(_url: url)
     }
-#else
-    /// Returns bookmark data for the URL, created with specified options.
-    public func bookmarkData(options: URL.BookmarkCreationOptions = []) throws -> Data {
-        try self.url.bookmarkData(options: options)
-    }
-    
-    /// Creates a URL that refers to a location specified by resolving bookmark data.
-    ///
-    /// - Parameters:
-    ///   - resolvingBookmarkData: The bookmark data
-    ///   - options: The options for resolving such data, `.withSecurityScope` for default.
-    ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
-    public convenience init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = [], bookmarkDataIsStale: inout Bool) throws {
-        var bookmarkDataIsStale = false
-        let url = try URL(resolvingBookmarkData: resolvingBookmarkData, options: options, bookmarkDataIsStale: &bookmarkDataIsStale)
-        self.init(_url: url)
-    }
-#endif
     
 #if os(macOS)
     
@@ -88,7 +69,7 @@ extension FinderItem {
     /// let item = FinderItem.downloadsDirectory
     /// try await item.tryPromptAccessFile()
     /// ```
-    /// If the user did not provide such permission, a `NSOpenPanel` will be displayed, asking the user r permissions.
+    /// If the user did not provide such permission, a `NSOpenPanel` will be displayed, asking the user for permissions.
     ///
     /// If the user did, this method would return without displaying any user interface.
     ///
@@ -102,7 +83,7 @@ extension FinderItem {
     /// ### Error Type
     /// - ``AccessFilePromptError``
     @MainActor
-    public func tryPromptAccessFile() async throws {
+    public mutating func tryPromptAccessFile() async throws {
         if let data = UserDefaults.standard.data(forKey: self.path) {
             var bookmarkDataIsStale = false
             let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, bookmarkDataIsStale: &bookmarkDataIsStale)

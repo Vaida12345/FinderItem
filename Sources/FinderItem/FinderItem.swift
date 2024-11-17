@@ -16,20 +16,29 @@ import UniformTypeIdentifiers
 ///
 /// FinderItem in an interface indicating the file on the disk. It is the most convenient way to interact with files.
 ///
-/// Please note that `FinderItem` does not conform to `ObservableObject` as `View`s are not expected to react to change on the path of an item.
+/// ## Design Principle
+///
+/// As the name suggests, ``FinderItem`` represents a *file*, and is strongly bound to the file at the path passed to initializers.
+///
+/// This means:
+/// - A ``FinderItem`` is mutated only when the location of the file changes, for example, by using ``rename(with:keepExtension:)``.
+/// - File operations and file path operations are easily differentiable.
+///     - File operations are `mutating`, and typically accompanied by `throws`.
+///     - File path operations are non-mutating, and always returns a new instance of ``FinderItem``.
+///
 ///
 /// ## File Path
 ///
-/// - A leading `/` would redirect to the root folder, such as */var/*.
-/// - A trailing `/` indicates being a folder, such as *folder/*.
+/// - A leading `/` would redirect to the root folder, such as `/var/`.
+/// - A trailing `/` indicates being a folder, such as `folder/`.
 ///
 /// The character `:` is not available in file path, as it is considered as `/`, where `/` is the reserved keyword for the indication of folder. Which means that,
-/// - `folder/file.txt` indicates the *file.txt* inside the *folder*.
-/// - `folder:file.txt` indicates the *folder/file.txt* file.
+/// - `folder/file.txt` indicates the `file.txt` inside `folder`.
+/// - `folder:file.txt` indicates the `folder/file.txt` file.
 ///
 /// ## Secure Scope
 ///
-/// When one need to persist an user selected file for later usage, the permission for reading is discarded. To prevent this, a bookmark is required. ``FinderItem`` provides this /// functionality using `CodableWithConfiguration`. Instead of encoding the way one would encode some `Codable`, use `configuration` instead.
+/// When a user-selected file needs to be retained for future use, the permission to read it is typically revoked. To counter this issue, a bookmark is necessary. `FinderItem` facilitates this process through the `CodableWithConfiguration` system. Instead of employing the standard encoding approach used with `Codable`, one should utilize `configuration`.
 ///
 /// ```swift
 /// // To encode:
@@ -41,9 +50,9 @@ import UniformTypeIdentifiers
 ///
 /// You would still need to call ``FinderItem/tryAccessSecurityScope()`` before and after accessing the file.
 ///
-/// - Experiment: It seems you can only call ``FinderItem/tryAccessSecurityScope()`` on the *original* file, not the ones derived using, for example, ``FinderItem/appending(path:directoryHint:)``. This would mean that to access a child folder, you need to access the security scope of its parent.
+/// - Experiment: It seems you can only call ``FinderItem/tryAccessSecurityScope()`` on the *original* file, not the ones derived using, for example, ``FinderItem/appending(path:directoryHint:)``. This means, to access a child folder, you need to access the security scope of its parent.
 ///
-/// Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access the contents of Downloads folder created by ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. Then, you can access the contents by persisting its bookmark data.
+/// Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access the contents of Downloads folder using ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. Then, you can access the contents by persisting its bookmark data.
 ///
 /// However, with `com.apple.security.files.downloads.read-write`, it seems you do not need to start security scope to access its contents. However, you would still need the bookmark data obtained from the dialog.
 ///
@@ -65,11 +74,11 @@ import UniformTypeIdentifiers
 /// ### Initializers
 /// - ``init(at:)``
 /// - ``init(at:directoryHint:)``
-/// - ``init(from:)-654o7``
+/// - ``init(from:)-1bl78``
 ///
 /// ### Loading contents
 ///
-/// - ``load(_:)-7spks``
+/// - ``load(_:)-97hgq``
 ///
 /// ### Inspecting an item
 /// - ``exists``
@@ -96,9 +105,9 @@ import UniformTypeIdentifiers
 /// - ``isWritable``
 ///
 /// ### File Operations
+/// File operations will change the location of the actual file it represents.
 /// - ``copy(to:)``
-/// - ``move(to:)-3wp1t``
-/// - ``move(to:)-8seqh``
+/// - ``move(to:)-5oihl``
 /// - ``moveToTrash()``
 /// - ``remove()``
 /// - ``removeIfExists()``
@@ -111,6 +120,7 @@ import UniformTypeIdentifiers
 /// - ``relativePath(to:)``
 /// - ``replacingStem(with:)``
 /// - ``replacingExtension(with:)``
+/// - ``createUniquePath()``
 ///
 /// ### Working with Finder
 /// - ``reveal()``
@@ -124,7 +134,6 @@ import UniformTypeIdentifiers
 /// ### Making folders
 /// - ``makeDirectory()``
 /// - ``generateDirectory()``
-/// - ``generateOutputPath()``
 ///
 /// ### Accessing Environment-Dependent Directories
 /// - ``FinderItem/applicationSupportDirectory``
@@ -173,12 +182,11 @@ import UniformTypeIdentifiers
 /// - ``with(extension:)``
 /// - ``with(subPath:)``
 ///
-public final class FinderItem: CustomStringConvertible, Hashable, Identifiable, Sendable {
+public struct FinderItem: CustomStringConvertible, Hashable, Identifiable, Sendable {
     
     // MARK: - Basic Properties
     
     /// The absolute url.
-    nonisolated(unsafe)
     public internal(set) var url: URL
     
     /// Creates the `FinderItem` without standardizing its url.
@@ -274,7 +282,7 @@ public extension FinderItem {
     
     /// The non-extension part of the file name.
     ///
-    /// The file name is the `String` before `.`.
+    /// The file name is the `String` before the last `.`.
     ///
     /// > Example:
     /// >
@@ -388,6 +396,12 @@ public extension FinderItem {
         (try? self.url.resourceValues(forKeys: [.isReadableKey]).isReadable) ?? false
     }
     
+    /// The id, which is its ``url``.
+    @inline(__always)
+    var id: URL {
+        self.url
+    }
+    
     
     // MARK: - Initializers
     
@@ -403,13 +417,13 @@ public extension FinderItem {
     /// - Parameters:
     ///   - url: The absolute ``url``.
     @inline(__always)
-    convenience init(at url: URL) {
-        self.init(_url: url.standardizedFileURL)
+    init(at url: URL) {
+        self.init(_url: url)
     }
     
     /// Creates the `FinderItem` without standardizing its url.
     @inline(__always)
-    internal convenience init(_path: String, directoryHint: URL.DirectoryHint) {
+    internal init(_path: String, directoryHint: URL.DirectoryHint) {
         self.init(_url: URL(filePath: _path, directoryHint: directoryHint))
     }
     
@@ -441,7 +455,7 @@ public extension FinderItem {
     ///   - path: The absolute path. A `/` should be added to the end as an indication of being a folder.
     ///   - directoryHint: An indication of whether the given path is an directory. This would effect the `hasDirectoryPath` value of the underlining ``url``.
     @inlinable
-    convenience init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
+    init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
         self.init(at: URL(filePath: path, directoryHint: directoryHint).standardizedFileURL)
     }
     
@@ -449,7 +463,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - provider: The `NSItemProvider` which contains the file-url of the item.
-    convenience init(from provider: NSItemProvider) async throws {
+    init(from provider: NSItemProvider) async throws {
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { data, error in
                 guard error == nil else { continuation.resume(throwing: error!); return }
@@ -466,30 +480,7 @@ public extension FinderItem {
     
     // MARK: - Instance Methods
     
-    /// Copies the current item to the `destination`.
-    ///
-    /// - Note: It creates the required folders at the copied item path.
-    ///
-    /// - Warning: This method removes the file at the destination.
-    ///
-    /// - Parameters:
-    ///   - destination: The ``FinderItem`` where the current item is copied to.
-    @inlinable
-    func copy(to destination: FinderItem) throws(FileError) {
-        do {
-            if !destination.enclosingFolder.exists {
-                try destination.enclosingFolder.makeDirectory()
-            } else {
-                try destination.removeIfExists()
-            }
-            
-            try FileManager.default.copyItem(at: self.url, to: destination.url)
-        } catch {
-            throw FileError.parse(error)
-        }
-    }
-    
-    /// Creates a symbolic link at the specified URL that points to an item at the given URL.
+    /// Creates a symbolic link at the specified URL that points to `self`.
     ///
     /// - Parameters:
     ///   - item: The file URL at which to create the new symbolic link. The last path component of the URL issued as the name of the link.
@@ -504,7 +495,7 @@ public extension FinderItem {
     
     /// Clears the content in the directory of the instance.
     ///
-    /// - Note: This was done by enumerating and deleting each child.
+    /// - Note: This is done by enumerating and deleting each child.
     @inlinable
     func clear() throws(FileError) {
         do {
@@ -516,30 +507,22 @@ public extension FinderItem {
         }
     }
     
-    /// Returns a Boolean value that indicates whether the files or directories in specified paths have the same contents.
+    /// Indicates whether the files or directories in specified path has the same contents with `self`.
     ///
     /// If both are directories, the contents are the list of files and subdirectories each contains—contents of subdirectories are also compared. For files, this method checks to see if they’re the same file, then compares their size, and finally compares their contents. This method does not traverse symbolic links, but compares the links themselves.
     ///
     /// - Parameters:
-    ///   - other: The path of a file or directory to compare with the contents of this item.
-    ///
-    /// - Returns: true if file or directory specified in path1 has the same contents as that specified in path2, otherwise false.
+    ///   - other: The path of a file or directory to compare with `self`.
     @inlinable
     func contentsEqual(to other: FinderItem) -> Bool {
         FileManager.default.contentsEqual(atPath: self.url.path(percentEncoded: false), andPath: other.url.path(percentEncoded: false))
     }
     
-    /// Hashes the essential components of this value by feeding them into the given hasher.
-    @inlinable
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(self.url)
-    }
-    
-    /// Generates the desired folders at the path, context ignored.
+    /// Generates the desired folder at the given path.
     ///
     /// - throws: When cannot create a directory, or a file with the same name exists.
     ///
-    /// - SeeAlso: To generate the directory *smartly*, ``generateDirectory()``
+    /// - SeeAlso: To generate the directory *smartly*, use ``generateDirectory()``
     @inlinable
     func makeDirectory() throws(FileError) {
         guard !self.exists else {
@@ -560,9 +543,9 @@ public extension FinderItem {
     
     /// Generates the desired folders at the path, context-aware.
     ///
-    /// This function should only be used when one is unsure whether a folder should be generated for its ``enclosingFolder`` or itself. A simple parser will be used to determine its nature. Otherwise, use ``makeDirectory()`` instead.
+    /// This function should be employed only when there is uncertainty about whether a folder should be generated for its ``enclosingFolder`` or for the folder itself. A simple parser will be utilized to determine its nature. If this is not the case, the ``makeDirectory()`` function should be used instead.
     ///
-    /// - SeeAlso: To generate the directory robustly, ``makeDirectory()``
+    /// The nature is determined using `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     @inlinable
     func generateDirectory() throws(FileError) {
         let targetIsFolder = self.url.hasDirectoryPath
@@ -573,13 +556,233 @@ public extension FinderItem {
         }
     }
     
+    /// Returns the relative path to other `item`.
+    ///
+    /// ```swift
+    /// let folder = FinderItem(at: "folder/")
+    /// let file = FinderItem(at: "folder/file")
+    /// file.relativePath(to: folder) // file
+    /// ```
+    ///
+    /// - Attention: The return value is `nil` if current instance is not in the folder of `item`.
+    ///
+    /// - Parameters:
+    ///   - item: A folder that hoped to contain current instance.
+    ///
+    /// - Returns: The relative path to other item; `nil` otherwise. The leading `/` is trimmed.
+    @inlinable
+    func relativePath(to item: FinderItem) -> String? {
+        let selfPath = self.url.path(percentEncoded: false)
+        let itemPath = item.url.path(percentEncoded: false)
+        guard selfPath.hasPrefix(itemPath) else { return nil }
+        
+        var value = selfPath.dropFirst(itemPath.count)
+        if value.hasPrefix("/") {
+            value.removeFirst()
+        }
+        return String(value)
+    }
+    
+    /// Remove the file.
+    @available(*, deprecated, renamed: "remove")
+    @inlinable
+    func removeFile() throws(FileError) {
+        try self.remove()
+    }
+    
+    /// Remove the file.
+    ///
+    /// - Note: Although the file is removed, the internal representation (``url``) remains unchanged.
+    @inlinable
+    func remove() throws(FileError) {
+        do {
+            try FileManager.default.removeItem(at: self.url)
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+    
+    /// Remove the file if it exists.
+    @available(*, deprecated, renamed: "removeIfExists")
+    @inlinable
+    func removeFileIfExists() throws(FileError) {
+        try self.removeIfExists()
+    }
+    
+    /// Remove the file if it exists.
+    ///
+    /// - Note: Although the file is removed, the internal representation (``url``) remains unchanged.
+    @inlinable
+    func removeIfExists() throws(FileError) {
+        guard self.exists else { return }
+        try self.remove()
+    }
+    
+    /// Returns the ``FinderItem`` that refers to the location specified by resolving an alias file.
+    ///
+    /// If the url argument doesn’t refer to an alias file (as defined by the ``fileType-swift.property``, ``FileType-swift.struct/alias`` property), the returned item is the same as `self`.
+    ///
+    /// This method throws an error in the following cases:
+    /// - The url argument is unreachable.
+    /// - The original file or directory is unknown or unreachable.
+    /// - The original file or directory is on a volume that the system can’t locate or can’t mount.
+    ///
+    /// This method doesn’t support the `withSecurityScope` option.
+    func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
+        do {
+            return try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+    
+    /// Hashes the essential components of this value by feeding them into the given hasher.
+    @inlinable
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.url)
+    }
+    
+    
+    // MARK: - File Operations
+    
+    /// Copies the current item to the `destination`.
+    ///
+    /// Any necessary folders required to store the `destination` are automatically created.
+    ///
+    /// - Parameters:
+    ///   - destination: The ``FinderItem`` where the current item is copied to.
+    @inlinable
+    func copy(to destination: FinderItem) throws(FileError) {
+        do {
+            if !destination.enclosingFolder.exists {
+                try destination.enclosingFolder.makeDirectory()
+            }
+            
+            try FileManager.default.copyItem(at: self.url, to: destination.url)
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+    
+#if !os(watchOS) && !os(tvOS)
+    /// Moves the current item to trash.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is modified upon the function's return.
+    mutating func moveToTrash() throws(FileError) {
+        do {
+            var newURL: NSURL?
+            try FileManager.default.trashItem(at: self.url, resultingItemURL: &newURL)
+            guard let url = newURL else { return }
+            self.url = url as URL
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+#endif
+    
+    /// Move the current item to `url`.
+    ///
+    /// - Parameters:
+    ///   - destination: The destination `url`.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
+    ///
+    /// - Tip: To change the file path itself, rather than the file, use ``replacingStem(with:)`` or ``replacingExtension(with:)``.
+    mutating func move(to destination: URL) throws(FileError) {
+        guard destination != self.url else { return }
+        do {
+            try FileManager.default.moveItem(at: self.url, to: destination)
+            self.url = destination
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+    
+    /// Move the current item to `path`.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
+    ///
+    /// - Parameters:
+    ///   - destination: The destination `path`.
+    ///
+    /// ## Topics
+    /// ### Variants
+    /// - ``FinderItem/move(to:)-2wdf3``
+    mutating func move(to destination: String) throws(FileError) {
+        try self.move(to: URL(filePath: destination))
+    }
+    
+    /// Renames the file.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is modified upon the function's return.
+    ///
+    /// - Parameters:
+    ///   - newName: The ``name`` for the file.
+    ///   - keepExtension: If `true`, the extension would be appended at the end of `newName`.
+    ///
+    /// - Tip: To change the file path itself, rather than the file, use ``replacingStem(with:)`` or ``replacingExtension(with:)``.
+    ///
+    /// - Precondition: `newName` cannot be empty.
+    @inlinable
+    mutating func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
+        precondition(!newName.isEmpty, "The `newName` cannot be empty.")
+        
+        let extensionName: String
+        if keepExtension {
+            let _extension = self.extension
+            if _extension.isEmpty {
+                extensionName = ""
+            } else {
+                extensionName = "." + _extension
+            }
+        } else {
+            extensionName = ""
+        }
+        
+        try self.move(to: self.enclosingFolder.appending(path: newName + extensionName).url)
+    }
+    
+    
+    // MARK: - File Path Operations
+    
     /// Changes the ``url`` so that there is no file of the same name on disk.
     ///
-    /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
+    /// - Warning: This method changes the ``url``.
     ///
     /// - Note: This method was designed to fit the situation when there would be multiple files of the same name at a location.
-    func generateOutputPath() throws(FileError) {
-        guard self.exists else { try self.enclosingFolder.makeDirectory(); return }
+    ///
+    /// > Example:
+    /// >
+    /// > ```swift
+    /// > let item = FinderItem(at: "file.txt")
+    /// > item.exits // true
+    /// > item.generateOutputPath()
+    /// > item // file 2.txt
+    /// > ```
+    @available(*, deprecated, renamed: "createUniquePath()", message: "Use the non-mutating version instead.")
+    mutating func generateOutputPath() {
+        self = createUniquePath()
+    }
+    
+    /// Ensures file uniqueness by creating a non-duplicating file path.
+    ///
+    /// This function creates a distinct ``FinderItem`` for a given file path, verifying that no duplicate file paths are present on the disk. It effectively manages scenarios where a file already exists at the specified location.
+    ///
+    /// ```swift
+    /// let item = FinderItem(at: "file.txt")
+    /// item.exits // true
+    /// item.createUniquePath() // file 2.txt
+    /// ```
+    ///
+    /// If the name is in the format of `.*? ?(\d+)`, the number will be considered as index, and continue counting.
+    ///
+    /// ```swift
+    /// let item = FinderItem(at: "music 324.m4a")
+    /// item.exits // true
+    /// item.createUniquePath() // music 325.m4a
+    /// ```
+    func createUniquePath() -> FinderItem {
+        guard self.exists else { return self }
         
         var counter = 2
         var stem = self.stem
@@ -604,175 +807,12 @@ public extension FinderItem {
                 counter += 1
             }
             
-            self.url = enclosingFolder.appending(path: "\(stem)\(counter).\(extensionName)").url
+            return enclosingFolder.appending(path: "\(stem)\(counter).\(extensionName)")
         } else {
             while enclosingFolder.appending(path: "\(stem)\(counter)").exists {
                 counter += 1
             }
-            self.url = enclosingFolder.appending(path: "\(stem)\(counter)").url
-        }
-    }
-    
-#if !os(watchOS) && !os(tvOS)
-    /// Moves the current item to trash.
-    ///
-    /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
-    func moveToTrash() throws(FileError) {
-        do {
-            var newURL: NSURL?
-            try FileManager.default.trashItem(at: self.url, resultingItemURL: &newURL)
-            guard let url = newURL else { return }
-            self.url = url as URL
-        } catch {
-            throw FileError.parse(error)
-        }
-    }
-#endif
-    
-    /// Move the current item to `url`.
-    ///
-    /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
-    ///
-    /// - Parameters:
-    ///   - url: The destination `url`.
-    ///
-    /// - Note: The destination is overwritten.
-    func move(to url: URL) throws(FileError) {
-        guard url != self.url else { return }
-        do {
-            try FileManager.default.moveItem(at: self.url, to: url)
-            self.url = url
-        } catch {
-            throw FileError.parse(error)
-        }
-    }
-    
-    /// Move the current item to `path`.
-    ///
-    /// - Warning: This method changes the ``url``, along with path to the actual file on the disk.
-    ///
-    /// - Parameters:
-    ///   - path: The destination `path`.
-    func move(to path: String) throws(FileError) {
-        try self.move(to: URL(filePath: path))
-    }
-    
-    /// Returns the relative path to other `item`.
-    ///
-    /// ```swift
-    /// let folder = FinderItem(at: "folder/")
-    /// let file = FinderItem(at: "folder/file")
-    /// file.relativePath(to: folder) // file
-    /// ```
-    ///
-    /// - Attention: The return value is `nil` if current instance is not in the folder of `item`.
-    ///
-    /// - Parameters:
-    ///   - item: A folder that hoped to contain current instance.
-    ///
-    /// - Returns: The relative path to other item; `nil` otherwise.
-    @inlinable
-    func relativePath(to item: FinderItem) -> String? {
-        let selfPath = self.url.path(percentEncoded: false)
-        let itemPath = item.url.path(percentEncoded: false)
-        guard selfPath.hasPrefix(itemPath) else { return nil }
-        
-        var value = selfPath.dropFirst(itemPath.count)
-        if value.hasPrefix("/") {
-            value.removeFirst()
-        }
-        return String(value)
-    }
-    
-    /// Remove the file.
-    @available(*, deprecated, renamed: "remove")
-    @inlinable
-    func removeFile() throws(FileError) {
-        try self.remove()
-    }
-    
-    /// Remove the file.
-    ///
-    /// - Note: Although the file is removed, the ``url`` remains unchanged.
-    @inlinable
-    func remove() throws(FileError) {
-        do {
-            try FileManager.default.removeItem(at: self.url)
-        } catch {
-            throw FileError.parse(error)
-        }
-    }
-    
-    /// Remove the file if it exists.
-    @available(*, deprecated, renamed: "removeIfExists")
-    @inlinable
-    func removeFileIfExists() throws(FileError) {
-        try self.removeIfExists()
-    }
-    
-    /// Remove the file if it exists.
-    ///
-    /// - Note: Although the file is removed, the ``url`` remains unchanged.
-    @inlinable
-    func removeIfExists() throws(FileError) {
-        guard self.exists else { return }
-        try self.remove()
-    }
-    
-    /// Renames the file.
-    ///
-    /// ```swift
-    /// let item: FinderItem = .desktopDirectory.with(subPath: "123.png")
-    /// item.rename(with: "456.png")
-    /// ```
-    ///
-    /// - Warning: This method changes the ``url``, and filePath of the actual file on the disk.
-    ///
-    /// - Important: Any changes to the ``name`` should call this method to sync content on disk.
-    ///
-    /// - Experiment: The function returns before the file on disk is renamed. However, ``path`` is correct as the function would update it with code.
-    ///
-    /// - Parameters:
-    ///   - newName: The ``name`` for the file.
-    ///   - keepExtension: If `true`, the extension would be appended at the end of `newName`.
-    ///
-    /// - Note: The destination is overwritten.
-    @inlinable
-    func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
-        guard !newName.isEmpty else {
-            fatalError("Attempting to rename the file with an empty name.")
-        }
-        
-        let extensionName: String
-        if keepExtension {
-            let _extension = self.extension
-            if _extension.isEmpty {
-                extensionName = ""
-            } else {
-                extensionName = "." + _extension
-            }
-        } else {
-            extensionName = ""
-        }
-        
-        try self.move(to: self.enclosingFolder.appending(path: newName + extensionName).url)
-    }
-    
-    /// Returns the ``FinderItem`` that refers to the location specified by resolving an alias file.
-    ///
-    /// If the url argument doesn’t refer to an alias file (as defined by the ``fileType-swift.property``, ``FileType-swift.struct/alias`` property), the returned item is the same as `self`.
-    ///
-    /// This method throws an error in the following cases:
-    /// - The url argument is unreachable.
-    /// - The original file or directory is unknown or unreachable.
-    /// - The original file or directory is on a volume that the system can’t locate or can’t mount.
-    ///
-    /// This method doesn’t support the `withSecurityScope` option.
-    func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
-        do {
-            return try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
-        } catch {
-            throw FileError.parse(error)
+            return enclosingFolder.appending(path: "\(stem)\(counter)")
         }
     }
     
@@ -795,7 +835,7 @@ public extension FinderItem {
     /// item.appending(path: "file.txt") // "folder/file"
     /// ```
     ///
-    /// - Note: The `path` can either begin with `"/"` or not.
+    /// - Note: The leading `/` is optional in `path`.
     ///
     /// - Parameters:
     ///   - path: The relative path. A `/` should be added to the end as an indication of being a folder.
@@ -816,19 +856,17 @@ public extension FinderItem {
     
     /// Returns a new instance with the path by replacing the extension with the new value.
     ///
-    /// > Example:
-    /// >
-    /// > ```swift
-    /// > let item = FinderItem(at: "file.txt")
-    /// > item.replacingExtension(with: "png") // "file.png"
-    /// > ```
+    /// The is a file path operation. A new instance of ``FinderItem`` is generated upon return.
+    ///
+    /// ```swift
+    /// let item = FinderItem(at: "file.txt")
+    /// item.replacingExtension(with: "png") // "file.png"
+    /// ```
     ///
     /// - Note: `extension` can be empty, which indicates no extension.
     ///
-    /// - invariant: This does not include any file operations.
-    ///
     /// - Parameters:
-    ///   - extensionName: The new extension name.
+    ///   - extensionName: The new extension.
     @inlinable
     func replacingExtension(with extensionName: some StringProtocol) -> FinderItem {
         let name = extensionName as? String ?? String(extensionName)
@@ -837,21 +875,21 @@ public extension FinderItem {
     
     /// Returns a new instance with the path by replacing the stem with the new value.
     ///
-    /// > Example:
-    /// >
-    /// > ```swift
-    /// > let item = FinderItem(at: "file.txt")
-    /// > item.replacingExtension(with: "text") // "text.txt"
-    /// > ```
+    /// The is a file path operation. A new instance of ``FinderItem`` is generated upon return.
     ///
-    /// - Precondition: `stem` cannot be empty. This is an intentional design. To form a hidden file, use ``enclosingFolder`` in conjunction with ``appending(path:directoryHint:)``.
+    /// ```swift
+    /// let item = FinderItem(at: "file.txt")
+    /// item.replacingStem(with: "text") // "text.txt"
+    /// ```
     ///
-    /// - invariant: This does not include any file operations.
+    /// - Precondition: `stem` cannot be empty.
     ///
     /// - Parameters:
-    ///   - stem: The new stem name.
+    ///   - stem: The new stem.
     @inlinable
     func replacingStem(with stem: some StringProtocol) -> FinderItem {
+        precondition(!stem.isEmpty, "`stem` cannot be empty.")
+        
         let name = stem as? String ?? String(stem)
         let ext = self.extension
         return self.enclosingFolder.appending(path: ext.isEmpty ? name : name + "." + ext)
@@ -888,14 +926,14 @@ public extension FinderItem {
     ///
     /// - Returns: The ``FinderItem`` for the resource file or `nil` if the file could not be located.
     @inlinable
-    class func bundleItem(forResource name: String, withExtension ext: String, in bundle: Bundle = .main) -> FinderItem? {
+    static func bundleItem(forResource name: String, withExtension ext: String, in bundle: Bundle = .main) -> FinderItem? {
         guard let url = bundle.url(forResource: name, withExtension: ext) else { return nil }
         return FinderItem(at: url)
     }
     
     /// Returns the normalized path from the given shell path.
     @inlinable
-    class func normalize(shellPath: String, shouldRemoveTrailingSpace: Bool = true) -> String {
+    static func normalize(shellPath: String, shouldRemoveTrailingSpace: Bool = true) -> String {
         var path = shellPath
             .replacingOccurrences(of: "\\ ", with: " ")
             .replacingOccurrences(of: #"\("#, with: "(")

@@ -17,7 +17,7 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// This is a variant of ``load(_:)-7spks``
+    /// This is a variant of ``load(_:)-97hgq``
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil(name:type:)``.
     func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
@@ -34,7 +34,7 @@ public extension FinderItem {
     ///
     /// These methods also provides the way to load the content.
     ///
-    /// - ``FinderItem/load(_:)-1vmco``
+    /// - ``FinderItem/load(_:)-824a``
     /// - ``FinderItem/load(_:format:)``
     ///
     ///
@@ -74,7 +74,7 @@ public extension FinderItem {
         try self.load(.data).decoded(type: T.self, format: format)
     }
     
-    /// One of the possible errors thrown by ``FinderItem/load(_:)-1vmco``, ``FinderItem/load(_:)-7spks``.
+    /// Generic error caused by loading contents.
     enum LoadError: GenericError {
         
         /// The API returned `nil`.
@@ -106,7 +106,7 @@ extension FinderItem {
     
     /// An loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-7spks``.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-97hgq``.
     public struct LoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) throws(Failure) -> Result
@@ -121,7 +121,7 @@ extension FinderItem {
     
     /// An asynchronous loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-1vmco``.
+    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-824a``.
     public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) async throws(Failure) -> Result
