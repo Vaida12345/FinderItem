@@ -36,7 +36,7 @@ extension FinderItem {
     }
     
     /// Returns bookmark data for the URL, created with specified options.
-    public func bookmarkData(options: URL.BookmarkCreationOptions = [.withSecurityScope]) throws -> Data {
+    public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws -> Data {
         try self.url.bookmarkData(options: options)
     }
     
@@ -46,11 +46,29 @@ extension FinderItem {
     ///   - resolvingBookmarkData: The bookmark data
     ///   - options: The options for resolving such data, `.withSecurityScope` for default.
     ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
-    public init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = [.withSecurityScope], bookmarkDataIsStale: inout Bool) throws {
+    public init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = FinderItem.defaultBookmarkResolveOptions, bookmarkDataIsStale: inout Bool) throws {
         var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: resolvingBookmarkData, options: options, bookmarkDataIsStale: &bookmarkDataIsStale)
         self.init(_url: url)
     }
+    
+    
+    public static var defaultBookmarkResolveOptions: URL.BookmarkResolutionOptions {
+#if os(macOS)
+        .withSecurityScope
+#else
+        []
+#endif
+    }
+    
+    public static var defaultBookmarkCreationOptions: URL.BookmarkCreationOptions {
+#if os(macOS)
+        .withSecurityScope
+#else
+        []
+#endif
+    }
+    
     
 #if os(macOS)
     
