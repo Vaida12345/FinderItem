@@ -923,12 +923,13 @@ public extension FinderItem {
     /// - Parameters:
     ///   - name: The name of the resource file.
     ///   - ext: The extension of the resource file.
+    ///   - subdirectory: The directory inside the bundle.
     ///   - bundle: The bundle in which the file exists.
     ///
     /// - Returns: The ``FinderItem`` for the resource file or `nil` if the file could not be located.
     @inlinable
-    static func bundleItem(forResource name: String, withExtension ext: String, in bundle: Bundle = .main) -> FinderItem? {
-        guard let url = bundle.url(forResource: name, withExtension: ext) else { return nil }
+    static func bundleItem(forResource name: String, withExtension ext: String, subdirectory: String? = nil, in bundle: Bundle = .main) -> FinderItem? {
+        guard let url = bundle.url(forResource: name, withExtension: ext, subdirectory: subdirectory) else { return nil }
         return FinderItem(at: url)
     }
     
@@ -970,6 +971,23 @@ public extension FinderItem {
         return path
     }
     
+    /// Returns a new instance with the path of its child.
+    ///
+    /// ```swift
+    /// let item = FinderItem(at: "folder/")
+    /// item/"file.txt" // "folder/file"
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - lhs: The enclosing folder.
+    ///   - rhs: The relative path. A `/` should be added to the end as an indication of being a folder.
+    ///
+    /// - Returns: A new instance with the path of its child.
+    @inlinable
+    static func /(_ lhs: FinderItem, _ rhs: some StringProtocol) -> FinderItem {
+        lhs.appending(path: rhs)
+    }
+    
     // MARK: - enums
     
     /// The type of the item.
@@ -997,7 +1015,5 @@ public extension FinderItem {
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }
-        
     }
-    
 }
