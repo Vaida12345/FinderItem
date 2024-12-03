@@ -78,7 +78,7 @@ public extension FinderItem {
     ///
     /// - Experiment: The "Inbox" sub-directory name is unavailable.
     static var documentsDirectory: FinderItem {
-        FinderItem(_url: .homeDirectory.appending(path: "Documents/", directoryHint: .isDirectory))
+        FinderItem(_url: .documentsDirectory)
     }
     
     /// The downloads directory for the current user.
