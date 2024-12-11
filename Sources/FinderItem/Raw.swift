@@ -22,7 +22,7 @@ extension FinderItem: RawRepresentable {
     /// - Parameters:
     ///   - rawValue: The absolute ``url``.
     @inlinable
-    public init(rawValue: URL) {
+    public convenience init(rawValue: URL) {
         self.init(at: rawValue)
     }
     

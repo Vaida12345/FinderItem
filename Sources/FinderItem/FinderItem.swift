@@ -24,6 +24,7 @@ import UniformTypeIdentifiers
 /// - A ``FinderItem`` is mutated only when the location of the file changes, for example, by using ``rename(with:keepExtension:)``.
 /// - File operations and file path operations are easily differentiable.
 ///     - File operations are `mutating`, and typically accompanied by `throws`.
+///         - However, such mutation is not apparent to users, hence using a shared instance may cause racing.
 ///     - File path operations are non-mutating, and always returns a new instance of ``FinderItem``.
 ///
 ///
@@ -183,7 +184,7 @@ import UniformTypeIdentifiers
 /// - ``with(extension:)``
 /// - ``with(subPath:)``
 ///
-public struct FinderItem: CustomStringConvertible, Hashable, Identifiable, Sendable {
+public final class FinderItem: CustomStringConvertible, Hashable, Identifiable, @unchecked Sendable {
     
     // MARK: - Basic Properties
     
@@ -418,13 +419,13 @@ public extension FinderItem {
     /// - Parameters:
     ///   - url: The absolute ``url``.
     @inline(__always)
-    init(at url: URL) {
+    convenience init(at url: URL) {
         self.init(_url: url)
     }
     
     /// Creates the `FinderItem` without standardizing its url.
     @inline(__always)
-    internal init(_path: String, directoryHint: URL.DirectoryHint) {
+    internal convenience init(_path: String, directoryHint: URL.DirectoryHint) {
         self.init(_url: URL(filePath: _path, directoryHint: directoryHint))
     }
     
@@ -456,7 +457,7 @@ public extension FinderItem {
     ///   - path: The absolute path. A `/` should be added to the end as an indication of being a folder.
     ///   - directoryHint: An indication of whether the given path is an directory. This would effect the `hasDirectoryPath` value of the underlining ``url``.
     @inlinable
-    init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
+    convenience init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
         self.init(at: URL(filePath: path, directoryHint: directoryHint).standardizedFileURL)
     }
     
@@ -464,7 +465,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - provider: The `NSItemProvider` which contains the file-url of the item.
-    init(from provider: NSItemProvider) async throws {
+    convenience init(from provider: NSItemProvider) async throws {
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { data, error in
                 guard error == nil else { continuation.resume(throwing: error!); return }
@@ -669,7 +670,7 @@ public extension FinderItem {
     /// Moves the current item to trash.
     ///
     /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is modified upon the function's return.
-    mutating func moveToTrash() throws(FileError) {
+    func moveToTrash() throws(FileError) {
         do {
             var newURL: NSURL?
             try FileManager.default.trashItem(at: self.url, resultingItemURL: &newURL)
@@ -689,7 +690,7 @@ public extension FinderItem {
     /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
     ///
     /// - Tip: To change the file path itself, rather than the file, use ``replacingStem(with:)`` or ``replacingExtension(with:)``.
-    mutating func move(to destination: URL) throws(FileError) {
+    func move(to destination: URL) throws(FileError) {
         guard destination != self.url else { return }
         do {
             try FileManager.default.moveItem(at: self.url, to: destination)
@@ -709,7 +710,7 @@ public extension FinderItem {
     /// ## Topics
     /// ### Variants
     /// - ``FinderItem/move(to:)-2wdf3``
-    mutating func move(to destination: String) throws(FileError) {
+    func move(to destination: String) throws(FileError) {
         try self.move(to: URL(filePath: destination))
     }
     
@@ -725,7 +726,7 @@ public extension FinderItem {
     ///
     /// - Precondition: `newName` cannot be empty.
     @inlinable
-    mutating func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
+    func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
         precondition(!newName.isEmpty, "The `newName` cannot be empty.")
         
         let extensionName: String
@@ -760,9 +761,9 @@ public extension FinderItem {
     /// > item.generateOutputPath()
     /// > item // file 2.txt
     /// > ```
-    @available(*, deprecated, renamed: "createUniquePath()", message: "Use the non-mutating version instead.")
-    mutating func generateOutputPath() {
-        self = createUniquePath()
+    @available(*, deprecated, renamed: "generateUniquePath()", message: "Use the non-mutating version instead.")
+    func generateOutputPath() {
+        self.url = generateUniquePath().url
     }
     
     /// Ensures file uniqueness by creating a non-duplicating file path.
@@ -782,7 +783,7 @@ public extension FinderItem {
     /// item.exits // true
     /// item.createUniquePath() // music 325.m4a
     /// ```
-    func createUniquePath() -> FinderItem {
+    func generateUniquePath() -> FinderItem {
         guard self.exists else { return self }
         
         var counter = 2
@@ -815,6 +816,11 @@ public extension FinderItem {
             }
             return enclosingFolder.appending(path: "\(stem)\(counter)")
         }
+    }
+    
+    @available(*, deprecated, renamed: "generateUniquePath()", message: "Use the non-mutating version instead.")
+    func createUniquePath() -> FinderItem {
+        self.generateUniquePath()
     }
     
     /// Returns a new instance with the path of its child.

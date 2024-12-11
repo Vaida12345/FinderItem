@@ -42,7 +42,7 @@ extension FinderItem: EncodableWithConfiguration {
 
 extension FinderItem: DecodableWithConfiguration {
     
-    public init(from decoder: Decoder, configuration: URL.BookmarkResolutionOptions) throws {
+    public convenience init(from decoder: Decoder, configuration: URL.BookmarkResolutionOptions) throws {
         let data: Data
         
         if let container = try? decoder.container(keyedBy: ConfigurableCodingKey.self) {

@@ -22,7 +22,7 @@ extension FinderItem: Codable {
     
     /// Decode the finderItem from the `decoder`.
     @inlinable
-    public init(from decoder: Decoder) throws {
+    public convenience init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let url = try container.decode(URL.self)
         self.init(at: url)

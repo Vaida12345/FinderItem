@@ -46,7 +46,7 @@ extension FinderItem {
     ///   - resolvingBookmarkData: The bookmark data
     ///   - options: The options for resolving such data, `.withSecurityScope` for default.
     ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
-    public init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = FinderItem.defaultBookmarkResolveOptions, bookmarkDataIsStale: inout Bool) throws {
+    public convenience init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = FinderItem.defaultBookmarkResolveOptions, bookmarkDataIsStale: inout Bool) throws {
         var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: resolvingBookmarkData, options: options, bookmarkDataIsStale: &bookmarkDataIsStale)
         self.init(_url: url)
@@ -101,7 +101,7 @@ extension FinderItem {
     /// ### Error Type
     /// - ``AccessFilePromptError``
     @MainActor
-    public mutating func tryPromptAccessFile() async throws {
+    public func tryPromptAccessFile() async throws {
         if let data = UserDefaults.standard.data(forKey: self.path) {
             var bookmarkDataIsStale = false
             let url = try URL(resolvingBookmarkData: data, options: .withSecurityScope, bookmarkDataIsStale: &bookmarkDataIsStale)
