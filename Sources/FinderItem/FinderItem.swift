@@ -818,7 +818,7 @@ public extension FinderItem {
         }
     }
     
-    @available(*, deprecated, renamed: "generateUniquePath()", message: "Use the non-mutating version instead.")
+    @available(*, deprecated, renamed: "generateUniquePath()")
     func createUniquePath() -> FinderItem {
         self.generateUniquePath()
     }

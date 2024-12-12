@@ -107,7 +107,17 @@ extension FinderItem {
     
     /// An loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-97hgq``.
+    /// You can extend this struct to define more contents that `FinderItem` can ``FinderItem/load(_:)-97hgq``.
+    ///
+    /// ```swift
+    /// extension FinderItem.LoadableContent {
+    ///     public static var container: FinderItem.LoadableContent<MIDIContainer, any Error> {
+    ///         .init { source in
+    ///             try MIDIContainer(at: source)
+    ///         }
+    ///     }
+    /// }
+    /// ```
     public struct LoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) throws(Failure) -> Result
@@ -122,7 +132,17 @@ extension FinderItem {
     
     /// An asynchronous loadable property that constrains the value.
     ///
-    /// You do not call this structure directly, you should use ``FinderItem/load(_:)-824a``.
+    /// You can extend this struct to define more contents that `FinderItem` can ``FinderItem/load(_:)-824a``.
+    ///
+    /// ```swift
+    /// extension FinderItem.AsyncLoadableContent {
+    ///     public static var container: FinderItem.AsyncLoadableContent<MIDIContainer, any Error> {
+    ///         .init { source in
+    ///             try await MIDIContainer(at: source)
+    ///         }
+    ///     }
+    /// }
+    /// ```
     public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
         public let contentLoader: (FinderItem) async throws(Failure) -> Result
