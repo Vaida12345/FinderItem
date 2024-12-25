@@ -76,11 +76,11 @@ import UniformTypeIdentifiers
 /// ### Initializers
 /// - ``init(at:)``
 /// - ``init(at:directoryHint:)``
-/// - ``init(from:)-1bl78``
+/// - ``init(from:)-654o7``
 ///
 /// ### Loading contents
 ///
-/// - ``load(_:)-97hgq``
+/// - ``load(_:)-7spks``
 ///
 /// ### Inspecting an item
 /// - ``exists``
@@ -109,7 +109,7 @@ import UniformTypeIdentifiers
 /// ### File Operations
 /// File operations will change the location of the actual file it represents.
 /// - ``copy(to:)``
-/// - ``move(to:)-5oihl``
+/// - ``move(to:)-3wp1t``
 /// - ``moveToTrash()``
 /// - ``remove()``
 /// - ``removeIfExists()``
@@ -154,7 +154,7 @@ import UniformTypeIdentifiers
 /// - ``FinderItem/preferencesDirectory``
 /// - ``FinderItem/temporaryDirectory``
 /// - ``FinderItem/itemReplacementDirectory``
-/// - ``FinderItem/bundleItem(forResource:withExtension:in:)``
+/// - ``FinderItem/bundleItem(forResource:withExtension:subdirectory:in:)``
 ///
 /// ### Explicitly Handle Security Scope
 ///
@@ -709,7 +709,7 @@ public extension FinderItem {
     ///
     /// ## Topics
     /// ### Variants
-    /// - ``FinderItem/move(to:)-2wdf3``
+    /// - ``FinderItem/move(to:)-8seqh``
     func move(to destination: String) throws(FileError) {
         try self.move(to: URL(filePath: destination))
     }

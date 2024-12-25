@@ -34,7 +34,7 @@ public extension FinderItem {
     ///
     /// - Note: To access files in the app bundle, use `bundleDirectory.with(subPath: "Contents")`.
     ///
-    /// - Note: use ``bundleItem(forResource:withExtension:in:)`` to access a file in the app bundle (files directly in the path).
+    /// - Note: use ``bundleItem(forResource:withExtension:subdirectory:in:)`` to access a file in the app bundle (files directly in the path).
     static var bundleDirectory: FinderItem {
         FinderItem(_url: Bundle.main.bundleURL)
     }
