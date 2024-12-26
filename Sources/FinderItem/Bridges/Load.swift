@@ -86,17 +86,13 @@ public extension FinderItem {
         /// Is a directory instead of file
         case notAFile
         
-        public var title: String {
+        public var message: String {
             switch self {
             case let .encounteredNil(name, type):
-                "Load file \(name) as \(type) resulted in failure"
+                "Load file \(name) as \(type) resulted in failure."
             case .notAFile:
-                "The given item is not a file"
+                "The given item is not a file."
             }
-        }
-        
-        public var message: String {
-            ""
         }
     }
     
@@ -178,12 +174,25 @@ import AVFoundation
 public extension FinderItem.AsyncLoadableContent {
     
     /// Loads the `AVAsset` at the source.
-    static var avAsset: FinderItem.AsyncLoadableContent<AVURLAsset?, Never> {
+    static var avAsset: FinderItem.AsyncLoadableContent<AVURLAsset, any Error> {
         .init { source in
             let asset = AVURLAsset(url: source.url)
-            guard (try? await asset.load(.isReadable)) ?? false else { return nil }
+            guard try await asset.load(.isReadable) else { throw AVAssetLoadError.notReadable(name: source.name) }
             return asset
         }
+    }
+    
+    
+    enum AVAssetLoadError: GenericError {
+        case notReadable(name: String)
+        
+        public var message: String {
+            switch self {
+            case .notReadable(let name):
+                "The media \(name) is not readable."
+            }
+        }
+        
     }
     
 }
@@ -200,7 +209,6 @@ public extension FinderItem.LoadableContent {
     }
     
     /// Loads the data at source as async bytes.
-    @available(macOS 12.0, *)
     static var resourceBytes: FinderItem.AsyncLoadableContent<URL.AsyncBytes, Never> {
         .init { source in
             source.url.resourceBytes
@@ -208,7 +216,6 @@ public extension FinderItem.LoadableContent {
     }
     
     /// Loads the data at source as async lines.
-    @available(macOS 12.0, *)
     static var lines: FinderItem.AsyncLoadableContent<AsyncLineSequence<URL.AsyncBytes>, Never> {
         .init { source in
             source.url.lines
