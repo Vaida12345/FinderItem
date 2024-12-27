@@ -143,6 +143,8 @@ public extension FinderItem {
     
     /// The directory for which are temporarily.
     ///
+    /// The exact location or unique ownership to the directory depends on the sandbox and OS.
+    ///
     /// - Warning: Remember to delete the contents when no longer needed to free up space.
     ///
     /// - Experiment: Contents are removed when the device reboots.
@@ -150,8 +152,47 @@ public extension FinderItem {
     /// - Note: Contents are **not** included in backups.
     ///
     /// - Note: Disk space used is **not** reported in the storage settings.
+    @available(*, deprecated, renamed: "temporaryDirectory(intent:)", message: "Please specify an intent for proper file management.")
     static var temporaryDirectory: FinderItem {
         FinderItem(_url: FileManager.default.temporaryDirectory)
+    }
+    
+    /// The directory for which are temporarily.
+    ///
+    /// The exact location or unique ownership to the directory depends on the sandbox and OS.
+    ///
+    /// - Warning: Remember to delete the contents when no longer needed to free up space.
+    static func temporaryDirectory(intent: TemporaryDirectoryIntent) throws -> FinderItem {
+        let directory = FinderItem(_url: FileManager.default.temporaryDirectory)
+        switch intent {
+        case .general:
+            return directory
+        case .discardable:
+            if let identifier = Bundle.main.bundleIdentifier {
+                let directory = directory.appending(path: "\(identifier).discardable", directoryHint: .isDirectory)
+                try directory.makeDirectory()
+                return directory
+            } else {
+                preconditionFailure("A bundle identifier cannot be identified. Hence the unique ownership of temporary directory cannot be determined.")
+            }
+        }
+    }
+    
+    /// The intent for creating a temporary directory.
+    enum TemporaryDirectoryIntent: Equatable {
+        
+        /// The general purpose directory. Such directory may be shared for other functionalities.
+        case general
+        
+        /// The files are marked as discardable. Apps are recommended to delete such directory when the app closes.
+        ///
+        /// - Tip: This directory is created on-demand, hence, when deleting such directory, use ``FinderItem/FinderItem/removeIfExists()``.
+        ///
+        /// - precondition: Bundle identifier exists.
+        ///
+        /// Using `AppDelegate` from `ViewCollection`, simply inherit from super class using `super.applicationWillTerminate()`
+        case discardable
+        
     }
     
 }

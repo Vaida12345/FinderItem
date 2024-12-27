@@ -52,7 +52,9 @@ extension FinderItem {
         self.init(_url: url)
     }
     
-    
+    /// The default option for bookmark resolve.
+    ///
+    /// On macOS, it is `withSecurityScope`; `[]` otherwise.
     public static var defaultBookmarkResolveOptions: URL.BookmarkResolutionOptions {
 #if os(macOS)
         .withSecurityScope
@@ -61,6 +63,9 @@ extension FinderItem {
 #endif
     }
     
+    /// The default option for bookmark creation.
+    ///
+    /// On macOS, it is `withSecurityScope`; `[]` otherwise.
     public static var defaultBookmarkCreationOptions: URL.BookmarkCreationOptions {
 #if os(macOS)
         .withSecurityScope

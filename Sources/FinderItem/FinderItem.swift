@@ -94,6 +94,7 @@ import UniformTypeIdentifiers
 /// - ``enclosingFolder``
 /// - ``url``
 /// - ``userFriendlyDescription``
+/// - ``normalize(shellPath:shouldRemoveTrailingSpace:)``
 ///
 /// ### Inspecting the contents
 /// - ``contentType``
@@ -115,14 +116,16 @@ import UniformTypeIdentifiers
 /// - ``removeIfExists()``
 /// - ``clear()``
 /// - ``createSymbolicLink(at:)``
+/// - ``resolvingAlias(options:)``
 ///
 /// ### File Path Operations
+/// - ``/(_:_:)``
 /// - ``appending(path:directoryHint:)``
 /// - ``rename(with:keepExtension:)``
 /// - ``relativePath(to:)``
 /// - ``replacingStem(with:)``
 /// - ``replacingExtension(with:)``
-/// - ``createUniquePath()``
+/// - ``generateUniquePath()``
 ///
 /// ### Working with Finder
 /// - ``reveal()``
@@ -153,8 +156,10 @@ import UniformTypeIdentifiers
 /// - ``FinderItem/picturesDirectory``
 /// - ``FinderItem/preferencesDirectory``
 /// - ``FinderItem/temporaryDirectory``
+/// - ``FinderItem/temporaryDirectory(intent:)``
 /// - ``FinderItem/itemReplacementDirectory``
 /// - ``FinderItem/bundleItem(forResource:withExtension:subdirectory:in:)``
+/// - ``FinderItem/TemporaryDirectoryIntent``
 ///
 /// ### Explicitly Handle Security Scope
 ///
@@ -167,6 +172,8 @@ import UniformTypeIdentifiers
 ///
 /// - ``FinderItem/bookmarkData(options:)``
 /// - ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``
+/// - ``defaultBookmarkCreationOptions``
+/// - ``defaultBookmarkResolveOptions``
 ///
 ///
 /// ### Integrated Security Scope Streamline
@@ -174,6 +181,11 @@ import UniformTypeIdentifiers
 ///
 /// ### Error Reporting
 /// - ``FileError``
+///
+/// ### Integrations
+/// Technology-specific implementations.
+/// - ``ValueTransformer``
+/// - ``itemProvider()``
 ///
 /// ### Deprecated
 /// - ``fileName``
@@ -183,6 +195,8 @@ import UniformTypeIdentifiers
 /// - ``removeFileIfExists()``
 /// - ``with(extension:)``
 /// - ``with(subPath:)``
+/// - ``createUniquePath()``
+/// - ``generateOutputPath()``
 ///
 public final class FinderItem: CustomStringConvertible, Hashable, Identifiable, @unchecked Sendable {
     
