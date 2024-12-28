@@ -49,17 +49,20 @@ public extension FinderItem {
     }
     
     /// Opens the current file.
-    @discardableResult
+    ///
+    /// - Parameters:
+    ///   - configuration: The options that indicate how you want to open the URL.
+    ///   - completionHandler: The completion handler block to call asynchronously with the results. AppKit executes the completion handler on a concurrent queue.
     @inlinable
-    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
+    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration(), completionHandler: ((NSRunningApplication?, (any Error)?) -> Void)? = nil) {
         if self.extension == "app" {
-            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
+            NSWorkspace.shared.openApplication(at: self.url, configuration: configuration, completionHandler: completionHandler)
         } else if self.isDirectory,
                   self.extension == "xcodeproj",
                   let appURL = Bundle(identifier: "com.apple.dt.Xcode")?.bundleURL {
-            try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
+            NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration, completionHandler: completionHandler)
         } else {
-            try await NSWorkspace.shared.open(self.url, configuration: configuration)
+            NSWorkspace.shared.open(self.url, configuration: configuration, completionHandler: completionHandler)
         }
     }
 #endif
