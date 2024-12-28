@@ -17,6 +17,7 @@ let package = Package(
     ], targets: [
         .target(name: "CComponent"),
         .target(name: "FinderItem", dependencies: ["CComponent", "Essentials"]),
+        .executableTarget(name: "Client", dependencies: ["FinderItem"], path: "Client"),
         .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
     ]
 )

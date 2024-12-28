@@ -30,18 +30,37 @@ public extension FinderItem {
     /// - Parameters:
     ///   - image: The image indicating the new icon for the item.
     ///
-    /// - Tip: This function is async to present blocking.
-    @inlinable
-    nonisolated func setIcon(image: NSImage) async {
+    /// - Note: The work is dispatched to a shared working thread and returns immediately. This ensures it is non-blocking and the underlying function is called on one thread at any given time, which is required.
+    func setIcon(image: NSImage) {
         guard self.exists else { return }
-        NSWorkspace.shared.setIcon(image, forFile: self.path, options: .init())
+        let work = DispatchWorkItem {
+            NSWorkspace.shared.setIcon(image, forFile: self.path, options: .init())
+        }
+        FinderItem.workingThread.async(execute: work)
     }
+    
+    private static let workingThread = DispatchQueue(label: "FinderItem.DispatchWorkingThread")
     
     /// Reveals the current file in finder.
     @MainActor @available(*, deprecated, renamed: "reveal")
     @inlinable
     func revealInFinder() {
         try? self.reveal()
+    }
+    
+    /// Opens the current file.
+    @discardableResult
+    @inlinable
+    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
+        if self.extension == "app" {
+            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
+        } else if self.isDirectory,
+                  self.extension == "xcodeproj",
+                  let appURL = Bundle(identifier: "com.apple.dt.Xcode")?.bundleURL {
+            try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
+        } else {
+            try await NSWorkspace.shared.open(self.url, configuration: configuration)
+        }
     }
 #endif
     
@@ -58,23 +77,6 @@ public extension FinderItem {
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         UIApplication.shared.open(self.url)
 #endif
-    }
-#endif
-    
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Opens the current file.
-    @discardableResult
-    @inlinable
-    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
-        if self.extension == "app" {
-            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
-        } else if self.isDirectory,
-                  self.extension == "xcodeproj",
-                  let appURL = Bundle(identifier: "com.apple.dt.Xcode")?.bundleURL {
-            try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
-        } else {
-            try await NSWorkspace.shared.open(self.url, configuration: configuration)
-        }
     }
 #endif
     
