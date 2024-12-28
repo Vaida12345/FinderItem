@@ -18,5 +18,5 @@ let package = Package(
         .target(name: "CComponent"),
         .target(name: "FinderItem", dependencies: ["CComponent", "Essentials"]),
         .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
-    ], swiftLanguageModes: [.v5]
+    ]
 )
