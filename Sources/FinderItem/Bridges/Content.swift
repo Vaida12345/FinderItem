@@ -65,21 +65,14 @@ public extension FinderItem {
             NSWorkspace.shared.open(self.url, configuration: configuration, completionHandler: completionHandler)
         }
     }
-#endif
     
-#if (canImport(AppKit) && !targetEnvironment(macCatalyst)) || (canImport(UIKit) && !os(watchOS))
     /// Reveals the current file in finder.
     ///
-    /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for both macOS and iOS.
+    /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
     @MainActor @inlinable
     func reveal() throws(FileError) {
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
-#else
-        guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
-        UIApplication.shared.open(self.url)
-#endif
     }
 #endif
     
