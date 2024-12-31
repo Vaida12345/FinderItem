@@ -217,6 +217,35 @@ struct FinderItemTests {
         #expect(file.relativePath(to: folder) == "file.txt")
     }
     
+    @Test
+    func immediateRemoval() throws {
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        try folder.makeDirectory()
+        defer { try! folder.remove() }
+        
+        let file = folder.appending(path: "/file.txt")
+        try "123".write(to: file)
+        #expect(file.exists)
+        
+        try file.remove()
+        #expect(!file.exists)
+    }
+    
+    @Test
+    func immediateMove() throws {
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        try folder.makeDirectory()
+        defer { try! folder.remove() }
+        
+        let file = folder.appending(path: "/file.txt")
+        try "123".write(to: file)
+        #expect(file.exists)
+        
+        try file.move(to: folder.appending(path: "/file 2.txt").url)
+        #expect(!folder.appending(path: "/file.txt").exists)
+        #expect(folder.appending(path: "/file 2.txt").exists)
+    }
+    
 }
 
 

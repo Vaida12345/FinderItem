@@ -609,6 +609,8 @@ public extension FinderItem {
     /// Remove the file.
     ///
     /// - Note: Although the file is removed, the internal representation (``url``) remains unchanged.
+    ///
+    /// - Experiment: The file is removed on return.
     @inlinable
     func remove() throws(FileError) {
         do {
@@ -628,6 +630,8 @@ public extension FinderItem {
     /// Remove the file if it exists.
     ///
     /// - Note: Although the file is removed, the internal representation (``url``) remains unchanged.
+    ///
+    /// - Experiment: The file is removed on return.
     @inlinable
     func removeIfExists() throws(FileError) {
         guard self.exists else { return }
@@ -684,6 +688,8 @@ public extension FinderItem {
     /// Moves the current item to trash.
     ///
     /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is modified upon the function's return.
+    ///
+    /// - Experiment: The file is moved before return.
     func moveToTrash() throws(FileError) {
         do {
             var newURL: NSURL?
@@ -704,6 +710,8 @@ public extension FinderItem {
     /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
     ///
     /// - Tip: To change the file path itself, rather than the file, use ``replacingStem(with:)`` or ``replacingExtension(with:)``.
+    ///
+    /// - Experiment: The file is moved before return.
     func move(to destination: URL) throws(FileError) {
         guard destination != self.url else { return }
         do {
@@ -724,6 +732,8 @@ public extension FinderItem {
     /// ## Topics
     /// ### Variants
     /// - ``FinderItem/move(to:)-8seqh``
+    ///
+    /// - Experiment: The file is moved before return.
     func move(to destination: String) throws(FileError) {
         try self.move(to: URL(filePath: destination))
     }
@@ -739,6 +749,8 @@ public extension FinderItem {
     /// - Tip: To change the file path itself, rather than the file, use ``replacingStem(with:)`` or ``replacingExtension(with:)``.
     ///
     /// - Precondition: `newName` cannot be empty.
+    ///
+    /// - Experiment: The file is moved before return.
     @inlinable
     func rename(with newName: String, keepExtension: Bool = false) throws(FileError) {
         precondition(!newName.isEmpty, "The `newName` cannot be empty.")
