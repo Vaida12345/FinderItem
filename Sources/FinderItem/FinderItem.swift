@@ -380,7 +380,8 @@ public extension FinderItem {
     var contentType: UTType {
         get throws(FileError) {
             do {
-                return try url.resourceValues(forKeys: [.contentTypeKey]).contentType!
+                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError.cannotRead(reason: .resourceValueNotAvailable) }
+                return contentType
             } catch {
                 throw FileError.parse(error)
             }

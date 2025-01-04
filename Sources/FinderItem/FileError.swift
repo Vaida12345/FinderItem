@@ -208,6 +208,10 @@ extension FinderItem {
                 case unknownStringEncoding
                 /// Could not read because the specified URL scheme is unsupported.
                 case unsupportedScheme
+                /// The resource value of a given resource key is not available.
+                ///
+                /// This reason is defined by the `FinderItem` package, and is thrown when `URL/resourceValues(forKeys:)` returns `nil` for a given key.
+                case resourceValueNotAvailable
             }
             
             /// The reason for the failure to write a file.
