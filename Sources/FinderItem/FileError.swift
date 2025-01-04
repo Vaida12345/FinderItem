@@ -285,6 +285,8 @@ extension FinderItem {
                     "The file \"\(source)\" employs an unknown string encoding."
                 case .unsupportedScheme:
                     "The file path \"\(source)\" employs an unsupported URL scheme."
+                case .resourceValueNotAvailable:
+                    "The resource value of a resource key is not available for the file \"\(source)\"."
                 }
                 
             case let .cannotWrite(reason):
