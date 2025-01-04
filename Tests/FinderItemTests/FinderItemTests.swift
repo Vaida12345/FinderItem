@@ -69,7 +69,7 @@ struct FinderItemTests {
     
     @Test("Test Folders")
     func folders() async throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -126,7 +126,7 @@ struct FinderItemTests {
     
     @Test("Test File Operations", .tags(.fileOperations))
     func fileOperations() async throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -156,7 +156,7 @@ struct FinderItemTests {
     
     @Test("Test More File Operations", .tags(.fileOperations))
     func moreFileOperations() async throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         defer { try! folder.remove() }
         
         let file = folder.appending(path: "A/B/C/D/.E/.file.txt")
@@ -165,17 +165,17 @@ struct FinderItemTests {
         
         try "1".write(to: file)
         
-        let file2 = file.createUniquePath()
+        let file2 = file.generateUniquePath()
         try "2".write(to: file2)
         
         #expect(file2.name == ".file 2.txt")
         
-        let file3 = file2.createUniquePath()
+        let file3 = file2.generateUniquePath()
         try "3".write(to: file3)
         
         #expect(file3.name == ".file 3.txt")
         
-        let file4 = file.createUniquePath()
+        let file4 = file.generateUniquePath()
         try "4".write(to: file4)
         
         #expect(file4.name == ".file 4.txt")
@@ -184,11 +184,11 @@ struct FinderItemTests {
     //FIXME: implement moving, rename, edit stem.
     @Test("Test File Moving Operations", .tags(.fileOperations))
     func fileMovingOperations() async throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
-        var target = folder.appending(path: "file.txt")
+        let target = folder.appending(path: "file.txt")
         let destination = folder.appending(path: "destination.txt")
         try target.write(to: target, format: .json)
         #expect(target.exists)
@@ -207,7 +207,7 @@ struct FinderItemTests {
     
     @Test("Test File Relative Paths")
     func fileRelativePath() throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -219,7 +219,7 @@ struct FinderItemTests {
     
     @Test
     func immediateRemoval() throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -233,7 +233,7 @@ struct FinderItemTests {
     
     @Test
     func immediateMove() throws {
-        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
