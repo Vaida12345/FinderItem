@@ -162,6 +162,8 @@ public extension FinderItem {
     /// The exact location or unique ownership to the directory depends on the sandbox and OS.
     ///
     /// - Warning: Remember to delete the contents when no longer needed to free up space.
+    ///
+    /// - Experiment: Contents are removed when the computer reboots.
     static func temporaryDirectory(intent: TemporaryDirectoryIntent) throws -> FinderItem {
         let directory = FinderItem(_url: FileManager.default.temporaryDirectory)
         switch intent {
