@@ -208,6 +208,22 @@ public extension FinderItem.LoadableContent {
         }
     }
     
+}
+
+public extension FinderItem.LoadableContent {
+    
+    /// Loads the string at the source.
+    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, any Error> {
+        .init { source in
+            try String(at: source, encoding: encoding)
+        }
+    }
+    
+}
+
+
+public extension FinderItem.AsyncLoadableContent {
+    
     /// Loads the data at source as async bytes.
     static var resourceBytes: FinderItem.AsyncLoadableContent<URL.AsyncBytes, Never> {
         .init { source in
@@ -219,17 +235,6 @@ public extension FinderItem.LoadableContent {
     static var lines: FinderItem.AsyncLoadableContent<AsyncLineSequence<URL.AsyncBytes>, Never> {
         .init { source in
             source.url.lines
-        }
-    }
-    
-}
-
-public extension FinderItem.LoadableContent {
-    
-    /// Loads the string at the source.
-    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, any Error> {
-        .init { source in
-            try String(at: source, encoding: encoding)
         }
     }
     
