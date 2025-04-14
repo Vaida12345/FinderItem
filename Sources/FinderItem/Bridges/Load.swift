@@ -19,14 +19,14 @@ public extension FinderItem {
     ///
     /// This is a variant of ``load(_:)-7spks``
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil(name:type:)``.
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FileError`` with code ``FileError/Code/ReadFailureReason/corruptFile``.
     func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
     }
     
     /// Loads the data to the expected `type`.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FinderItem/LoadError/encounteredNil(name:type:)``.
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FileError`` with code ``FileError/Code/ReadFailureReason/corruptFile``.
     ///
     /// ## Topics
     ///
@@ -73,27 +73,6 @@ public extension FinderItem {
     /// - Returns: The contents decoded.
     func load<T>(_ type: T.Type, format: Data.CodingFormat) throws -> T where T: Decodable {
         try self.load(.data).decoded(type: T.self, format: format)
-    }
-    
-    /// Generic error caused by loading contents.
-    enum LoadError: GenericError {
-        
-        /// The API returned `nil`.
-        ///
-        /// No further information was given by the API.
-        case encounteredNil(name: String, type: String)
-        
-        /// Is a directory instead of file
-        case notAFile
-        
-        public var message: String {
-            switch self {
-            case let .encounteredNil(name, type):
-                "Load file \(name) as \(type) resulted in failure."
-            case .notAFile:
-                "The given item is not a file."
-            }
-        }
     }
     
 }
