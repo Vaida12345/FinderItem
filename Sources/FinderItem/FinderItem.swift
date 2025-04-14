@@ -961,8 +961,21 @@ public extension FinderItem {
     ///
     /// - Returns: The ``FinderItem`` for the resource file or `nil` if the file could not be located.
     @inlinable
-    static func bundleItem(forResource name: String, withExtension ext: String, subdirectory: String? = nil, in bundle: Bundle = .main) -> FinderItem? {
-        guard let url = bundle.url(forResource: name, withExtension: ext, subdirectory: subdirectory) else { return nil }
+    static func bundleItem(forResource name: String?, withExtension ext: String?, subdirectory: String? = nil, in bundle: Bundle = .main) throws -> FinderItem {
+        guard let url = bundle.url(forResource: name, withExtension: ext, subdirectory: subdirectory) else {
+            var path = ""
+            if let subdirectory {
+                path += subdirectory + "/"
+            }
+            if let name {
+                path += name
+            }
+            if let ext {
+                path += "." + ext
+            }
+            
+            throw FileError(code: .cannotRead(reason: .noSuchFile), source: .bundleDirectory/path)
+        }
         return FinderItem(at: url)
     }
     
