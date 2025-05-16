@@ -413,6 +413,14 @@ public extension FinderItem {
         (try? self.url.resourceValues(forKeys: [.isReadableKey]).isReadable) ?? false
     }
     
+    /// The file size, in bytes.
+    ///
+    /// - Note: ``fileSize`` does not support directories.
+    @inline(__always)
+    var fileSize: Int? {
+        try? self.url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+    }
+    
     /// The id, which is its ``url``.
     @inline(__always)
     var id: URL {

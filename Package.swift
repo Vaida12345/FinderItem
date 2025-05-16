@@ -13,10 +13,11 @@ let package = Package(
     ], products: [
         .library(name: "FinderItem", targets: ["FinderItem"])
     ], dependencies: [
-        .package(url: "https://www.github.com/Vaida12345/Essentials", from: "1.0.0")
+        .package(url: "https://www.github.com/Vaida12345/Essentials", from: "1.0.0"),
+        .package(url: "https://www.github.com/Vaida12345/DetailedDescription", from: "2.0.3"),
     ], targets: [
         .target(name: "CComponent"),
-        .target(name: "FinderItem", dependencies: ["CComponent", "Essentials"]),
+        .target(name: "FinderItem", dependencies: ["CComponent", "Essentials", "DetailedDescription"]),
         .executableTarget(name: "Client", dependencies: ["FinderItem"], path: "Client"),
         .testTarget(name: "FinderItemTests", dependencies: ["FinderItem"])
     ]
