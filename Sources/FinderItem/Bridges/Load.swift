@@ -20,6 +20,7 @@ public extension FinderItem {
     /// This is a variant of ``load(_:)-7spks``
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FileError`` with code ``FileError/Code/ReadFailureReason/corruptFile``.
+    @inlinable
     func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
     }
@@ -60,6 +61,7 @@ public extension FinderItem {
     ///
     /// - ``FinderItem/LoadableContent``
     /// - ``FinderItem/AsyncLoadableContent``
+    @inlinable
     func load<T, E>(_ type: FinderItem.LoadableContent<T, E>) throws(E) -> T where E: Error {
         try type.contentLoader(self)
     }
@@ -71,6 +73,7 @@ public extension FinderItem {
     ///   - format: The decoder to be used.
     ///
     /// - Returns: The contents decoded.
+    @inlinable
     func load<T>(_ type: T.Type, format: Data.CodingFormat) throws -> T where T: Decodable {
         try self.load(.data).decoded(type: T.self, format: format)
     }
@@ -98,6 +101,7 @@ extension FinderItem {
         public let contentLoader: (FinderItem) throws(Failure) -> Result
         
         
+        @inlinable
         public init(contentLoader: @escaping (_ source: FinderItem) throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
@@ -123,6 +127,7 @@ extension FinderItem {
         public let contentLoader: (FinderItem) async throws(Failure) -> Result
         
         
+        @inlinable
         public init(contentLoader: @escaping (_ source: FinderItem) async throws(Failure) -> Result) {
             self.contentLoader = contentLoader
         }
@@ -138,6 +143,7 @@ public extension FinderItem.LoadableContent {
     ///
     /// - Parameters:
     ///   - options: Option flags for reading the node located at url.
+    @inlinable
     static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper, any Error> {
         .init { source in
             try FileWrapper(url: source.url, options: options)
@@ -153,6 +159,7 @@ import AVFoundation
 public extension FinderItem.AsyncLoadableContent {
     
     /// Loads the `AVAsset` at the source.
+    @inlinable
     static var avAsset: FinderItem.AsyncLoadableContent<AVURLAsset, any Error> {
         .init { source in
             let asset = AVURLAsset(url: source.url)
@@ -165,6 +172,7 @@ public extension FinderItem.AsyncLoadableContent {
     enum AVAssetLoadError: GenericError {
         case notReadable(name: String)
         
+        @inlinable
         public var message: String {
             switch self {
             case .notReadable(let name):
@@ -181,6 +189,7 @@ public extension FinderItem.AsyncLoadableContent {
 public extension FinderItem.LoadableContent {
     
     /// Loads the data at the source.
+    @inlinable
     static var data: FinderItem.LoadableContent<Data, any Error> {
         .init { source in
             try Data(contentsOf: source.url)
@@ -192,6 +201,7 @@ public extension FinderItem.LoadableContent {
 public extension FinderItem.LoadableContent {
     
     /// Loads the string at the source.
+    @inlinable
     static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, any Error> {
         .init { source in
             try String(at: source, encoding: encoding)
@@ -204,6 +214,7 @@ public extension FinderItem.LoadableContent {
 public extension FinderItem.AsyncLoadableContent {
     
     /// Loads the data at source as async bytes.
+    @inlinable
     static var resourceBytes: FinderItem.AsyncLoadableContent<URL.AsyncBytes, Never> {
         .init { source in
             source.url.resourceBytes
@@ -211,6 +222,7 @@ public extension FinderItem.AsyncLoadableContent {
     }
     
     /// Loads the data at source as async lines.
+    @inlinable
     static var lines: FinderItem.AsyncLoadableContent<AsyncLineSequence<URL.AsyncBytes>, Never> {
         .init { source in
             source.url.lines
