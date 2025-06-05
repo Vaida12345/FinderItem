@@ -33,24 +33,28 @@ extension FinderItem {
     /// ```
     public final class ValueTransformer: Foundation.ValueTransformer {
         
+        @inlinable
         public override class func transformedValueClass() -> AnyClass {
             FinderItem.self
         }
         
+        @inlinable
         public override func transformedValue(_ value: Any?) -> Any? {
             let item = value as! FinderItem
             
-            return try! withAccessingSecurityScopedResource(to: item) { source in
+            return try! item.withAccessingSecurityScopedResource { source in
                 try source.bookmarkData()
             }
         }
         
+        @inlinable
         public override func reverseTransformedValue(_ value: Any?) -> Any? {
             let data = (value as! Data)
             var dataIsStable = false
             return try! FinderItem(resolvingBookmarkData: data, bookmarkDataIsStale: &dataIsStable)
         }
         
+        @inlinable
         public override class func allowsReverseTransformation() -> Bool {
             true
         }
@@ -58,6 +62,7 @@ extension FinderItem {
         /// Register the transformer.
         ///
         /// You must register any `ValueTransformer` prior to its initial invocation.
+        @inlinable
         public static func register() {
             Foundation.ValueTransformer.setValueTransformer(FinderItem.ValueTransformer(), forName: .init(name))
         }
@@ -65,6 +70,7 @@ extension FinderItem {
         /// The name of this transformer.
         ///
         /// Please use this name to direct `SwiftData` `Model` to the correct transformer.
+        @inlinable
         public static var name: String {
             "FinderItem.ValueTransformer"
         }

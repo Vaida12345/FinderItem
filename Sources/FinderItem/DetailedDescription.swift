@@ -31,10 +31,12 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
         
         public var rawValue: UInt64
         
+        @inlinable
         public init() {
             self.init(rawValue: 0)
         }
         
+        @inlinable
         public init(rawValue: UInt64) {
             self.rawValue = rawValue
         }

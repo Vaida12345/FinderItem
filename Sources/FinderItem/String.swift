@@ -14,6 +14,7 @@ extension FinderItem: ExpressibleByStringInterpolation {
     /// This is an convenience initializer for ``FinderItem/init(at:directoryHint:)``.
     ///
     /// To work with finder path copy, the leading and trailing `"` or `'` are trimmed.
+    @inlinable
     public convenience init(stringLiteral value: String) {
         self.init(at: value.trimmingCharacters(in: ["\"", "\'"]))
     }

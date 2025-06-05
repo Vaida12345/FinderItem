@@ -206,6 +206,7 @@ public final class FinderItem: CustomStringConvertible, Hashable, Identifiable, 
     public internal(set) var url: URL
     
     /// Creates the `FinderItem` without standardizing its url.
+    @usableFromInline
     internal init(_url: URL) {
         self.url = _url
     }
@@ -218,7 +219,7 @@ public extension FinderItem {
     // MARK: - Instance Properties
     
     /// Returns the description of the `FinderItem`.
-    @inline(__always)
+    @inlinable
     var description: String {
         self.path
     }
@@ -227,6 +228,7 @@ public extension FinderItem {
     /// The user friendly description.
     ///
     /// This method would attempt to replace user home directory with "~", and iCloud drive with "iCloud Drive"
+    @inlinable
     var userFriendlyDescription: String {
         let path = self.path
         let userPath = "/" + FileManager.default.homeDirectoryForCurrentUser.path(percentEncoded: false).split(separator: "/")[0..<2].joined(separator: "/")
@@ -253,13 +255,13 @@ public extension FinderItem {
     /// > let item = FinderItem(at: "folder/file.txt")
     /// > item.enclosingFolder // "folder/"
     /// > ```
-    @inline(__always)
+    @inlinable
     var enclosingFolder: FinderItem {
         FinderItem(_url: self.url.deletingLastPathComponent())
     }
     
     /// The textual path of the given item.
-    @inline(__always)
+    @inlinable
     var path: String {
         self.url.path(percentEncoded: false)
     }
@@ -274,7 +276,7 @@ public extension FinderItem {
     /// > ```
     ///
     /// - seeAlso: ``rename(with:keepExtension:)``, ``stem``, ``extension``
-    @inline(__always)
+    @inlinable
     var name: String {
         self.url.lastPathComponent
     }
@@ -319,7 +321,7 @@ public extension FinderItem {
     
     /// The non-extension part of the file name.
     @available(*, deprecated, renamed: "stem")
-    @inline(__always)
+    @inlinable
     var fileName: String { self.stem }
     
     /// Determines whether a `item` is a directory (instead of file).
@@ -327,7 +329,7 @@ public extension FinderItem {
     /// This method would consult the file system for the nature of the file. If the file does not exist, it would fall back to `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     ///
     /// - Returns: If the file does not exist, it is inferred from the ``url``.
-    @inline(__always)
+    @inlinable
     var isDirectory: Bool {
         (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? self.url.hasDirectoryPath
     }
@@ -337,7 +339,7 @@ public extension FinderItem {
     /// This method would consult the file system for the nature of the file. If the file does not exist, it would fall back to `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     ///
     /// - Returns: If the file does not exist, it is inferred from the ``url``.
-    @inline(__always)
+    @inlinable
     var isFile: Bool {
         (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? !self.url.hasDirectoryPath
     }
@@ -353,6 +355,7 @@ public extension FinderItem {
     /// ## Topics
     /// ### The Resulting Structure
     /// - ``FileType-swift.struct``
+    @inlinable
     var fileType: FileType {
         get throws(FileError) {
             do {
@@ -376,7 +379,7 @@ public extension FinderItem {
     }
     
     /// The `UTType` of the file.
-    @inline(__always)
+    @inlinable
     var contentType: UTType {
         get throws(FileError) {
             do {
@@ -390,25 +393,25 @@ public extension FinderItem {
     
     /// Determines whether the file exists at the required position.
     @available(*, deprecated, renamed: "exists")
-    @inline(__always)
+    @inlinable
     var isExistence: Bool {
         self.exists
     }
     
     /// Determines whether the file exists at the required position.
-    @inline(__always)
+    @inlinable
     var exists: Bool {
         FileManager.default.fileExists(atPath: self.path)
     }
     
     /// Determines whether the file is writable.
-    @inline(__always)
+    @inlinable
     var isWritable: Bool {
         (try? self.url.resourceValues(forKeys: [.isWritableKey]).isWritable) ?? false
     }
     
     /// Determines whether the file is readable.
-    @inline(__always)
+    @inlinable
     var isReadable: Bool {
         (try? self.url.resourceValues(forKeys: [.isReadableKey]).isReadable) ?? false
     }
@@ -416,13 +419,13 @@ public extension FinderItem {
     /// The file size, in bytes.
     ///
     /// - Note: ``fileSize`` does not support directories.
-    @inline(__always)
+    @inlinable
     var fileSize: Int? {
         try? self.url.resourceValues(forKeys: [.fileSizeKey]).fileSize
     }
     
     /// The id, which is its ``url``.
-    @inline(__always)
+    @inlinable
     var id: URL {
         self.url
     }
@@ -441,13 +444,13 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - url: The absolute ``url``.
-    @inline(__always)
+    @inlinable
     convenience init(at url: URL) {
         self.init(_url: url)
     }
     
     /// Creates the `FinderItem` without standardizing its url.
-    @inline(__always)
+    @inlinable
     internal convenience init(_path: String, directoryHint: URL.DirectoryHint) {
         self.init(_url: URL(filePath: _path, directoryHint: directoryHint))
     }
@@ -488,6 +491,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - provider: The `NSItemProvider` which contains the file-url of the item.
+    @inlinable
     convenience init(from provider: NSItemProvider) async throws {
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { data, error in
@@ -657,6 +661,7 @@ public extension FinderItem {
     /// - The original file or directory is on a volume that the system can’t locate or can’t mount.
     ///
     /// This method doesn’t support the `withSecurityScope` option.
+    @inlinable
     func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
         do {
             return try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
@@ -743,6 +748,7 @@ public extension FinderItem {
     /// - ``FinderItem/move(to:)-8seqh``
     ///
     /// - Experiment: The file is moved before return.
+    @inlinable
     func move(to destination: String) throws(FileError) {
         try self.move(to: URL(filePath: destination))
     }
@@ -818,6 +824,7 @@ public extension FinderItem {
     /// item.exits // true
     /// item.createUniquePath() // music 325.m4a
     /// ```
+    @inlinable
     func generateUniquePath() -> FinderItem {
         guard self.exists else { return self }
         
@@ -854,6 +861,7 @@ public extension FinderItem {
     }
     
     @available(*, deprecated, renamed: "generateUniquePath()")
+    @inlinable
     func createUniquePath() -> FinderItem {
         self.generateUniquePath()
     }
@@ -950,8 +958,8 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - name: The new extension name.
-    @inlinable
     @available(*, deprecated, renamed: "replacingExtension(with:)")
+    @inlinable
     func with(extension name: some StringProtocol) -> FinderItem {
         self.replacingExtension(with: name)
     }
@@ -1066,6 +1074,7 @@ public extension FinderItem {
         /// Compared to alias, symbolic link is a lower-level feature, often used in terminal operations, pointing directly to the target file's path
         public static let symbolicLink = FileType(rawValue: 1 << 5)
         
+        @inlinable
         public init(rawValue: Int) {
             self.rawValue = rawValue
         }

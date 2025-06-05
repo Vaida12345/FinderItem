@@ -26,6 +26,7 @@ extension FinderItem {
 
 extension FinderItem: EncodableWithConfiguration {
     
+    @inlinable
     public func encode(to encoder: Encoder, configuration: NSURL.BookmarkCreationOptions) throws {
         var container = encoder.singleValueContainer()
         

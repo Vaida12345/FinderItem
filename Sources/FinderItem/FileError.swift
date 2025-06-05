@@ -79,6 +79,7 @@ extension FinderItem {
         public let underlyingError: (any Error)?
         
         
+        @inlinable
         public static func == (lhs: FileError, rhs: FileError) -> Bool {
             lhs.code == rhs.code
         }
@@ -95,6 +96,7 @@ extension FinderItem {
         /// ```
         ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
+        @inlinable
         public static func cannotUnmount(reason: Code.UnmountFailureReason) -> FileError {
             FileError(code: .cannotUnmount(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -110,6 +112,7 @@ extension FinderItem {
         /// ```
         ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
+        @inlinable
         public static func cannotRead(reason: Code.ReadFailureReason) -> FileError {
             FileError(code: .cannotRead(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -125,6 +128,7 @@ extension FinderItem {
         /// ```
         ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
+        @inlinable
         public static func cannotWrite(reason: Code.WriteFailureReason) -> FileError {
             FileError(code: .cannotWrite(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -140,6 +144,7 @@ extension FinderItem {
         /// ```
         ///
         /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
+        @inlinable
         public static func unknown() -> FileError {
             FileError(code: .unknown, source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
         }
@@ -236,6 +241,7 @@ extension FinderItem {
         }
         
         /// The title of the error.
+        @inlinable
         public var title: String {
             switch code {
             case .cannotUnmount:
@@ -251,6 +257,7 @@ extension FinderItem {
             }
         }
         
+        @inlinable
         public var message: String {
             if let underlyingError = underlyingError as? CocoaError {
                 return underlyingError.localizedDescription
@@ -318,6 +325,7 @@ extension FinderItem {
         }
         
         
+        @inlinable
         public init(code: Code, source: FinderItem, underlyingError: Error? = nil) {
             self.code = code
             self.source = source
@@ -329,6 +337,7 @@ extension FinderItem {
         ///
         /// - Parameters:
         ///   - error: The source error
+        @inlinable
         public static func parse(_ error: some Error) -> FileError {
             guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             guard let url = (error.userInfo["NSDestinationFilePath"] as? String).map({ URL(fileURLWithPath: $0) }) ?? error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
@@ -394,6 +403,7 @@ extension FinderItem {
         ///   - arg: The source error
         ///
         /// - throws: The argument when parsing failed.
+        @inlinable
         public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
             let error = parse(arg)
             if error == .unknown() {

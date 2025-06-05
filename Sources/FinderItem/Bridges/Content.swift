@@ -42,7 +42,8 @@ public extension FinderItem {
     private static let workingThread = DispatchQueue(label: "FinderItem.DispatchWorkingThread")
     
     /// Reveals the current file in finder.
-    @MainActor @available(*, deprecated, renamed: "reveal")
+    @available(*, deprecated, renamed: "reveal")
+    @MainActor
     @inlinable
     func revealInFinder() {
         try? self.reveal()
@@ -69,7 +70,8 @@ public extension FinderItem {
     /// Reveals the current file in finder.
     ///
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
-    @MainActor @inlinable
+    @MainActor
+    @inlinable
     func reveal() throws(FileError) {
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
