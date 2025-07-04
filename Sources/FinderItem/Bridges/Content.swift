@@ -45,25 +45,24 @@ public extension FinderItem {
     @available(*, deprecated, renamed: "reveal")
     @MainActor
     @inlinable
-    func revealInFinder() {
-        try? self.reveal()
+    func revealInFinder() async throws {
+        try await self.reveal()
     }
     
     /// Opens the current file.
     ///
     /// - Parameters:
     ///   - configuration: The options that indicate how you want to open the URL.
-    ///   - completionHandler: The completion handler block to call asynchronously with the results. AppKit executes the completion handler on a concurrent queue.
     @inlinable
-    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration(), completionHandler: ((NSRunningApplication?, (any Error)?) -> Void)? = nil) {
+    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
         if self.extension == "app" {
-            NSWorkspace.shared.openApplication(at: self.url, configuration: configuration, completionHandler: completionHandler)
+            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
         } else if self.isDirectory,
                   self.extension == "xcodeproj",
                   let appURL = Bundle(identifier: "com.apple.dt.Xcode")?.bundleURL {
-            NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration, completionHandler: completionHandler)
+            try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
         } else {
-            NSWorkspace.shared.open(self.url, configuration: configuration, completionHandler: completionHandler)
+            try await NSWorkspace.shared.open(self.url, configuration: configuration)
         }
     }
     
@@ -72,7 +71,7 @@ public extension FinderItem {
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
     @MainActor
     @inlinable
-    func reveal() throws(FileError) {
+    func reveal() async throws(FileError) {
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
     }
