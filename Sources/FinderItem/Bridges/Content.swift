@@ -54,6 +54,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - configuration: The options that indicate how you want to open the URL.
     @inlinable
+    @discardableResult
     func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
         if self.extension == "app" {
             try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
