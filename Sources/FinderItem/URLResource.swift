@@ -16,7 +16,7 @@ extension FinderItem {
     /// - Returns: `nil` if there’s no available value for the given key.
     ///
     /// - Throws: If this method fails to determine a value’s availability or retrieve its value.
-    public func load<T>(_ resource: ResourceKey<T>) async throws -> T? {
+    public func load<T>(_ resource: ResourceKey<T>) async throws -> sending T? {
         try await resource.load(self)
     }
     
@@ -122,3 +122,26 @@ public extension FinderItem.ResourceKey {
     }
     
 }
+
+
+#if os(macOS)
+import AppKit
+
+public extension FinderItem.ResourceKey {
+    
+    /// The icon stored with the resource
+    static var customIcon: FinderItem.ResourceKey<NSImage> {
+        .init { source in
+            try source.url.resourceValues(forKeys: [.customIconKey]).customIcon
+        }
+    }
+    
+    /// The resource’s normal icon
+    static var effectiveIcon: FinderItem.ResourceKey<NSImage> {
+        .init { source in
+            try source.url.resourceValues(forKeys: [.effectiveIconKey]).effectiveIcon as? NSImage
+        }
+    }
+    
+}
+#endif

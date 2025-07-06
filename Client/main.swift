@@ -14,5 +14,5 @@ import DetailedDescription
 let item = FinderItem(at: "/Users/vaida/Downloads/Safari download/vocab.json")
 
 detailedPrint(item.extendedAttributes!)
-print(item.extendedAttributes?.origin)
+try await item.load(.customIcon)?.tiffRepresentation?.write(to: .desktopDirectory/"file.tiff")
 #endif
