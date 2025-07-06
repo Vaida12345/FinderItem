@@ -10,5 +10,7 @@ import AppKit
 import DetailedDescription
 
 
-let item = FinderItem.desktopDirectory
-detailedPrint(item, configuration: .showFileSize)
+let item = FinderItem(at: "/Users/vaida/Downloads/Safari download/vocab.json")
+
+detailedPrint(item.extendedAttributes!)
+print(item.extendedAttributes?.origin)
