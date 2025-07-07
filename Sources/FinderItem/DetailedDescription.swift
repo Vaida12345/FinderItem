@@ -25,10 +25,10 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
                     if let attributes = try? self.load(.xattr) {
                         descriptor.container("attributes") {
                             descriptor.forEach(attributes) { name in
-                                if let string = try? self.load(.xattr(name, as: String?.self)) {
+                                if let plist = try? self.load(.xattr(name, as: Any?.self)) {
+                                    descriptor.value(name + " <plist>", of: plist)
+                                } else if let string = try? self.load(.xattr(name, as: String?.self)) {
                                     descriptor.value(name, of: string)
-                                } else if let plist = try? self.load(.xattr(name, as: Any?.self)) {
-                                    descriptor.value(name, of: plist)
                                 } else {
                                     descriptor.constant("\(name): <binary>")
                                 }
@@ -48,10 +48,10 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
                 descriptor.container(self.name + fileSize) {
                     if let attributes = try? self.load(.xattr) {
                         descriptor.forEach(attributes) { name in
-                            if let string = try? self.load(.xattr(name, as: String?.self)) {
+                            if let plist = try? self.load(.xattr(name, as: Any?.self)) {
+                                descriptor.value(name + " <plist>", of: plist)
+                            } else if let string = try? self.load(.xattr(name, as: String?.self)) {
                                 descriptor.value(name, of: string)
-                            } else if let plist = try? self.load(.xattr(name, as: Any?.self)) {
-                                descriptor.value(name, of: plist)
                             } else {
                                 descriptor.constant("\(name): <binary>")
                             }

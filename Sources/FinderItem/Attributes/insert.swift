@@ -54,24 +54,6 @@ extension FinderItem.InsertableAttributeKey {
         }
     }
     
-    /// The file where from.
-    @inlinable
-    public static var origins: FinderItem.InsertableAttributeKey<[String], FinderItem.XAttributeError> {
-        .init { item, value throws(FinderItem.XAttributeError) in
-            let plist = try! PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
-            try item.insertAttribute(.xattr("com.apple.metadata:kMDItemWhereFroms"), plist)
-        }
-    }
-    
-    /// The date downloaded.
-    @inlinable
-    public static var dateDownloaded: FinderItem.InsertableAttributeKey<[Date], FinderItem.XAttributeError> {
-        .init { item, value throws(FinderItem.XAttributeError) in
-            let plist = try! PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
-            try item.insertAttribute(.xattr("com.apple.metadata:kMDItemDownloadedDate"), plist)
-        }
-    }
-    
 }
 #endif
 

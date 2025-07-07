@@ -112,31 +112,4 @@ extension FinderItem.XAttributeKey {
         }
     }
 }
-
-
-extension FinderItem.XAttributeKey  {
-    
-    /// The downloaded date.
-    ///
-    /// Corresponds to `com.apple.metadata:kMDItemDownloadedDate`.
-    @inlinable
-    public static var dateDownloaded: FinderItem.XAttributeKey<Optional<Date>> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
-            guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemDownloadedDate", as: Any?.self)) else { return nil }
-            return (plist as! NSArray)[0] as! NSDate as Date
-        }
-    }
-    
-    /// The download where from.
-    ///
-    /// Corresponds to `com.apple.metadata:kMDItemWhereFroms`.
-    @inlinable
-    public static var origins: FinderItem.XAttributeKey<Optional<[String]>> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
-            guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemWhereFroms", as: Any?.self)) else { return nil }
-            return (plist as! NSArray).map { $0 as! String }
-        }
-    }
-    
-}
 #endif
