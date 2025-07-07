@@ -12,187 +12,7 @@ import AppKit
 import UniformTypeIdentifiers
 
 
-/// A representable of files.
-///
-/// FinderItem in an interface indicating the file on the disk. It is the most convenient way to interact with files.
-///
-/// ## Design Principle
-///
-/// As the name suggests, ``FinderItem`` represents a *file*, and is strongly bound to the file at the path passed to initializers.
-///
-/// This means:
-/// - A ``FinderItem`` is mutated only when the location of the file changes, for example, by using ``rename(with:keepExtension:)``.
-/// - File operations and file path operations are easily differentiable.
-///     - File operations are `mutating`, and typically accompanied by `throws`.
-///         - However, such mutation is not apparent to users, hence using a shared instance may cause racing.
-///     - File path operations are non-mutating, and always returns a new instance of ``FinderItem``.
-///
-///
-/// ## File Path
-///
-/// - A leading `/` would redirect to the root folder, such as `/var/`.
-/// - A trailing `/` indicates being a folder, such as `folder/`.
-///
-/// The character `:` is not available in file path, as it is considered as `/`, where `/` is the reserved keyword for the indication of folder. Which means that,
-/// - `folder/file.txt` indicates the `file.txt` inside `folder`.
-/// - `folder:file.txt` indicates the `folder/file.txt` file.
-///
-///
-/// ## Secure Scope
-///
-/// When a user-selected file needs to be retained for future use, the permission to read it is typically revoked. To counter this issue, a bookmark is necessary. `FinderItem` facilitates this process through the `CodableWithConfiguration` system. Instead of employing the standard encoding approach used with `Codable`, one should utilize `configuration`.
-///
-/// ```swift
-/// // To encode:
-/// try container.encode(item, configuration: [.withSecurityScope])
-///
-/// // To decode:
-/// try container.decode(FinderItem.self, configuration: [.withSecurityScope])
-/// ```
-///
-/// You would still need to call ``FinderItem/tryAccessSecurityScope()`` before and after accessing the file.
-///
-/// - Experiment: It seems you can only call ``FinderItem/tryAccessSecurityScope()`` on the *original* file, not the ones derived using, for example, ``FinderItem/appending(path:directoryHint:)``. This means, to access a child folder, you need to access the security scope of its parent.
-///
-/// Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access the contents of Downloads folder using ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. Then, you can access the contents by persisting its bookmark data.
-///
-/// However, with `com.apple.security.files.downloads.read-write`, it seems you do not need to start security scope to access its contents. However, you would still need the bookmark data obtained from the dialog.
-///
-///
-/// ### Bookmarks
-///
-/// To preserve the access to the security scope, you need to use ``FinderItem/bookmarkData(options:)``. This function returns the bookmark data that can be used to create the url with the security scope.
-///
-/// To create `FinderItem` from the bookmark, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``. On return, `bookmarkDataIsStale` serves as an indicator of whether the persisted bookmark data needs to be updated.
-///
-///
-/// ## Topics
-///
-/// ### Initializers
-/// - ``init(at:)``
-/// - ``init(at:directoryHint:)``
-/// - ``init(from:)-654o7``
-///
-/// ### Loading contents
-///
-/// - ``load(_:)-7spks``
-///
-/// ### Inspecting an item
-/// - ``exists``
-/// - ``fileType-swift.property``
-///
-/// ### Inspecting the file path
-/// - ``name``
-/// - ``stem``
-/// - ``extension``
-/// - ``path``
-/// - ``enclosingFolder``
-/// - ``url``
-/// - ``userFriendlyDescription``
-/// - ``normalize(shellPath:shouldRemoveTrailingSpace:)``
-///
-/// ### Inspecting the contents
-/// - ``contentType``
-/// - ``contentsEqual(to:)``
-/// - ``setIcon(image:)``
-///
-/// ### Inspecting a file
-/// - ``isFile``
-/// - ``isDirectory``
-/// - ``isReadable``
-/// - ``isWritable``
-///
-/// ### File Operations
-/// File operations will change the location of the actual file it represents.
-/// - ``copy(to:)``
-/// - ``move(to:)-3wp1t``
-/// - ``moveToTrash()``
-/// - ``remove()``
-/// - ``removeIfExists()``
-/// - ``clear()``
-/// - ``createSymbolicLink(at:)``
-/// - ``resolvingAlias(options:)``
-///
-/// ### File Path Operations
-/// - ``/(_:_:)``
-/// - ``appending(path:directoryHint:)``
-/// - ``rename(with:keepExtension:)``
-/// - ``relativePath(to:)``
-/// - ``replacingStem(with:)``
-/// - ``replacingExtension(with:)``
-/// - ``generateUniquePath()``
-///
-/// ### Working with Finder
-/// - ``reveal()``
-/// - ``open(configuration:)``
-///
-/// ### Working with folder
-/// - ``children(range:)``
-/// - ``ChildrenOption``
-/// - ``FinderItemChildren``
-///
-/// ### Making folders
-/// - ``makeDirectory()``
-/// - ``generateDirectory()``
-///
-/// ### Accessing Environment-Dependent Directories
-/// - ``FinderItem/applicationSupportDirectory``
-/// - ``FinderItem/bundleDirectory``
-/// - ``FinderItem/cachesDirectory``
-/// - ``FinderItem/currentDirectory``
-/// - ``FinderItem/desktopDirectory``
-/// - ``FinderItem/documentsDirectory``
-/// - ``FinderItem/downloadsDirectory``
-/// - ``FinderItem/homeDirectory``
-/// - ``FinderItem/libraryDirectory``
-/// - ``FinderItem/musicDirectory``
-/// - ``FinderItem/moviesDirectory``
-/// - ``FinderItem/logsDirectory``
-/// - ``FinderItem/picturesDirectory``
-/// - ``FinderItem/preferencesDirectory``
-/// - ``FinderItem/temporaryDirectory``
-/// - ``FinderItem/temporaryDirectory(intent:)``
-/// - ``FinderItem/itemReplacementDirectory``
-/// - ``FinderItem/bundleItem(forResource:withExtension:subdirectory:in:)``
-/// - ``FinderItem/TemporaryDirectoryIntent``
-///
-/// ### Explicitly Handle Security Scope
-///
-/// - ``FinderItem/tryAccessSecurityScope()``
-/// - ``FinderItem/stopAccessSecurityScope()``
-/// - ``withAccessingSecurityScopedResource(to:perform:)``
-///
-///
-/// ### Explicitly Handle Bookmark
-///
-/// - ``FinderItem/bookmarkData(options:)``
-/// - ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``
-/// - ``defaultBookmarkCreationOptions``
-/// - ``defaultBookmarkResolveOptions``
-///
-///
-/// ### Integrated Security Scope Streamline
-/// - ``FinderItem/tryPromptAccessFile()``
-///
-/// ### Error Reporting
-/// - ``FileError``
-///
-/// ### Integrations
-/// Technology-specific implementations.
-/// - ``ValueTransformer``
-/// - ``itemProvider()``
-///
-/// ### Deprecated
-/// - ``fileName``
-/// - ``isExistence``
-/// - ``revealInFinder()``
-/// - ``removeFile()``
-/// - ``removeFileIfExists()``
-/// - ``with(extension:)``
-/// - ``with(subPath:)``
-/// - ``createUniquePath()``
-/// - ``generateOutputPath()``
-///
+/// Abstractions over which you interact with file system.
 public final class FinderItem: CustomStringConvertible, Hashable, Identifiable, @unchecked Sendable {
     
     // MARK: - Basic Properties
@@ -256,6 +76,8 @@ public extension FinderItem {
     }
     
     /// The textual path of the given item.
+    ///
+    /// [Learn More](<doc:filepath>)
     @inlinable
     var path: String {
         self.url.path(percentEncoded: false)
@@ -344,7 +166,7 @@ public extension FinderItem {
     var contentType: UTType {
         get throws(FileError) {
             do {
-                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError.cannotRead(reason: .resourceValueNotAvailable) }
+                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError(code: .cannotRead(reason: .resourceValueNotAvailable), source: self) }
                 return contentType
             } catch {
                 throw FileError.parse(error)
@@ -409,6 +231,8 @@ public extension FinderItem {
     /// | `lib.framework` | `checkFileSystem` | `false`             |
     ///
     /// Nevertheless, in the current implementations, the ``isDirectory`` method consults the file system, and use `hasDirectoryPath` as a fallback.
+    ///
+    /// [Learn More](<doc:filepath>)
     ///
     /// > Note:
     /// > The input `path` will be standardized.
@@ -594,7 +418,7 @@ public extension FinderItem {
     
     /// Returns the ``FinderItem`` that refers to the location specified by resolving an alias file.
     ///
-    /// If the url argument doesn’t refer to an alias file (as defined by the ``fileType-swift.property``, ``FileType-swift.struct/alias`` property), the returned item is the same as `self`.
+    /// If `self` isn't an alias file, the returned item is the same as `self`.
     ///
     /// This method throws an error in the following cases:
     /// - The url argument is unreachable.

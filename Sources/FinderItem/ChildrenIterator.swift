@@ -16,7 +16,7 @@ import Foundation
 /// > For advanced controls, you can use ``FinderItemChildren/Iterator/skipDescendants()`` to control the flow of ``FinderItemChildren/Iterator``.
 public struct FinderItemChildren: Sequence {
     
-    private let options: FinderItem.ChildrenOption
+    private let options: FinderItem.ChildrenRange
     
     private let parent: FinderItem
     
@@ -35,7 +35,7 @@ public struct FinderItemChildren: Sequence {
     
     
     @usableFromInline
-    internal init(options: FinderItem.ChildrenOption, parent: FinderItem) throws(FinderItem.FileError) {
+    internal init(options: FinderItem.ChildrenRange, parent: FinderItem) throws(FinderItem.FileError) {
         guard parent.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: parent) }
         
         self.options = options
@@ -47,12 +47,12 @@ public struct FinderItemChildren: Sequence {
     
     public final class Iterator: IteratorProtocol {
         
-        private let options: FinderItem.ChildrenOption
+        private let options: FinderItem.ChildrenRange
         private let stream: UnsafeMutablePointer<FTS>
         private var current: UnsafeMutablePointer<FTSENT>? = nil
         
         
-        fileprivate init(item: FinderItem, range options: FinderItem.ChildrenOption) {
+        fileprivate init(item: FinderItem, range options: FinderItem.ChildrenRange) {
             self.options = options
             let path = item.path
             

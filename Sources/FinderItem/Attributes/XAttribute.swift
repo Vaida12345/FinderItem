@@ -16,21 +16,51 @@ extension FinderItem {
     
     /// Loads an extended attribute.
     ///
-    /// - throws ``XAttributeError``
+    /// To obtain a list of attributes associated with `file`,
+    /// ```swift
+    /// try file.load(.xattr)
+    /// ```
     ///
-    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showExtendedAttributes`` option to view all attributes.
+    /// To obtain the value of a specific key
+    /// ```swift
+    /// try item.load(.xattr("com.apple.metadata:kMDItemKeywords"))
+    /// ```
+    ///
+    /// > Tip:
+    /// > You can use the following code to inspect all the extended attributes associated with `file`
+    /// > ```swift
+    /// > detailedPrint(file, configuration: .showExtendedAttributes)
+    /// > ```
+    ///
+    /// - SeeAlso: The package comes with a set of common attributes, see ``CommonXAttributeKey``.
+    ///
+    /// - returns: Refer to documentation of the `attributeKey`. `nil` is only returned when it cannot be parsed.
     @inlinable
     public func load<T>(_ attributeKey: XAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
         try attributeKey.load(self)
     }
     
+    /// Load an extended attribute using its name.
+    ///
+    /// Please refer to the type properties for predefined keys.
+    ///
+    /// ## Topics
+    /// ### Obtains all keys
+    /// Returns all keys associated with a file
+    /// - ``xattr``
+    ///
+    /// ### Obtains value of a key
+    /// Returns value associated with the given key name
+    /// - ``xattr(_:)``
+    /// - ``xattr(_:as:)``
     public struct XAttributeKey<Value> {
         
         @usableFromInline
         let load: (_ source: FinderItem) throws(FinderItem.XAttributeError) -> Value
         
         
-        public init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
+        @inlinable
+        init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
             self.load = load
         }
         
@@ -40,7 +70,9 @@ extension FinderItem {
 
 extension FinderItem.XAttributeKey {
     
-    /// Returns the extended attribute keys associated with `self`.
+    /// Returns all of extended attribute keys associated with `self`.
+    ///
+    /// - throws: Error in retrieval process.
     ///
     /// - Returns: `[]` when there aren't any attributes associated with `self`.
     @inlinable
@@ -69,9 +101,19 @@ extension FinderItem.XAttributeKey {
     
     /// Returns the extended attribute associated with the given `name` as unparsed raw data.
     ///
-    /// This method returns the value associated with `name` as an array of `UInt8`, use the overloads to parse as `String?` or property list (`Any?`).
+    /// This method returns the value associated with `name` as an array of `UInt8`.
     ///
-    /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    /// > Tip:
+    /// > You can use the following code to inspect all the extended attributes associated with `file`
+    /// > ```swift
+    /// > detailedPrint(file, configuration: .showExtendedAttributes)
+    /// > ```
+    ///
+    /// - throws: Error in retrieval process.
+    ///
+    /// - SeeAlso: The package comes with a set of common attributes, see ``CommonXAttributeKey``.
+    ///
+    /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     @inlinable
     public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8]> {
         .init { item throws (FinderItem.XAttributeError) in
@@ -89,7 +131,19 @@ extension FinderItem.XAttributeKey {
     
     /// Returns the extended attribute associated with the given `name` as a `String`, or `nil` if the data is not a `String`.
     ///
-    /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    /// > Tip:
+    /// > You can use the following code to inspect all the extended attributes associated with `file`
+    /// > ```swift
+    /// > detailedPrint(file, configuration: .showExtendedAttributes)
+    /// > ```
+    ///
+    /// - throws: Error in retrieval process.
+    ///
+    /// - SeeAlso: The package comes with a set of common attributes, see ``CommonXAttributeKey``.
+    ///
+    /// - SeeAlso: Use ``xattr(_:)`` to read the value as it is.
+    ///
+    /// - returns: `nil` only when data is not a `String`.
     @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
@@ -100,7 +154,19 @@ extension FinderItem.XAttributeKey {
     
     /// Returns the extended attribute associated with the given `name` as a property list, or `nil` if the data is not a property list.
     ///
-    /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    /// > Tip:
+    /// > You can use the following code to inspect all the extended attributes associated with `file`
+    /// > ```swift
+    /// > detailedPrint(file, configuration: .showExtendedAttributes)
+    /// > ```
+    ///
+    /// - throws: Error in retrieval process.
+    ///
+    /// - SeeAlso: The package comes with a set of common attributes, see ``CommonXAttributeKey``.
+    ///
+    /// - SeeAlso: Use ``xattr(_:)`` to read the value as it is.
+    ///
+    /// - returns: `nil` only when data is not a property list.
     @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in

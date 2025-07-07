@@ -24,7 +24,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - range: the range for finding children.
     @inlinable
-    func children(range: ChildrenOption) throws(FileError) -> FinderItemChildren {
+    func children(range: ChildrenRange) throws(FileError) -> FinderItemChildren {
         try FinderItemChildren(options: range, parent: self)
     }
     
@@ -38,9 +38,9 @@ public extension FinderItem {
     /// > desktopDirectory.children(range: .enumeration.withHidden)
     /// > ```
     ///
-    /// - SeeAlso: ``ChildrenOption/Additional``
+    /// - SeeAlso: ``ChildrenRange/Additional``
     @dynamicMemberLookup
-    struct ChildrenOption: Equatable, Sendable {
+    struct ChildrenRange: Equatable, Sendable {
         
         private let rawValue: UInt8
         
@@ -50,18 +50,18 @@ public extension FinderItem {
         /// Performs a shallow search of the folder.
         ///
         /// - Tip: Unless ``Additional/withHidden``, hidden files, directories and their children are ignored.
-        public static let contentsOfDirectory = ChildrenOption(rawValue: 1 << 0)
+        public static let contentsOfDirectory = ChildrenRange(rawValue: 1 << 0)
         
         /// Performs a deep enumeration of the folder.
         ///
         /// This method would enumerate covering all files and folders.
         ///
         /// - Tip: Unless ``Additional/withHidden``, hidden files, directories and their children are ignored.
-        public static let enumeration = ChildrenOption(rawValue: 1 << 1)
+        public static let enumeration = ChildrenRange(rawValue: 1 << 1)
         
         /// Performs the same as ``contentsOfDirectory``.``Additional/withSystemHidden``, and would only explore the contents of a subfolder when it satisfies the `predicate`.
-        public static func exploreDescendants(on predicate: @escaping @Sendable (FinderItem) -> Bool) -> ChildrenOption {
-            ChildrenOption(rawValue: 1 << 4, exploreDescendantsPredicate: predicate)
+        public static func exploreDescendants(on predicate: @escaping @Sendable (FinderItem) -> Bool) -> ChildrenRange {
+            ChildrenRange(rawValue: 1 << 4, exploreDescendantsPredicate: predicate)
         }
         
         // Backend support attributes
@@ -83,32 +83,32 @@ public extension FinderItem {
         /// A read subscript to a keyPath of `Source`.
         ///
         /// - Note: The type needs to conform to `@dynamicMemberLookup`.
-        public subscript(dynamicMember keyPath: KeyPath<Additional, ChildrenOption>) -> ChildrenOption {
-            ChildrenOption(rawValue: self.rawValue | ChildrenOption.reference[keyPath: keyPath].rawValue, exploreDescendantsPredicate: self.exploreDescendantsPredicate)
+        public subscript(dynamicMember keyPath: KeyPath<Additional, ChildrenRange>) -> ChildrenRange {
+            ChildrenRange(rawValue: self.rawValue | ChildrenRange.reference[keyPath: keyPath].rawValue, exploreDescendantsPredicate: self.exploreDescendantsPredicate)
         }
         
-        internal func contains(_ other: ChildrenOption) -> Bool {
+        internal func contains(_ other: ChildrenRange) -> Bool {
             self.rawValue | other.rawValue == self.rawValue
         }
         
-        public static func == (lhs: ChildrenOption, rhs: ChildrenOption) -> Bool {
+        public static func == (lhs: ChildrenRange, rhs: ChildrenRange) -> Bool {
             lhs.rawValue == rhs.rawValue
         }
         
         /// Additional instructions to specify the range of retrieving children.
         ///
-        /// - SeeAlso: ``ChildrenOption``
+        /// - SeeAlso: ``ChildrenRange``
         public struct Additional: Sendable {
             
             /// The option to include hidden files.
             ///
             /// - Remark: Without this option, hidden files, folders, and their contents are excluded, which is default.
-            public let withHidden: ChildrenOption = ChildrenOption(rawValue: 1 << 2)
+            public let withHidden: ChildrenRange = ChildrenRange(rawValue: 1 << 2)
             
             /// The option to include hidden files, and system hidden files.
             ///
             /// - Remark: This would include ``withHidden``, along side with `.DS_Store` and `Icon\r`.
-            public let withSystemHidden: ChildrenOption = ChildrenOption(rawValue: 1 << 3 | 1 << 2)
+            public let withSystemHidden: ChildrenRange = ChildrenRange(rawValue: 1 << 3 | 1 << 2)
             
             fileprivate init() { }
         }

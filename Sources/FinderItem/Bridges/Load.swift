@@ -17,9 +17,9 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// This is a variant of ``load(_:)-7spks``
+    /// You can also define your own keys that can be loaded using this method, see ``AsyncLoadableContent``.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FileError`` with code ``FileError/Code/ReadFailureReason/corruptFile``.
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Code/ReadFailureReason/corruptFile``).
     @inlinable
     func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
@@ -27,7 +27,9 @@ public extension FinderItem {
     
     /// Loads the data to the expected `type`.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it would throw ``FileError`` with code ``FileError/Code/ReadFailureReason/corruptFile``.
+    /// You can also define your own keys that can be loaded using this method, see ``LoadableContent``.
+    ///
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Code/ReadFailureReason/corruptFile``).
     ///
     /// ## Topics
     ///
@@ -42,17 +44,13 @@ public extension FinderItem {
     /// ### The Contents
     ///
     /// - ``FinderItem/LoadableContent/data``
-    /// - ``FinderItem/LoadableContent/resourceBytes``
-    /// - ``FinderItem/LoadableContent/lines``
+    /// - ``FinderItem/AsyncLoadableContent/resourceBytes``
+    /// - ``FinderItem/AsyncLoadableContent/lines``
     /// - ``FinderItem/LoadableContent/string(encoding:)``
     ///
     /// ### The Representation
     ///
     /// - ``FinderItem/LoadableContent/fileWrapper(options:)``
-    ///
-    /// ### Errors
-    ///
-    /// - ``FinderItem/LoadError``
     ///
     ///
     /// ### The Structures

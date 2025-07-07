@@ -14,7 +14,7 @@ It abstracts over many structures, including `FileManager`, `URL`, `FilePath`, a
 - Inspect file ``FinderItem/FinderItem/stem`` & ``FinderItem/FinderItem/extension``.
 - Gets ``FinderItem/FinderItem/contentType``.
 - File operations including ``FinderItem/FinderItem/copy(to:)``,  ``FinderItem/FinderItem/move(to:)-3wp1t``, ``FinderItem/FinderItem/remove()``.
-- ``FinderItem/FinderItem/open(configuration:)`` or ``FinderItem/FinderItem/reveal()`` files
+- ``FinderItem/FinderItem/open()`` or ``FinderItem/FinderItem/reveal()`` files
 - Get sorted children as a stream using ``FinderItem/FinderItem/children(range:)``.
 - [Typed throws](``FinderItem/FinderItem/FileError``).
 - Get and insert attributes: ``FinderItem/load(_:)``, ``FinderItem/insertAttribute(_:_:)``.
@@ -36,3 +36,7 @@ You can add this framework as a dependency to your Xcode project by clicking Fil
 ```
 https://www.github.com/Vaida12345/FinderItem
 ```
+
+## Topics
+### Classes
+- ``FinderItem``

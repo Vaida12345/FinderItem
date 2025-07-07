@@ -30,16 +30,6 @@ extension FinderItem {
     /// }
     /// ```
     ///
-    /// > Note:
-    /// >
-    /// > With the customized `Equitable` implementation, you could also judge the nature of an error as the following,
-    /// > ```swift
-    /// > if fileError == .cannotRead(reason: .noSuchFile) {
-    /// >     ...
-    /// > }
-    /// > ```
-    /// > However, this would mean that you *cannot* use `==` in any other ways.
-    ///
     /// ## Topics
     /// ### Properties
     /// - ``code``
@@ -52,7 +42,7 @@ extension FinderItem {
     /// ### Error Information
     /// - ``title``
     /// - ``message``
-    public struct FileError: GenericError, Equatable {
+    public struct FileError: GenericError {
         
         /// The error code.
         ///
@@ -81,72 +71,7 @@ extension FinderItem {
         
         @inlinable
         public static func == (lhs: FileError, rhs: FileError) -> Bool {
-            lhs.code == rhs.code
-        }
-        
-        
-        /// Indicates the ``Code-swift.enum/cannotUnmount(reason:)`` error.
-        ///
-        /// The return value only serves as a way to compare. For example,
-        ///
-        /// ```swift
-        /// if fileError == .cannotRead(reason: .noSuchFile) {
-        ///     ...
-        /// }
-        /// ```
-        ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
-        @inlinable
-        public static func cannotUnmount(reason: Code.UnmountFailureReason) -> FileError {
-            FileError(code: .cannotUnmount(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
-        }
-        
-        /// Indicates the ``Code-swift.enum/cannotRead(reason:)`` error.
-        ///
-        /// The return value only serves as a way to compare. For example,
-        ///
-        /// ```swift
-        /// if fileError == .cannotRead(reason: .noSuchFile) {
-        ///     ...
-        /// }
-        /// ```
-        ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
-        @inlinable
-        public static func cannotRead(reason: Code.ReadFailureReason) -> FileError {
-            FileError(code: .cannotRead(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
-        }
-        
-        /// Indicates the ``Code-swift.enum/cannotWrite(reason:)`` error.
-        ///
-        /// The return value only serves as a way to compare. For example,
-        ///
-        /// ```swift
-        /// if fileError == .cannotRead(reason: .noSuchFile) {
-        ///     ...
-        /// }
-        /// ```
-        ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
-        @inlinable
-        public static func cannotWrite(reason: Code.WriteFailureReason) -> FileError {
-            FileError(code: .cannotWrite(reason: reason), source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
-        }
-        
-        /// Indicates the ``Code-swift.enum/unknown`` error.
-        ///
-        /// The return value only serves as a way to compare. For example,
-        ///
-        /// ```swift
-        /// if fileError == .cannotRead(reason: .noSuchFile) {
-        ///     ...
-        /// }
-        /// ```
-        ///
-        /// - Important: Do never use this function to initialize an error, use ``init(code:source:underlyingError:)`` instead.
-        @inlinable
-        public static func unknown() -> FileError {
-            FileError(code: .unknown, source: .homeDirectory, underlyingError: CocoaError(.coderInvalidValue))
+            lhs.code == rhs.code && lhs.source == rhs.source
         }
         
         
@@ -406,7 +331,7 @@ extension FinderItem {
         @inlinable
         public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
             let error = parse(arg)
-            if error == .unknown() {
+            if error.code == .unknown {
                 throw arg
             } else {
                 return error

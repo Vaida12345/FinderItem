@@ -12,23 +12,50 @@ import Foundation
 extension FinderItem {
     
     /// Inserts and replaces existing attributes.
+    ///
+    /// You can also define your own keys that can be inserted using this method, see ``InsertableAttributeKey``.
     @inlinable
     public func insertAttribute<T, E: Error>(_ attribute: InsertableAttributeKey<T, E>, _ value: T) throws (E) {
         try attribute.insertTo(self, value)
     }
     
-    /// Inserts and replaces existing attributes.
+    /// Inserts and replaces an existing `Boolean` attribute.
+    ///
+    /// By default, the attribute is inserted as `true`. You can override this using ``insertAttribute(_:_:)``, or
+    /// ```swift
+    /// try file.insertAttribute(!.isPackage)
+    /// ```
+    ///
+    /// You can also define your own keys that can be inserted using this method, see ``InsertableAttributeKey``.
     @inlinable
     public func insertAttribute<E: Error>(_ attribute: InsertableAttributeKey<Bool, E>) throws (E) {
         try attribute.insertTo(self, true)
     }
     
     
+    /// A key indicating that the associated value can be inserted to a `FinderItem`.
+    ///
+    /// You can create extensions to this structure to define your own keys, for example:
+    /// ```swift
+    /// extension FinderItem.InsertableAttributeKey {
+    ///    public static var isPackage: FinderItem.InsertableAttributeKey<Bool, any Error> {
+    ///        .init { item, value in
+    ///            var resourceValues = URLResourceValues()
+    ///            resourceValues.isPackage = value
+    ///            try item.url.setResourceValues(resourceValues)
+    ///        }
+    ///     }
+    /// }
+    /// ```
     public struct InsertableAttributeKey<Value, E> {
         
         @usableFromInline
         let insertTo: (_ item: FinderItem, _ value: Value) throws(E) -> Void
         
+        /// Creates a new key.
+        ///
+        /// - Parameters:
+        ///   - insertTo: A closure that is invoked to insert `value` to `item`.
         @inlinable
         public init(insertTo: @escaping (_ item: FinderItem, _ value: Value) throws(E) -> Void) {
             self.insertTo = insertTo
@@ -62,6 +89,12 @@ extension FinderItem.InsertableAttributeKey {
 extension FinderItem.InsertableAttributeKey where Value == Bool, E == any Error {
     
     /// Negates the attribute.
+    ///
+    /// By default, booleans are inserted as `true`, use this function to insert `false`.
+    /// ```swift
+    /// try file.insertAttribute(.isPackage)  // inserts true
+    /// try file.insertAttribute(!.isPackage) // inserts false
+    /// ```
     @inlinable
     public static prefix func !(_ key: FinderItem.InsertableAttributeKey<Bool, any Error>) -> FinderItem.InsertableAttributeKey<Bool, any Error> {
         .init { item, value in
@@ -122,22 +155,6 @@ extension FinderItem.InsertableAttributeKey {
             var resourceValues = URLResourceValues()
             resourceValues.contentModificationDate = value
             try item.url.setResourceValues(resourceValues)
-        }
-    }
-    
-}
-
-
-// MARK: - FileAttribute
-
-extension FinderItem.InsertableAttributeKey {
-    
-    /// Indicates whether the file’s extension is hidden.
-    public static var extensionHidden: FinderItem.InsertableAttributeKey<Bool, any Error> {
-        .init { source, value in
-            var attributes = try FileManager.default.attributesOfItem(atPath: source.path)
-            attributes[.extensionHidden] = NSNumber(booleanLiteral: value)
-            try FileManager.default.setAttributes(attributes, ofItemAtPath: source.path)
         }
     }
     

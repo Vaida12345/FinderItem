@@ -14,7 +14,7 @@ extension FinderItem {
     
     /// An error indicating loading extended attribute resulted in failure.
     ///
-    /// To obtain the nature of the error, use `==` to test against the common cases.
+    /// To determine the nature of the error, use `==` to test against the common cases.
     /// ```swift
     /// catch {
     ///     error == .noSuchAttribute
@@ -39,6 +39,7 @@ extension FinderItem {
             String(cString: strerror(code))
         }
         
+        /// Creates an error from the error code.
         @inlinable
         public init(code: Int32) {
             self.code = code

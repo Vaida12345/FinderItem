@@ -19,9 +19,9 @@ extension FinderItem {
     
     /// In an app that has adopted App Sandbox, makes the resource pointed to by a security-scoped URL available to the app.
     ///
-    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessSecurityScope()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
+    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessingSecurityScopedResource()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
     ///
-    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    /// - SeeAlso: ``withAccessingSecurityScopedResource(perform:)``
     ///
     /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
     ///
@@ -33,7 +33,7 @@ extension FinderItem {
     
     /// In an app that adopts App Sandbox, revokes access to the resource pointed to by a security-scoped URL.
     ///
-    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    /// - SeeAlso: ``withAccessingSecurityScopedResource(perform:)``
     @inlinable
     public func stopAccessingSecurityScopedResource() {
         self.url.stopAccessingSecurityScopedResource()
@@ -48,7 +48,6 @@ extension FinderItem {
     /// - Returns: Whatever is returned by the `action`.
     ///
     /// - Parameters:
-    ///   - source: The `FinderItem` which refers to an item outside the sandbox of the app.
     ///   - action: The action which is performed. The `source` of the closure is exactly the same as the `source` passed, the value is provided to prevent capture.
     @inlinable
     public func withAccessingSecurityScopedResource<Result>(perform action: (_ source: FinderItem) throws -> Result) throws -> Result {
@@ -62,12 +61,16 @@ extension FinderItem {
     // MARK: - Bookmark
     
     /// Returns bookmark data for the URL, created with specified options.
+    ///
+    /// - Note: You only need to uses this method when you choose to handle bookmarks manually, otherwise encode and decode with `withSecurityScope` configuration is sufficient.
     @inlinable
     public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws -> Data {
         try self.url.bookmarkData(options: options)
     }
     
     /// Creates a URL that refers to a location specified by resolving bookmark data.
+    ///
+    /// - Note: You only need to uses this method when you choose to handle bookmarks manually, otherwise encode and decode with `withSecurityScope` configuration is sufficient.
     ///
     /// - Parameters:
     ///   - resolvingBookmarkData: The bookmark data
@@ -109,9 +112,9 @@ extension FinderItem {
 extension Sequence<FinderItem> {
     /// In an app that has adopted App Sandbox, makes the resource pointed to by a security-scoped URL available to the app.
     ///
-    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessSecurityScope()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
+    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessingSecurityScopedResource()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
     ///
-    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    /// - SeeAlso: ``FinderItem/withAccessingSecurityScopedResource(perform:)``
     ///
     /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
     ///
@@ -125,7 +128,7 @@ extension Sequence<FinderItem> {
     
     /// In an app that adopts App Sandbox, revokes access to the resource pointed to by a security-scoped URL.
     ///
-    /// - SeeAlso: ``withAccessingSecurityScopedResource(to:perform:)``
+    /// - SeeAlso: ``FinderItem/withAccessingSecurityScopedResource(perform:)``
     @inlinable
     public func stopAccessingSecurityScopedResource() {
         for i in self {

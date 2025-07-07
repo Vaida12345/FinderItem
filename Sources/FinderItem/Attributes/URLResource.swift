@@ -13,23 +13,41 @@ extension FinderItem {
     
     /// Returns a resource value identified by the given resource key.
     ///
+    /// This function returns `nil` when the retrieval process if completed without error, but there isn't a value associated with the given key.
+    ///
+    /// You can also define your own keys that can be inserted using this method, see ``ResourceKey``.
+    ///
     /// - Returns: `nil` if there’s no available value for the given key.
     ///
     /// - Throws: If this method fails to determine a value’s availability or retrieve its value.
-    ///
-    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showExtendedAttributes`` option to view all attributes.
     @inlinable
     public func load<T>(_ resource: ResourceKey<T>) throws -> sending T? {
         try resource.load(self)
     }
     
-    
+    /// A generic attribute resource key.
+    ///
+    /// You can create extensions to this structure to define your own keys, for example:
+    /// ```swift
+    /// extension FinderItem.InsertableAttributeKey {
+    ///    static var isApplication: FinderItem.ResourceKey<Bool> {
+    ///         .init { source in
+    ///             try source.url.resourceValues(forKeys: [.isApplicationKey]).isApplication
+    ///         }
+    ///     }
+    /// }
+    /// ```
     public struct ResourceKey<T>: Sendable {
         
         @usableFromInline
         let load: @Sendable (_ source: FinderItem) throws -> T?
         
         /// A new resource key with the given closure.
+        ///
+        /// This closure should return `nil` only when the retrieval process if completed without error, but there isn't a value associated with the given key.
+        ///
+        /// - Parameters:
+        ///   - load: The closure that gets called to load an attribute from `$0`.
         @inlinable
         public init(load: @Sendable @escaping (_: FinderItem) throws -> T?) {
             self.load = load

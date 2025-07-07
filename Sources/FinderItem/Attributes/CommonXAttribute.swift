@@ -20,15 +20,21 @@ extension FinderItem {
     
     /// Loads an extended attribute.
     ///
-    /// - throws ``XAttributeError``
-    ///
-    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showExtendedAttributes`` option to view all attributes.
+    /// > Tip:
+    /// > You can use the following code to inspect all the extended attributes associated with `file`
+    /// > ```swift
+    /// > detailedPrint(file, configuration: .showExtendedAttributes)
+    /// > ```
     @inlinable
-    public func load<T>(_ attributeKey: CommonXAttributeKey<T>) throws(FinderItem.XAttributeError) -> T? {
-        guard let plist = try self.load(.xattr(attributeKey.name, as: Any?.self)) else { return nil }
+    public func load<T>(_ attributeKey: CommonXAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
+        let plist = try self.load(.xattr(attributeKey.name, as: Any?.self))! // can unwrap as long as we are sure it is a plist
         return attributeKey.parser(plist)
     }
     
+    
+    /// A set of predefined extended attributes.
+    ///
+    /// Please refer to the type properties for a set of predefined extended attributes.
     public struct CommonXAttributeKey<Value> {
         
         @usableFromInline
@@ -55,6 +61,8 @@ extension FinderItem {
 public extension FinderItem.CommonXAttributeKey {
     
     /// The downloaded date.
+    ///
+    /// - SeeAlso: ``origin``
     @inlinable
     static var dateDownloaded: FinderItem.CommonXAttributeKey<Date> {
         .named("com.apple.metadata:kMDItemDownloadedDate") { plist in
@@ -63,6 +71,8 @@ public extension FinderItem.CommonXAttributeKey {
     }
     
     /// The file (download) where from.
+    ///
+    /// - SeeAlso: ``dateDownloaded``
     @inlinable
     static var origin: FinderItem.CommonXAttributeKey<[String]> {
         .named("com.apple.metadata:kMDItemWhereFroms") { plist in
@@ -71,6 +81,8 @@ public extension FinderItem.CommonXAttributeKey {
     }
     
     /// Finder comments on this file.
+    ///
+    /// - Experiment: Finder may have a hard time loading the modified comments.
     @inlinable
     static var comments: FinderItem.CommonXAttributeKey<String> {
         .named("com.apple.metadata:kMDItemFinderComment") { plist in
@@ -79,6 +91,8 @@ public extension FinderItem.CommonXAttributeKey {
     }
     
     /// Keywords associated with this file.
+    ///
+    /// - Experiment: Finder may show the keywords in a reversed order.
     @inlinable
     static var keywords: FinderItem.CommonXAttributeKey<[String]> {
         .named("com.apple.metadata:kMDItemKeywords") { plist in
