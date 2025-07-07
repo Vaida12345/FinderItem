@@ -58,10 +58,6 @@ public extension FinderItem {
     func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
         if self.extension == "app" {
             try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
-        } else if self.isDirectory,
-                  self.extension == "xcodeproj",
-                  let appURL = Bundle(identifier: "com.apple.dt.Xcode")?.bundleURL {
-            try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
         } else {
             try await NSWorkspace.shared.open(self.url, configuration: configuration)
         }
