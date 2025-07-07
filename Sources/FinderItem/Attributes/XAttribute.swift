@@ -16,102 +16,23 @@ extension FinderItem {
     
     /// Loads an extended attribute.
     ///
-    /// - throws ``XAttributeLoadError``
+    /// - throws ``XAttributeError``
     ///
     /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showAttributes`` option to view all attributes.
-    public func load<T>(_ attributeKey: XAttributeKey<T>) throws(FinderItem.XAttributeLoadError) -> T {
+    public func load<T>(_ attributeKey: XAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
         try attributeKey.load(self)
     }
     
     public struct XAttributeKey<Value> {
         
-        let load: (_ source: FinderItem) throws(FinderItem.XAttributeLoadError) -> Value
+        let load: (_ source: FinderItem) throws(FinderItem.XAttributeError) -> Value
         
         
-        init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeLoadError) -> Value) {
+        init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
             self.load = load
         }
         
     }
-    
-    
-    /// An error indicating loading extended attribute resulted in failure.
-    ///
-    /// To obtain the nature of the error, use `==` to test against the common cases.
-    /// ```swift
-    /// catch {
-    ///     error == .noSuchAttribute
-    /// }
-    /// ```
-    public struct XAttributeLoadError: GenericError, Equatable {
-        
-        /// The error code associated with the error.
-        ///
-        /// > SeeAlso:
-        /// > ```sh
-        /// > $ man listxattr
-        /// > ```
-        /// > ```sh
-        /// > $ man getxattr
-        /// > ```
-        public let code: Int32
-        
-        /// The message from the error code.
-        public var message: String {
-            String(cString: strerror(code))
-        }
-        
-        init(code: Int32) {
-            self.code = code
-        }
-        
-        
-        /// The extended attribute does not exist.
-        public static var noSuchAttribute: XAttributeLoadError {
-            XAttributeLoadError(code: ENOATTR)
-        }
-        
-        /// The file system does not support extended attributes or has the feature disabled.
-        public static var operationNotSupported: XAttributeLoadError {
-            XAttributeLoadError(code: ENOTSUP)
-        }
-        
-        /// The named attribute is not permitted for this type of object.
-        public static var operationNotPermitted: XAttributeLoadError {
-            XAttributeLoadError(code: EPERM)
-        }
-        
-        /// `name` is invalid.
-        public static var invalidName: XAttributeLoadError {
-            XAttributeLoadError(code: EINVAL)
-        }
-        
-        /// `self` does not refer to a regular file and the attribute in question is only applicable to files.
-        public static var notAFile: XAttributeLoadError {
-            XAttributeLoadError(code: EISDIR)
-        }
-        
-        /// A component of `self`'s prefix is not a directory.
-        public static var notADirectory: XAttributeLoadError {
-            XAttributeLoadError(code: ENOTDIR)
-        }
-        
-        /// Search permission is denied for a component of `self` or the attribute is not allowed to be read (e.g. an ACL prohibits reading the attributes of this file).
-        public static var accessDenied: XAttributeLoadError {
-            XAttributeLoadError(code: EACCES)
-        }
-        
-        /// `self` points to an invalid address.
-        public static var badAddress: XAttributeLoadError {
-            XAttributeLoadError(code: EFAULT)
-        }
-        
-        /// An I/O error occurred while reading from or writing to the file system.
-        public static var ioError: XAttributeLoadError {
-            XAttributeLoadError(code: EIO)
-        }
-    }
-    
 }
 
 
@@ -121,12 +42,12 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Returns: `[]` when there aren't any attributes associated with `self`.
     public static var xattr: FinderItem.XAttributeKey< [String]> {
-        .init { source throws (FinderItem.XAttributeLoadError) in
+        .init { source throws (FinderItem.XAttributeError) in
             let bufferSize = listxattr(source.path, nil, 0, 0)
             if bufferSize == 0 {
                 return []
             } else if bufferSize == -1 {
-                throw FinderItem.XAttributeLoadError(code: errno)
+                throw FinderItem.XAttributeError(code: errno)
             }
             
             let namebuf = [CChar](unsafeUninitializedCapacity: bufferSize) { buffer, initializedCount in
@@ -149,10 +70,10 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
     public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8]> {
-        .init { item throws (FinderItem.XAttributeLoadError) in
+        .init { item throws (FinderItem.XAttributeError) in
             let size = getxattr(item.path, name, nil, 0, 0, 0)
             if size == -1 {
-                throw FinderItem.XAttributeLoadError(code: errno)
+                throw FinderItem.XAttributeError(code: errno)
             }
             
             return [UInt8](unsafeUninitializedCapacity: size) { buffer, initializedCount in
@@ -166,7 +87,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeLoadError) in
+        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return String(bytes: raw, encoding: .utf8)
         }
@@ -176,7 +97,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeLoadError) in
+        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return raw.withUnsafeBytes { bytes in
                 let data = Data(bytesNoCopy: .init(mutating: bytes.baseAddress!), count: raw.count, deallocator: .none)
@@ -193,7 +114,7 @@ extension FinderItem.XAttributeKey  {
     ///
     /// Corresponds to `com.apple.metadata:kMDItemDownloadedDate`.
     public static var dateDownloaded: FinderItem.XAttributeKey<Optional<Date>> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeLoadError) in
+        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemDownloadedDate", as: Any?.self)) else { return nil }
             return (plist as! NSArray)[0] as! NSDate as Date
         }
@@ -202,13 +123,12 @@ extension FinderItem.XAttributeKey  {
     /// The download where from.
     ///
     /// Corresponds to `com.apple.metadata:kMDItemWhereFroms`.
-    public static var origin: FinderItem.XAttributeKey<Optional<[String]>> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeLoadError) in
+    public static var origins: FinderItem.XAttributeKey<Optional<[String]>> {
+        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemWhereFroms", as: Any?.self)) else { return nil }
             return (plist as! NSArray).map { $0 as! String }
         }
     }
     
 }
-
 #endif

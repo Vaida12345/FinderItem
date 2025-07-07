@@ -11,8 +11,7 @@ import AppKit
 import DetailedDescription
 
 
-let item = FinderItem(at: "/Users/vaida/Downloads/Safari download/generation_config.json")
-
-detailedPrint(item, configuration: .showExtendedAttributes)
-try print(item.load(.xattr))
+let item = FinderItem(at: "/Users/vaida/Desktop/text.txt")
+try item.insertAttribute(.extensionHidden)
+try print(item.load(.extensionHidden))
 #endif
