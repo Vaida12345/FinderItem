@@ -11,8 +11,8 @@ import AppKit
 import DetailedDescription
 
 
-let item = FinderItem(at: "/Users/vaida/Downloads/Safari download/vocab.json")
+let item = FinderItem(at: "/Users/vaida/Downloads/Safari download/generation_config.json")
 
-detailedPrint(item.extendedAttributes!)
-try await item.load(.customIcon)?.tiffRepresentation?.write(to: .desktopDirectory/"file.tiff")
+detailedPrint(item, configuration: .showExtendedAttributes)
+try print(item.load(.xattr))
 #endif

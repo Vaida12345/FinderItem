@@ -16,17 +16,19 @@ extension FinderItem {
     /// - Returns: `nil` if there’s no available value for the given key.
     ///
     /// - Throws: If this method fails to determine a value’s availability or retrieve its value.
-    public func load<T>(_ resource: ResourceKey<T>) async throws -> sending T? {
-        try await resource.load(self)
+    ///
+    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showAttributes`` option to view all attributes.
+    public func load<T>(_ resource: ResourceKey<T>) throws -> sending T? {
+        try resource.load(self)
     }
     
     
     public struct ResourceKey<T>: Sendable {
         
-        let load: @Sendable (_ source: FinderItem) async throws -> T?
+        let load: @Sendable (_ source: FinderItem) throws -> T?
         
         /// A new resource key with the given closure.
-        public init(load: @Sendable @escaping (_: FinderItem) async throws -> T?) {
+        public init(load: @Sendable @escaping (_: FinderItem) throws -> T?) {
             self.load = load
         }
     }

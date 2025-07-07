@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://www.github.com/Vaida12345/DetailedDescription",
       "state" : {
-        "revision" : "30d0c3d0fd0c21f42db6d91d44263b1f0dc3bfd0",
-        "version" : "2.0.4"
+        "revision" : "0c5fbe3befeb9cfa5af2741796b4b560744c44dd",
+        "version" : "2.0.8"
       }
     },
     {
