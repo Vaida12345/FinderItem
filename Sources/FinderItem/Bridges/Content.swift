@@ -57,10 +57,13 @@ public extension FinderItem {
     @discardableResult
     func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
         if self.extension == "app" {
-            try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
-        } else {
-            try await NSWorkspace.shared.open(self.url, configuration: configuration)
+            return try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
         }
+        
+        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: self.url) else {
+            return try await NSWorkspace.shared.open(self.url, configuration: configuration)
+        }
+        return try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
     }
     
     /// Reveals the current file in finder.
