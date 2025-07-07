@@ -49,21 +49,12 @@ public extension FinderItem {
         try await self.reveal()
     }
     
-    /// Opens the current file.
+    /// Opens an item for a URL in the default manner in its preferred app.
     ///
-    /// - Parameters:
-    ///   - configuration: The options that indicate how you want to open the URL.
+    /// This function returns after the app is opened.
     @inlinable
-    @discardableResult
-    func open(configuration: NSWorkspace.OpenConfiguration = NSWorkspace.OpenConfiguration()) async throws -> NSRunningApplication {
-        if self.extension == "app" {
-            return try await NSWorkspace.shared.openApplication(at: self.url, configuration: configuration)
-        }
-        
-        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: self.url) else {
-            return try await NSWorkspace.shared.open(self.url, configuration: configuration)
-        }
-        return try await NSWorkspace.shared.open([self.url], withApplicationAt: appURL, configuration: configuration)
+    func open() async {
+        LSOpenCFURLRef(self.url as CFURL, nil)
     }
     
     /// Reveals the current file in finder.

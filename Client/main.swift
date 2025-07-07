@@ -11,7 +11,9 @@ import AppKit
 import DetailedDescription
 
 
-let item = FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase/Projects/Projects/Annotation/Annotation.xcodeproj/")
-try await print(item.open())
+let item = FinderItem(at: "/System/Applications/TV.app")
+
+await print(item.open())
+try await Task.sleep(for: .seconds(100))
 
 #endif
