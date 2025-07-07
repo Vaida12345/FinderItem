@@ -13,5 +13,4 @@ import DetailedDescription
 
 let item = FinderItem(at: "/Users/vaida/Desktop/text.txt")
 try item.insertAttribute(.extensionHidden)
-try print(item.load(.extensionHidden))
 #endif

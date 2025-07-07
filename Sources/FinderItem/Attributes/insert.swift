@@ -12,11 +12,13 @@ import Foundation
 extension FinderItem {
     
     /// Inserts and replaces existing attributes.
+    @inlinable
     public func insertAttribute<T, E: Error>(_ attribute: InsertableAttributeKey<T, E>, _ value: T) throws (E) {
         try attribute.insertTo(self, value)
     }
     
     /// Inserts and replaces existing attributes.
+    @inlinable
     public func insertAttribute<E: Error>(_ attribute: InsertableAttributeKey<Bool, E>) throws (E) {
         try attribute.insertTo(self, true)
     }
@@ -24,7 +26,13 @@ extension FinderItem {
     
     public struct InsertableAttributeKey<Value, E> {
         
+        @usableFromInline
         let insertTo: (_ item: FinderItem, _ value: Value) throws(E) -> Void
+        
+        @inlinable
+        public init(insertTo: @escaping (_ item: FinderItem, _ value: Value) throws(E) -> Void) {
+            self.insertTo = insertTo
+        }
     }
 }
 
@@ -34,6 +42,7 @@ extension FinderItem {
 extension FinderItem.InsertableAttributeKey {
     
     /// Inserts an extended attribute with the given `name`.
+    @inlinable
     public static func xattr(_ name: String) -> FinderItem.InsertableAttributeKey<Data, FinderItem.XAttributeError> {
         .init { item, value throws(FinderItem.XAttributeError) in
             let code = value.withUnsafeBytes { bytes in
@@ -45,7 +54,8 @@ extension FinderItem.InsertableAttributeKey {
         }
     }
     
-    /// Inserts where from.
+    /// The file where from.
+    @inlinable
     public static var origins: FinderItem.InsertableAttributeKey<[String], FinderItem.XAttributeError> {
         .init { item, value throws(FinderItem.XAttributeError) in
             let plist = try! PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
@@ -53,7 +63,8 @@ extension FinderItem.InsertableAttributeKey {
         }
     }
     
-    /// Inserts date downloaded.
+    /// The date downloaded.
+    @inlinable
     public static var dateDownloaded: FinderItem.InsertableAttributeKey<[Date], FinderItem.XAttributeError> {
         .init { item, value throws(FinderItem.XAttributeError) in
             let plist = try! PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
@@ -69,6 +80,7 @@ extension FinderItem.InsertableAttributeKey {
 extension FinderItem.InsertableAttributeKey where Value == Bool, E == any Error {
     
     /// Negates the attribute.
+    @inlinable
     public static prefix func !(_ key: FinderItem.InsertableAttributeKey<Bool, any Error>) -> FinderItem.InsertableAttributeKey<Bool, any Error> {
         .init { item, value in
             try key.insertTo(item, !value)

@@ -10,11 +10,7 @@ import Foundation
 
 extension FinderItem {
     
-    /// Loads an extended attribute.
-    ///
-    /// - throws ``XAttributeError``
-    ///
-    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showAttributes`` option to view all attributes.
+    /// Loads a file attribute.
     public func load<T>(_ attributeKey: FileAttributeKey<T>) throws -> T? {
         try attributeKey.load(self)
     }

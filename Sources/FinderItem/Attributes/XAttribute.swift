@@ -18,17 +18,19 @@ extension FinderItem {
     ///
     /// - throws ``XAttributeError``
     ///
-    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showAttributes`` option to view all attributes.
+    /// - Tip: You can `detailedPrint` `self` with the ``DescriptionConfiguration/showExtendedAttributes`` option to view all attributes.
+    @inlinable
     public func load<T>(_ attributeKey: XAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
         try attributeKey.load(self)
     }
     
     public struct XAttributeKey<Value> {
         
+        @usableFromInline
         let load: (_ source: FinderItem) throws(FinderItem.XAttributeError) -> Value
         
         
-        init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
+        public init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
             self.load = load
         }
         
@@ -41,6 +43,7 @@ extension FinderItem.XAttributeKey {
     /// Returns the extended attribute keys associated with `self`.
     ///
     /// - Returns: `[]` when there aren't any attributes associated with `self`.
+    @inlinable
     public static var xattr: FinderItem.XAttributeKey< [String]> {
         .init { source throws (FinderItem.XAttributeError) in
             let bufferSize = listxattr(source.path, nil, 0, 0)
@@ -69,6 +72,7 @@ extension FinderItem.XAttributeKey {
     /// This method returns the value associated with `name` as an array of `UInt8`, use the overloads to parse as `String?` or property list (`Any?`).
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    @inlinable
     public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8]> {
         .init { item throws (FinderItem.XAttributeError) in
             let size = getxattr(item.path, name, nil, 0, 0, 0)
@@ -86,6 +90,7 @@ extension FinderItem.XAttributeKey {
     /// Returns the extended attribute associated with the given `name` as a `String`, or `nil` if the data is not a `String`.
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             let raw = try item.load(.xattr(name)) as [UInt8]
@@ -96,6 +101,7 @@ extension FinderItem.XAttributeKey {
     /// Returns the extended attribute associated with the given `name` as a property list, or `nil` if the data is not a property list.
     ///
     /// - Note: You do not use this function directly, you pass it to ``FinderItem/load(_:)``
+    @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             let raw = try item.load(.xattr(name)) as [UInt8]
@@ -113,6 +119,7 @@ extension FinderItem.XAttributeKey  {
     /// The downloaded date.
     ///
     /// Corresponds to `com.apple.metadata:kMDItemDownloadedDate`.
+    @inlinable
     public static var dateDownloaded: FinderItem.XAttributeKey<Optional<Date>> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemDownloadedDate", as: Any?.self)) else { return nil }
@@ -123,6 +130,7 @@ extension FinderItem.XAttributeKey  {
     /// The download where from.
     ///
     /// Corresponds to `com.apple.metadata:kMDItemWhereFroms`.
+    @inlinable
     public static var origins: FinderItem.XAttributeKey<Optional<[String]>> {
         FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
             guard let plist = try item.load(.xattr("com.apple.metadata:kMDItemWhereFroms", as: Any?.self)) else { return nil }

@@ -16,7 +16,7 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
         using descriptor: DetailedDescription.Descriptor<FinderItem>,
         configuration: DescriptionConfiguration
     ) -> any DescriptionBlockProtocol {
-        let fileSize = configuration.contains(.showFileSize) ? self.fileSize.map { " [\(Int64($0), format: .byteCount(style: .file))]" } ?? "" : ""
+        let fileSize = configuration.contains(.showFileSize) ? (try? self.load(.fileSize).map { " [\(Int64($0), format: .byteCount(style: .file))]" }) ?? "" : ""
         
         return if self.isDirectory,
             let children = try? self.children(range: .contentsOfDirectory.withHidden) {

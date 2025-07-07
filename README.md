@@ -16,7 +16,7 @@ It abstracts over many structures, including `FileManager`, `URL`, `FilePath`, a
 - File operations including [``copy(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/copy(to:)),  [``move(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/move(to:)-5oihl), [``remove()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/remove()).
 - [``open(configuration:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/open(configuration:)) or [``reveal()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/reveal()) files
 - Get sorted children as a stream using [``children(range:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/children(range:)).
-- Fully incorporate Swift6.0 & *typed throws*. All errors are parsed as [`FileError`](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/fileerror)
+- [Typed throws](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/fileerror)
 
 
 ## Getting Started

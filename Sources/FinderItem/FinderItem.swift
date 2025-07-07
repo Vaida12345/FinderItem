@@ -344,40 +344,6 @@ public extension FinderItem {
         (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) ?? !self.url.hasDirectoryPath
     }
     
-    /// Returns the file type of the given file.
-    ///
-    /// To inspect the content,
-    ///
-    /// ```swift
-    /// item.fileType.contains(.package)
-    /// ```
-    ///
-    /// ## Topics
-    /// ### The Resulting Structure
-    /// - ``FileType-swift.struct``
-    @inlinable
-    var fileType: FileType {
-        get throws(FileError) {
-            do {
-                let sourceKeys: Set<URLResourceKey> = [.isRegularFileKey, .isDirectoryKey, .isApplicationKey, .isAliasFileKey, .isPackageKey, .isHiddenKey, .isSymbolicLinkKey]
-                let resourceValues = try self.url.resourceValues(forKeys: sourceKeys)
-                var types: FileType = []
-                
-                if resourceValues.isRegularFile  ?? false { types.formUnion(.file) }
-                if resourceValues.isDirectory    ?? false { types.formUnion(.directory) }
-                if resourceValues.isApplication  ?? false { types.formUnion(.application) }
-                if resourceValues.isAliasFile    ?? false { types.formUnion(.alias) }
-                if resourceValues.isPackage      ?? false { types.formUnion(.package) }
-                if resourceValues.isHidden       ?? false { types.formUnion(.hidden) }
-                if resourceValues.isSymbolicLink ?? false { types.formUnion(.symbolicLink) }
-                
-                return types
-            } catch {
-                throw FileError.parse(error)
-            }
-        }
-    }
-    
     /// The `UTType` of the file.
     @inlinable
     var contentType: UTType {
@@ -402,26 +368,6 @@ public extension FinderItem {
     @inlinable
     var exists: Bool {
         FileManager.default.fileExists(atPath: self.path)
-    }
-    
-    /// Determines whether the file is writable.
-    @inlinable
-    var isWritable: Bool {
-        (try? self.url.resourceValues(forKeys: [.isWritableKey]).isWritable) ?? false
-    }
-    
-    /// Determines whether the file is readable.
-    @inlinable
-    var isReadable: Bool {
-        (try? self.url.resourceValues(forKeys: [.isReadableKey]).isReadable) ?? false
-    }
-    
-    /// The file size, in bytes.
-    ///
-    /// - Note: ``fileSize`` does not support directories.
-    @inlinable
-    var fileSize: Int? {
-        try? self.url.resourceValues(forKeys: [.fileSizeKey]).fileSize
     }
     
     /// The id, which is its ``url``.
