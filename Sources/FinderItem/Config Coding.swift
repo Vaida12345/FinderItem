@@ -11,6 +11,7 @@ import Foundation
 
 extension FinderItem {
     
+    // This is included only for legacy decoding.
     fileprivate enum ConfigurableCodingKey: String, CodingKey {
         
         /// The key indicating the path of the FinderItem.

@@ -66,11 +66,6 @@ import UniformTypeIdentifiers
 /// To create `FinderItem` from the bookmark, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``. On return, `bookmarkDataIsStale` serves as an indicator of whether the persisted bookmark data needs to be updated.
 ///
 ///
-/// ### Ask user for permissions
-///
-/// With `com.apple.security.files.user-selected.read-write`, you could ask users for files using `fileImporter`, or `NSPenal`. FinderItem also offers integrated streamline of asking for permission and storing the bookmark. To read more, see ``FinderItem/tryPromptAccessFile()``.
-///
-///
 /// ## Topics
 ///
 /// ### Initializers
@@ -994,35 +989,5 @@ public extension FinderItem {
     @inlinable
     static func /(_ lhs: FinderItem, _ rhs: some StringProtocol) -> FinderItem {
         lhs.appending(path: rhs)
-    }
-    
-    // MARK: - enums
-    
-    /// The type of the item.
-    struct FileType: OptionSet, Sendable {
-        
-        public let rawValue: Int
-        
-        /// determining whether the resource is a regular file rather than a directory or a symbolic link.
-        public static let file         = FileType(rawValue: 1 << 0)
-        /// determining whether the resource is a directory
-        public static let directory    = FileType(rawValue: 1 << 1)
-        /// determining whether the resource is an application
-        public static let application  = FileType(rawValue: 1 << 2)
-        /// determining whether the file is an alias.
-        public static let alias        = FileType(rawValue: 1 << 3)
-        /// determining whether the resource is a file package.
-        public static let package      = FileType(rawValue: 1 << 4)
-        /// determining whether the resource is normally not displayed to users
-        public static let hidden       = FileType(rawValue: 1 << 5)
-        /// determining whether the resource is a symbolic link.
-        ///
-        /// Compared to alias, symbolic link is a lower-level feature, often used in terminal operations, pointing directly to the target file's path
-        public static let symbolicLink = FileType(rawValue: 1 << 5)
-        
-        @inlinable
-        public init(rawValue: Int) {
-            self.rawValue = rawValue
-        }
     }
 }
