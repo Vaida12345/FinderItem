@@ -7,6 +7,9 @@
 
 #if os(macOS)
 import FinderItem
+import Foundation
+import DetailedDescription
 
-print(FinderItem(at: "/Users/vaida/Desktop").extension)
+let item = FinderItem(at: "/Users/vaida/Desktop/file.mid")
+detailedPrint(item, configuration: .showFileSize)
 #endif

@@ -64,9 +64,9 @@ public extension FinderItem.CommonXAttributeKey {
     ///
     /// - SeeAlso: ``origin``
     @inlinable
-    static var dateDownloaded: FinderItem.CommonXAttributeKey<Date> {
+    static var dateDownloaded: FinderItem.CommonXAttributeKey<[Date]> {
         .named("com.apple.metadata:kMDItemDownloadedDate") { plist in
-            return (plist as! NSArray)[0] as! NSDate as Date
+            return (plist as! NSArray).map { $0 as! Date }
         }
     }
     

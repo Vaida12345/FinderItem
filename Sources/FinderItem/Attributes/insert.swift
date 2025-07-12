@@ -47,7 +47,7 @@ extension FinderItem {
     ///     }
     /// }
     /// ```
-    public struct InsertableAttributeKey<Value, E> {
+    public struct InsertableAttributeKey<Value, E: Error> {
         
         @usableFromInline
         let insertTo: (_ item: FinderItem, _ value: Value) throws(E) -> Void
