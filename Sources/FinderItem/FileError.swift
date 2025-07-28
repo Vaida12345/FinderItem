@@ -138,10 +138,18 @@ extension FinderItem {
                 case unknownStringEncoding
                 /// Could not read because the specified URL scheme is unsupported.
                 case unsupportedScheme
-                /// The resource value of a given resource key is not available.
+                
+                /// Creates a reason based on a POSIX `errno` code.
                 ///
-                /// This reason is defined by the `FinderItem` package, and is thrown when `URL/resourceValues(forKeys:)` returns `nil` for a given key.
-                case resourceValueNotAvailable
+                /// - Note: A one-to-one matching cannot be not guaranteed, as this structure primarily aims to serve the Swift suite of errors. Notably, `EBADF` is ignored.
+                @inlinable
+                public static func posix(code: Int32) -> ReadFailureReason {
+                    switch code {
+                    case EACCES: .noPermission
+                    case ENAMETOOLONG, ENOENT: .invalidFileName
+                    default: .unknown
+                    }
+                }
             }
             
             /// The reason for the failure to write a file.
@@ -217,8 +225,6 @@ extension FinderItem {
                     "The file \"\(source)\" employs an unknown string encoding."
                 case .unsupportedScheme:
                     "The file path \"\(source)\" employs an unsupported URL scheme."
-                case .resourceValueNotAvailable:
-                    "The resource value of a resource key is not available for the file \"\(source)\"."
                 }
                 
             case let .cannotWrite(reason):
@@ -264,6 +270,8 @@ extension FinderItem {
         ///   - error: The source error
         @inlinable
         public static func parse(_ error: some Error) -> FileError {
+            if let error = error as? FileError { return error }
+            
             guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             guard let url = (error.userInfo["NSDestinationFilePath"] as? String).map({ URL(fileURLWithPath: $0) }) ?? error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
             let source = FinderItem(at: url)

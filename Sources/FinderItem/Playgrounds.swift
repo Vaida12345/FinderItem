@@ -9,25 +9,9 @@ import UniformTypeIdentifiers
 
 
 extension FinderItem: CustomPlaygroundDisplayConvertible {
-    public var playgroundDescription: Any {
-        PlaygroundDescription(
-            name: self.name,
-            path: self.path,
-            contentType: try? self.contentType.identifier,
-            children: try? self.children(range: .contentsOfDirectory).map(\.self)
-        )
-    }
     
-    public struct PlaygroundDescription {
-        
-        let name: String
-        
-        let path: String
-        
-        let contentType: String?
-        
-        let children: [FinderItem]?
-        
+    public var playgroundDescription: Any {
+        self.url
     }
 }
 

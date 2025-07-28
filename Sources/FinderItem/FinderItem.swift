@@ -166,7 +166,7 @@ public extension FinderItem {
     var contentType: UTType {
         get throws(FileError) {
             do {
-                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError(code: .cannotRead(reason: .resourceValueNotAvailable), source: self) }
+                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError(code: .cannotRead(reason: .unknown), source: self) }
                 return contentType
             } catch {
                 throw FileError.parse(error)
@@ -301,15 +301,79 @@ public extension FinderItem {
         }
     }
     
-    /// Indicates whether the files or directories in specified path has the same contents with `self`.
+    /// Indicates whether the files in specified path has the same contents with `self`.
     ///
-    /// If both are directories, the contents are the list of files and subdirectories each contains—contents of subdirectories are also compared. For files, this method checks to see if they’re the same file, then compares their size, and finally compares their contents. This method does not traverse symbolic links, but compares the links themselves.
+    /// This method checks to see if they’re the same file, then compares their size, and finally compares their contents. This method does not traverse symbolic links, but compares the links themselves.
+    ///
+    /// - Precondition: `self` must not be a folder.
+    ///
+    /// - Note: Starting `FinderItem 1.1.1`, this method uses a customized implementation for performance reasons.
     ///
     /// - Parameters:
-    ///   - other: The path of a file or directory to compare with `self`.
+    ///   - other: The path of a file to compare with `self`.
     @inlinable
-    func contentsEqual(to other: FinderItem) -> Bool {
-        FileManager.default.contentsEqual(atPath: self.url.path(percentEncoded: false), andPath: other.url.path(percentEncoded: false))
+    func contentsEqual(to other: FinderItem) throws -> Bool {
+        guard self.path != other.path else { return true }
+        
+        let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
+            var s = stat()
+            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: self) }
+            return s
+        }
+        
+        let otherInfo = try other.url.withUnsafeFileSystemRepresentation { rep in
+            var s = stat()
+            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: other) }
+            return s
+        }
+        
+        /* check for being hard links */
+        if myInfo.st_dev == otherInfo.st_dev && myInfo.st_ino == otherInfo.st_ino {
+            return true
+        }
+        
+        /* check for being same type */
+        if mode_t(myInfo.st_mode) & S_IFMT != mode_t(otherInfo.st_mode) & S_IFMT {
+            return false
+        }
+        
+        if (myInfo.st_mode & S_IFMT) == S_IFREG {
+            guard myInfo.st_size == otherInfo.st_size else { return false }
+            
+            return try self.url.withUnsafeFileSystemRepresentation { myPath in
+                guard let myPath else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: self) }
+                
+                return try other.url.withUnsafeFileSystemRepresentation { otherPath in
+                    guard let otherPath else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: other) }
+                    
+                    let myfd = Darwin.open(myPath, O_RDONLY)
+                    let otherfd = Darwin.open(otherPath, O_RDONLY)
+                    defer {
+                        close(myfd)
+                        close(otherfd)
+                    }
+                    
+                    _ = fcntl(myfd, F_NOCACHE) // hints
+                    _ = fcntl(otherfd, F_NOCACHE)
+                    
+                    let myMap = mmap(nil, Int(myInfo.st_size), PROT_READ, MAP_PRIVATE, myfd, 0)
+                    let otherMap = mmap(nil, Int(otherInfo.st_size), PROT_READ, MAP_PRIVATE, otherfd, 0)
+                    
+                    defer {
+                        munmap(myMap, Int(myInfo.st_size))
+                        munmap(otherMap, Int(otherInfo.st_size))
+                    }
+                    
+                    return memcmp(myMap, otherMap, Int(myInfo.st_size)) == 0
+                }
+            }
+        } else if (myInfo.st_mode & S_IFMT) == S_IFLNK {
+            return try FileManager.default.destinationOfSymbolicLink(atPath: self.path) == FileManager.default.destinationOfSymbolicLink(atPath: other.path)
+        } else if (myInfo.st_mode & S_IFMT) == S_IFDIR {
+            fatalError("contentsEqual(to:) should not be called on a folder")
+        }
+        
+        fatalError("Unknown file type 0x\(String(myInfo.st_mode, radix: 16)) for file \(self.path)")
     }
     
     /// Generates the desired folder at the given path.

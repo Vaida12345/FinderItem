@@ -39,12 +39,6 @@ struct FinderItemTests {
         #expect((FinderItem(at: "/Users/vaida/Desktop").stem == "Desktop"))
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").stem == "file"))
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.tar.gz").stem == "file.tar"))
-        
-        try #expect((FinderItem(at: "/Users/vaida/Desktop").fileType == [.directory]))
-        
-        #expect(throws: FinderItem.FileError.cannotRead(reason: .noSuchFile), performing: {
-            try FinderItem(at: "/Users/me/Desktop/file.txt").fileType
-        })
     }
     
     @Test("Test File Wrapper")
@@ -80,8 +74,8 @@ struct FinderItemTests {
         #expect(folder.appending(path: "file.txt").isFile)
         #expect(!folder.appending(path: "file.txt").isDirectory)
         #expect(folder.appending(path: "file.txt").exists)
-        #expect(folder.appending(path: "file.txt").isReadable)
-        #expect(folder.appending(path: "file.txt").isWritable)
+        try #expect(folder.appending(path: "file.txt").load(.isReadable) ?? false)
+        try #expect(folder.appending(path: "file.txt").load(.isWritable) ?? false)
         
         // add folder
         let subdir = folder.appending(path: "Folder", directoryHint: .isDirectory)
@@ -89,8 +83,8 @@ struct FinderItemTests {
         #expect(!subdir.isFile)
         #expect(subdir.isDirectory)
         #expect(subdir.exists)
-        #expect(subdir.isReadable)
-        #expect(subdir.isWritable)
+        try #expect(subdir.load(.isReadable) ?? false)
+        try #expect(subdir.load(.isWritable) ?? false)
         
         // add files to subdir
         let value = 123
@@ -100,7 +94,7 @@ struct FinderItemTests {
         // add hidden file
         let text = "123"
         try text.write(to: folder.appending(path: ".image.txt"))
-        #expect(try folder.appending(path: ".image.txt").load(.string()).data() == text.data())
+        #expect(try folder.appending(path: ".image.txt").load(.string()).data(using: .utf8) == text.data(using: .utf8))
         #expect(try folder.appending(path: ".image.txt").contentType.conforms(to: .text))
         
         // add hidden dir
@@ -136,9 +130,10 @@ struct FinderItemTests {
         #expect(file.isFile)
         #expect(file.exists)
         
-        #expect(throws: FinderItem.FileError.cannotWrite(reason: .fileExists)) {
+        let error = try #require(throws: FinderItem.FileError.self) {
             try file.makeDirectory()
         }
+        #expect(error.code == .cannotWrite(reason: .fileExists))
         
         let anotherFile = folder.appending(path: "file Copy.txt")
         
@@ -244,6 +239,30 @@ struct FinderItemTests {
         try file.move(to: folder.appending(path: "/file 2.txt").url)
         #expect(!folder.appending(path: "/file.txt").exists)
         #expect(folder.appending(path: "/file 2.txt").exists)
+    }
+    
+    @Test
+    func contentsEqual() throws {
+        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        try folder.makeDirectory()
+        defer { try! folder.remove() }
+        
+        let source = folder.appending(path: "/source.txt")
+        let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: 1024)
+        defer { buffer.deallocate() }
+        var data = Data(bytesNoCopy: buffer.baseAddress!, count: buffer.count, deallocator: .none)
+        try data.write(to: source)
+        
+        let destination1 = folder.appending(path: "/destination1.txt")
+        try source.copy(to: destination1)
+        
+        #expect(try source.contentsEqual(to: destination1))
+        
+        let destination2 = folder.appending(path: "/destination2.txt")
+        data[data.count - 1] &+= 1
+        try data.write(to: destination2)
+        
+        #expect(try !source.contentsEqual(to: destination2))
     }
     
 }
