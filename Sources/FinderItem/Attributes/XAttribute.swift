@@ -10,6 +10,7 @@ import Darwin
 import Foundation
 import DetailedDescription
 import Essentials
+import System
 
 
 extension FinderItem {
@@ -36,7 +37,7 @@ extension FinderItem {
     ///
     /// - returns: Refer to documentation of the `attributeKey`. `nil` is only returned when it cannot be parsed.
     @inlinable
-    public func load<T>(_ attributeKey: XAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
+    public func load<T>(_ attributeKey: XAttributeKey<T>) throws(Errno) -> T {
         try attributeKey.load(self)
     }
     
@@ -56,11 +57,11 @@ extension FinderItem {
     public struct XAttributeKey<Value> {
         
         @usableFromInline
-        let load: (_ source: FinderItem) throws(FinderItem.XAttributeError) -> Value
+        let load: (_ source: FinderItem) throws(Errno) -> Value
         
         
         @inlinable
-        init(load: @escaping (_: FinderItem) throws(FinderItem.XAttributeError) -> Value) {
+        init(load: @escaping (_: FinderItem) throws(Errno) -> Value) {
             self.load = load
         }
         
@@ -76,13 +77,13 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Returns: `[]` when there aren't any attributes associated with `self`.
     @inlinable
-    public static var xattr: FinderItem.XAttributeKey< [String]> {
-        .init { source throws (FinderItem.XAttributeError) in
+    public static var xattr: FinderItem.XAttributeKey<[String]> {
+        .init { source throws(Errno) in
             let bufferSize = listxattr(source.path, nil, 0, 0)
             if bufferSize == 0 {
                 return []
             } else if bufferSize == -1 {
-                throw FinderItem.XAttributeError(code: errno)
+                throw Errno(rawValue: errno)
             }
             
             let namebuf = [CChar](unsafeUninitializedCapacity: bufferSize) { buffer, initializedCount in
@@ -116,10 +117,10 @@ extension FinderItem.XAttributeKey {
     /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     @inlinable
     public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8]> {
-        .init { item throws (FinderItem.XAttributeError) in
+        .init { item throws(Errno) in
             let size = getxattr(item.path, name, nil, 0, 0, 0)
             if size == -1 {
-                throw FinderItem.XAttributeError(code: errno)
+                throw Errno(rawValue: errno)
             }
             
             return [UInt8](unsafeUninitializedCapacity: size) { buffer, initializedCount in
@@ -146,7 +147,7 @@ extension FinderItem.XAttributeKey {
     /// - returns: `nil` only when data is not a `String`.
     @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
+        FinderItem.XAttributeKey { item throws(Errno) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return String(bytes: raw, encoding: .utf8)
         }
@@ -169,7 +170,7 @@ extension FinderItem.XAttributeKey {
     /// - returns: `nil` only when data is not a property list.
     @inlinable
     public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?> {
-        FinderItem.XAttributeKey { item throws(FinderItem.XAttributeError) in
+        FinderItem.XAttributeKey { item throws(Errno) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return raw.withUnsafeBytes { bytes in
                 let data = Data(bytesNoCopy: .init(mutating: bytes.baseAddress!), count: raw.count, deallocator: .none)

@@ -7,13 +7,14 @@
 
 #if canImport(Darwin)
 import Foundation
+import System
 
 
 extension FinderItem {
     
     /// Inserts and replaces existing attributes.
     @inlinable
-    public func insertAttribute<T>(_ attribute: CommonXAttributeKey<T>, _ value: T) throws(FinderItem.XAttributeError) {
+    public func insertAttribute<T>(_ attribute: CommonXAttributeKey<T>, _ value: T) throws(Errno) {
         let plist = try! PropertyListSerialization.data(fromPropertyList: value, format: .binary, options: 0)
         try self.insertAttribute(.xattr(attribute.name), plist)
     }
@@ -26,7 +27,7 @@ extension FinderItem {
     /// > detailedPrint(file, configuration: .showExtendedAttributes)
     /// > ```
     @inlinable
-    public func load<T>(_ attributeKey: CommonXAttributeKey<T>) throws(FinderItem.XAttributeError) -> T {
+    public func load<T>(_ attributeKey: CommonXAttributeKey<T>) throws(Errno) -> T {
         let plist = try self.load(.xattr(attributeKey.name, as: Any?.self))! // can unwrap as long as we are sure it is a plist
         return attributeKey.parser(plist)
     }

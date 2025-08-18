@@ -7,6 +7,7 @@
 
 import Essentials
 import Foundation
+import System
 
 
 extension FinderItem {
@@ -70,13 +71,13 @@ extension FinderItem.InsertableAttributeKey {
     
     /// Inserts an extended attribute with the given `name`.
     @inlinable
-    public static func xattr(_ name: String) -> FinderItem.InsertableAttributeKey<Data, FinderItem.XAttributeError> {
-        .init { item, value throws(FinderItem.XAttributeError) in
+    public static func xattr(_ name: String) -> FinderItem.InsertableAttributeKey<Data, Errno> {
+        .init { item, value throws(Errno) in
             let code = value.withUnsafeBytes { bytes in
                 setxattr(item.path, name, bytes.baseAddress, value.count, 0, 0)
             }
             guard code == 0 else {
-                throw .code(errno)
+                throw Errno(rawValue: errno)
             }
         }
     }
