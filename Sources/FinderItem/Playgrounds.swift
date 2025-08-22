@@ -22,6 +22,6 @@ import SwiftUI
 
 #Playground {
     let item = try FinderItem.temporaryDirectory(intent: .general)
-    
+    print(item)
 }
 #endif
