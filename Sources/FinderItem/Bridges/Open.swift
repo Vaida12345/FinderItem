@@ -11,7 +11,7 @@ import CoreServices
 import Essentials
 
 
-extension FinderItem {
+public extension FinderItem {
     
     /// Sets an image as icon.
     ///
