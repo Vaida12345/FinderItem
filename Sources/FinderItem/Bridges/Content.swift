@@ -24,50 +24,6 @@ public extension FinderItem {
         NSItemProvider(contentsOf: self.url)
     }
     
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Sets an image as icon.
-    ///
-    /// - Parameters:
-    ///   - image: The image indicating the new icon for the item.
-    ///
-    /// - Note: The work is dispatched to a shared working thread and returns immediately. This ensures it is non-blocking and the underlying function is called on one thread at any given time, which is required.
-    func setIcon(image: NSImage) {
-        guard self.exists else { return }
-        let work = DispatchWorkItem {
-            NSWorkspace.shared.setIcon(image, forFile: self.path, options: .init())
-        }
-        FinderItem.workingThread.async(execute: work)
-    }
-    
-    private static let workingThread = DispatchQueue(label: "FinderItem.DispatchWorkingThread")
-    
-    /// Reveals the current file in finder.
-    @available(*, deprecated, renamed: "reveal")
-    @MainActor
-    @inlinable
-    func revealInFinder() async throws {
-        try await self.reveal()
-    }
-    
-    /// Opens an item for a URL in the default manner in its preferred app.
-    ///
-    /// This function returns after the app is opened.
-    @inlinable
-    func open() async {
-        LSOpenCFURLRef(self.url as CFURL, nil)
-    }
-    
-    /// Reveals the current file in finder.
-    ///
-    /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
-    @MainActor
-    @inlinable
-    func reveal() async throws(FileError) {
-        guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
-        NSWorkspace.shared.activateFileViewerSelecting([self.url])
-    }
-#endif
-    
 }
 
 
