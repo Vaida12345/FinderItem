@@ -314,6 +314,8 @@ public extension FinderItem {
     @inlinable
     func contentsEqual(to other: FinderItem) throws -> Bool {
         guard self.path != other.path else { return true }
+        guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
+        guard other.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: other) }
         
         let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
             var s = stat()
