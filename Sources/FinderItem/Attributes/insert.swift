@@ -74,7 +74,23 @@ extension FinderItem.InsertableAttributeKey {
     public static func xattr(_ name: String) -> FinderItem.InsertableAttributeKey<Data, Errno> {
         .init { item, value throws(Errno) in
             let code = value.withUnsafeBytes { bytes in
-                setxattr(item.path, name, bytes.baseAddress, value.count, 0, 0)
+                setxattr(item.path, name, bytes.baseAddress, bytes.count, 0, 0)
+            }
+            guard code == 0 else {
+                throw Errno(rawValue: errno)
+            }
+        }
+    }
+    
+}
+
+extension FinderItem.InsertableAttributeKey {
+    
+    /// Inserts the icon attribute, read from `xattr`.
+    public static var xattrIcon: FinderItem.InsertableAttributeKey<FinderItem.XAttributeIcon, any Error> {
+        .init { item, value in
+            let code = try value.data.withUnsafeBytes { bytes in
+                setxattr(item.path, "com.apple.icon.folder#S", bytes.baseAddress, bytes.count, 0, 0)
             }
             guard code == 0 else {
                 throw Errno(rawValue: errno)

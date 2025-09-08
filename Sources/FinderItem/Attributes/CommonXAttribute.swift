@@ -120,5 +120,64 @@ public extension FinderItem.CommonXAttributeKey {
             return (plist as! NSArray).map { $0 as! String }
         }
     }
+    
+    /// Tags set by user.
+    @inlinable
+    static var tags: FinderItem.CommonXAttributeKey<[String]> {
+        .named("com.apple.metadata:_kMDItemUserTags") { plist in
+            plist as! [String]
+        }
+    }
+}
+
+
+public extension FinderItem.XAttributeKey {
+    
+    /// The icon attribute, read from `xattr`.
+    ///
+    /// - Experiment: This method updates the `Finder` database alright, but it is not reflected on GUI.
+    @inlinable
+    static var xattrIcon: FinderItem.XAttributeKey<FinderItem.XAttributeIcon?, any Error> {
+        FinderItem.XAttributeKey { item in
+            let raw = try item.load(.xattr("com.apple.icon.folder#S")) as [UInt8]
+            guard let json = try JSONSerialization.jsonObject(with: Data(raw)) as? [String : String] else { return nil }
+            if let value = json["sym"] {
+                return .systemImage(value)
+            } else if let value = json["emoji"] {
+                return .emoji(value)
+            } else {
+                return nil
+            }
+        }
+    }
+}
+
+public extension FinderItem {
+    
+    /// The icon attribute, read from `xattr`.
+    enum XAttributeIcon {
+        /// A system-defined image.
+        ///
+        /// See `SF Symbols` for details.
+        case systemImage(String)
+        
+        /// An emoji
+        case emoji(String)
+        
+        
+        internal var data: Data {
+            get throws {
+                let raw = switch self {
+                case .systemImage(let name):
+                    ["sym" : name]
+                case .emoji(let string):
+                    ["emoji" : string]
+                }
+                
+                return try JSONSerialization.data(withJSONObject: raw)
+            }
+        }
+    }
+    
 }
 #endif

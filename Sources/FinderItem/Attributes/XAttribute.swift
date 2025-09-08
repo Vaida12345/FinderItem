@@ -37,7 +37,7 @@ extension FinderItem {
     ///
     /// - returns: Refer to documentation of the `attributeKey`. `nil` is only returned when it cannot be parsed.
     @inlinable
-    public func load<T>(_ attributeKey: XAttributeKey<T>) throws(Errno) -> T {
+    public func load<T, E>(_ attributeKey: XAttributeKey<T, E>) throws(E) -> T where E: Error {
         try attributeKey.load(self)
     }
     
@@ -54,14 +54,14 @@ extension FinderItem {
     /// Returns value associated with the given key name
     /// - ``xattr(_:)``
     /// - ``xattr(_:as:)``
-    public struct XAttributeKey<Value> {
+    public struct XAttributeKey<Value, E> where E: Error {
         
         @usableFromInline
-        let load: (_ source: FinderItem) throws(Errno) -> Value
+        let load: (_ source: FinderItem) throws(E) -> Value
         
         
         @inlinable
-        init(load: @escaping (_: FinderItem) throws(Errno) -> Value) {
+        init(load: @escaping (_: FinderItem) throws(E) -> Value) {
             self.load = load
         }
         
@@ -77,7 +77,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - Returns: `[]` when there aren't any attributes associated with `self`.
     @inlinable
-    public static var xattr: FinderItem.XAttributeKey<[String]> {
+    public static var xattr: FinderItem.XAttributeKey<[String], Errno> {
         .init { source throws(Errno) in
             let bufferSize = listxattr(source.path, nil, 0, 0)
             if bufferSize == 0 {
@@ -116,7 +116,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     @inlinable
-    public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8]> {
+    public static func xattr(_ name: String) -> FinderItem.XAttributeKey<[UInt8], Errno> {
         .init { item throws(Errno) in
             let size = getxattr(item.path, name, nil, 0, 0, 0)
             if size == -1 {
@@ -146,7 +146,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - returns: `nil` only when data is not a `String`.
     @inlinable
-    public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?> {
+    public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<String?, Errno> {
         FinderItem.XAttributeKey { item throws(Errno) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return String(bytes: raw, encoding: .utf8)
@@ -169,7 +169,7 @@ extension FinderItem.XAttributeKey {
     ///
     /// - returns: `nil` only when data is not a property list.
     @inlinable
-    public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?> {
+    public static func xattr(_ name: String, as type: Value.Type = Value.self) -> FinderItem.XAttributeKey<Any?, Errno> {
         FinderItem.XAttributeKey { item throws(Errno) in
             let raw = try item.load(.xattr(name)) as [UInt8]
             return raw.withUnsafeBytes { bytes in
