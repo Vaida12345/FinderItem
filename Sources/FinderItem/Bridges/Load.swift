@@ -21,7 +21,7 @@ public extension FinderItem {
     ///
     /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Code/ReadFailureReason/corruptFile``).
     @inlinable
-    func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
+    nonisolated func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
     }
     

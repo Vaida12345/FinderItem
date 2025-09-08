@@ -257,7 +257,7 @@ public extension FinderItem {
     /// - Parameters:
     ///   - provider: The `NSItemProvider` which contains the file-url of the item.
     @inlinable
-    convenience init(from provider: NSItemProvider) async throws {
+    nonisolated convenience init(from provider: NSItemProvider) async throws {
         let url: URL = try await withCheckedThrowingContinuation { continuation in
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { data, error in
                 guard error == nil else { continuation.resume(throwing: error!); return }

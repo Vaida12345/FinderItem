@@ -24,7 +24,7 @@ public extension Array where Element == FinderItem {
     /// - Parameters:
     ///   - providers: The providers of items from which all of their children and themselves would be iterated to obtain items of the type `option`.
     @inlinable
-    init(from providers: [NSItemProvider]) async throws {
+    nonisolated init(from providers: [NSItemProvider]) async throws {
         self.init()
         self.reserveCapacity(providers.count)
         for provider in providers {

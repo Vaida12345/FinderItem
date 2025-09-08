@@ -31,9 +31,8 @@ public extension FinderItem {
     
     /// Reveals the current file in finder.
     @available(*, deprecated, renamed: "reveal")
-    @MainActor
     @inlinable
-    func revealInFinder() async throws {
+    nonisolated func revealInFinder() async throws {
         try await self.reveal()
     }
     
@@ -41,7 +40,7 @@ public extension FinderItem {
     ///
     /// This function returns after the app is opened.
     @inlinable
-    func open() async throws(LaunchServiceError) {
+    nonisolated func open() async throws(LaunchServiceError) {
         let status = LSOpenCFURLRef(self.url as CFURL, nil)
         guard status == noErr else { throw LaunchServiceError(rawValue: status) ?? .unknown }
     }
@@ -50,7 +49,7 @@ public extension FinderItem {
     ///
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
     @inlinable
-    func reveal() async throws(FileError) {
+    nonisolated func reveal() async throws(FileError) {
         guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
     }
