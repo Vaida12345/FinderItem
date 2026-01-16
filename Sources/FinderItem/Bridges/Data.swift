@@ -48,9 +48,10 @@ public extension Data {
     ///
     /// - Parameters:
     ///   - source: The `FinderItem` representing the location of the asset.
+    ///   - options: Options for loading data.
     @inlinable
-    init(at source: FinderItem) throws {
-        try self.init(contentsOf: source.url)
+    init(at source: FinderItem, options: NSData.ReadingOptions = []) throws {
+        try self.init(contentsOf: source.url, options: options)
     }
     
 }

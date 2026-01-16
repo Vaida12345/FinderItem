@@ -189,14 +189,29 @@ public extension FinderItem.LoadableContent {
     /// Loads the data at the source.
     @inlinable
     static var data: FinderItem.LoadableContent<Data, any Error> {
+        Self.data()
+    }
+    
+    /// Loads the data at the source.
+    ///
+    /// - Parameters:
+    ///   - options: Options for loading data.
+    @inlinable
+    static func data(options: NSData.ReadingOptions = []) -> FinderItem.LoadableContent<Data, any Error> {
         .init { source in
-            try Data(contentsOf: source.url)
+            try Data(contentsOf: source.url, options: options)
         }
     }
     
 }
 
 public extension FinderItem.LoadableContent {
+    
+    /// Loads the string at the source.
+    @inlinable
+    static var string: FinderItem.LoadableContent<String, any Error> {
+        Self.string()
+    }
     
     /// Loads the string at the source.
     @inlinable

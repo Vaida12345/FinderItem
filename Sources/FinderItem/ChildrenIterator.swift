@@ -14,7 +14,7 @@ import Foundation
 ///
 /// > Tip:
 /// > For advanced controls, you can use ``FinderItemChildren/Iterator/skipDescendants()`` to control the flow of ``FinderItemChildren/Iterator``.
-public struct FinderItemChildren: Sequence {
+public struct FinderItemChildren: Sequence, Sendable {
     
     private let options: FinderItem.ChildrenRange
     
