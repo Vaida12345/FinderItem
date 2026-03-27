@@ -110,6 +110,11 @@ public extension FinderItem {
             /// - Remark: This would include ``withHidden``, along side with `.DS_Store` and `Icon\r`.
             public let withSystemHidden: ChildrenRange = ChildrenRange(rawValue: 1 << 3 | 1 << 2)
             
+            /// Returns the children without any order.
+            ///
+            /// This may run faster as it does not require sorting children beforehand, but the returned children could be in arbitrary order.
+            public let noOrder: ChildrenRange = ChildrenRange(rawValue: 1 << 4)
+            
             fileprivate init() { }
         }
     }

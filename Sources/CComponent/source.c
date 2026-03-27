@@ -25,6 +25,6 @@ int cmp(const FTSENT **l, const FTSENT **r) {
     return returnValue;
 }
 
-FTS* fts_cmp_open(char * const * path, int options) {
-    return fts_open(path, options, cmp);
+FTS* fts_cmp_open(char * const * path, int options, int ordered) {
+    return fts_open(path, options, ordered != 0 ? cmp : NULL);
 }

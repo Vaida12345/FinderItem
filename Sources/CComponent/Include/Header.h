@@ -12,6 +12,6 @@
 #include <fts.h>
 
 /// Creates an `FTS` that could traverse a file hierarchy. The files are sorted using `kCFCompareNumerically | kCFCompareWidthInsensitive`.
-FTS* fts_cmp_open(char * const * path, int options);
+FTS* fts_cmp_open(char * const * path, int options, int ordered);
 
 #endif /* Header_h */
