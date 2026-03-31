@@ -31,6 +31,11 @@ extension FinderItem: EncodableWithConfiguration {
     public func encode(to encoder: Encoder, configuration: NSURL.BookmarkCreationOptions) throws {
         var container = encoder.singleValueContainer()
         
+        var configuration = configuration
+#if os(macOS)
+        configuration.insert(.withSecurityScope)
+#endif
+        
         try container.encode(self.url.bookmarkData(options: configuration,
                                                    includingResourceValuesForKeys: nil,
                                                    relativeTo: nil))
@@ -44,7 +49,7 @@ extension FinderItem: EncodableWithConfiguration {
 
 extension FinderItem: DecodableWithConfiguration {
     
-    public convenience init(from decoder: Decoder, configuration: URL.BookmarkResolutionOptions) throws {
+    public convenience init(from decoder: Decoder, configuration: NSURL.BookmarkResolutionOptions) throws {
         let data: Data
         
         if let container = try? decoder.container(keyedBy: ConfigurableCodingKey.self) {
@@ -53,6 +58,11 @@ extension FinderItem: DecodableWithConfiguration {
             let container = try decoder.singleValueContainer()
             data = try container.decode(Data.self)
         }
+        
+        var configuration = configuration
+#if os(macOS)
+        configuration.insert(.withSecurityScope)
+#endif
         
         var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: data,

@@ -113,6 +113,8 @@ public extension FinderItem {
             /// Returns the children without any order.
             ///
             /// This may run faster as it does not require sorting children beforehand, but the returned children could be in arbitrary order.
+            ///
+            /// This can also reduce disk IO when enumerating a large folder.
             public let noOrder: ChildrenRange = ChildrenRange(rawValue: 1 << 4)
             
             fileprivate init() { }

@@ -162,12 +162,15 @@ public extension FinderItem {
     }
     
     /// The `UTType` of the file.
+    ///
+    /// - returns: `nil` if the system cannot determine a content type for the file.
+    ///
+    /// - throws: When the system cannot read the file, for example, due to permission issues.
     @inlinable
-    var contentType: UTType {
+    var contentType: UTType? {
         get throws(FileError) {
             do {
-                guard let contentType = try url.resourceValues(forKeys: [.contentTypeKey]).contentType else { throw FileError(code: .cannotRead(reason: .unknown), source: self) }
-                return contentType
+                return try url.resourceValues(forKeys: [.contentTypeKey]).contentType
             } catch {
                 throw FileError.parse(error)
             }
