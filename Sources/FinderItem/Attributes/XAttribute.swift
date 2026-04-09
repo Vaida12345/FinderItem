@@ -178,5 +178,19 @@ extension FinderItem.XAttributeKey {
             }
         }
     }
+    
+    /// Returns whether the file has a custom icon.
+    public static var hasCustomIcon: FinderItem.XAttributeKey<Bool, Errno> {
+        FinderItem.XAttributeKey { item throws(Errno) in
+            try? item.startAccessingSecurityScopedResource()
+            do {
+                let info = try item.load(.xattr("com.apple.FinderInfo"))
+                return info[8] & 0x04 != 0
+            } catch {
+                // no such attribute
+                return false
+            }
+        }
+    }
 }
 #endif
