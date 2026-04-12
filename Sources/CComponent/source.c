@@ -17,7 +17,7 @@ int cmp(const FTSENT **l, const FTSENT **r) {
     CFStringRef lhsString = CFStringCreateWithCString(NULL, lhs, kCFStringEncodingUTF8);
     CFStringRef rhsString = CFStringCreateWithCString(NULL, rhs, kCFStringEncodingUTF8);
     
-    int returnValue = (int) CFStringCompareWithOptionsAndLocale(lhsString, rhsString, CFRangeMake(0, strlen(lhs)), kCFCompareNumerically | kCFCompareWidthInsensitive, nil);
+    int returnValue = (int) CFStringCompareWithOptionsAndLocale(lhsString, rhsString, CFRangeMake(0, strlen(lhs)), kCFCompareNumerically | kCFCompareWidthInsensitive | kCFCompareCaseInsensitive, nil);
     
     CFRelease(lhsString);
     CFRelease(rhsString);
