@@ -95,7 +95,7 @@ struct FinderItemTests {
         let text = "123"
         try text.write(to: folder.appending(path: ".image.txt"))
         #expect(try folder.appending(path: ".image.txt").load(.string()).data(using: .utf8) == text.data(using: .utf8))
-        #expect(try folder.appending(path: ".image.txt").contentType.conforms(to: .text))
+        #expect(try folder.appending(path: ".image.txt").contentType?.conforms(to: .text) ?? false)
         
         // add hidden dir
         let hiddendir = folder.appending(path: ".hidden")
@@ -263,6 +263,17 @@ struct FinderItemTests {
         try data.write(to: destination2)
         
         #expect(try !source.contentsEqual(to: destination2))
+    }
+    
+    @Test
+    func nameTest() throws {
+        let file = try FinderItem.temporaryDirectory(intent: .general)/".hidden"
+        #expect(file.stem == ".hidden")
+        #expect(file.extension.isEmpty)
+        
+        let file2 = try FinderItem.temporaryDirectory(intent: .general)/".hidden.tar.gz"
+        #expect(file2.stem == ".hidden.tar")
+        #expect(file2.extension == "gz")
     }
     
 }

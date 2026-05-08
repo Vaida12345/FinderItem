@@ -131,9 +131,12 @@ public extension FinderItem {
     /// - SeeAlso: ``rename(with:keepExtension:)``, ``extension``, ``name``
     @inlinable
     var stem: String {
-        let name = self.name
-        guard let lastIndex = name.lastIndex(of: ".") else { return name }
-        return String(name[name.startIndex..<lastIndex])
+        let `extension` = self.extension
+        if `extension`.isEmpty {
+            return self.url.lastPathComponent
+        } else {
+            return String(self.url.lastPathComponent.dropLast(self.url.pathExtension.count + 1))
+        }
     }
     
     /// The non-extension part of the file name.
