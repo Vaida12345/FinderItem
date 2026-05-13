@@ -11,6 +11,5 @@ import Foundation
 import DetailedDescription
 
 
-print(FinderItem.temporaryDirectory)
-print(try FinderItem.itemReplacementDirectory)
+print(try FinderItem.applicationSupportDirectory)
 #endif

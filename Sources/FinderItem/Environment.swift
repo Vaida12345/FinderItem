@@ -25,13 +25,11 @@ public extension FinderItem {
     
     /// The directory for which are required but not visible for users.
     ///
-    /// - Important: Stores app-created files only.
+    /// For support files that your app needs to operate but that you don’t want to be openly visible.
     ///
-    /// - Warning: Contents are persisted and included in backups.
+    /// This directory stores data like configuration files, templates, and modified versions of default files from your bundle.
     ///
-    /// - Note: Disk space used is reported in the storage settings.
-    ///
-    /// - Note: Examples include data files, configuration files, templates.
+    /// - Note: For non-sandboxed macOS app, this returns `~/Library/Application Support`.
     @inlinable
     static var applicationSupportDirectory: FinderItem {
         get throws(FileError) {
@@ -52,14 +50,6 @@ public extension FinderItem {
     /// The directory for which can be re-created by the app.
     ///
     /// For files that persist longer than temporary files, but are still purgeable, use the caches directory. In the caches directory, store files the app doesn’t require to operate, but that improve performance, such as database cache files and transient, downloadable content.
-    ///
-    /// - Warning: The system may delete the Caches directory to free up disk space.
-    ///
-    /// - Note: Contents are **not** included in backups.
-    ///
-    /// - Note: Disk space used is **not** reported in the storage settings.
-    ///
-    /// - Note: Examples include database cache files and downloadable content.
     @inlinable
     static var cachesDirectory: FinderItem {
         get throws(FileError) {
@@ -86,8 +76,6 @@ public extension FinderItem {
     
 #if os(macOS)
     /// The desktop directory for the current user.
-    ///
-    /// - Important: This item is only valid to be used in Command Line Tools or Swift Packages on macOS.
     @inlinable
     static var desktopDirectory: FinderItem {
         get throws(FileError) {
@@ -98,15 +86,9 @@ public extension FinderItem {
     
     /// The standard directory for document files.
     ///
+    /// The system can make the contents of the `Documents` folder available for file sharing. Only store files in this folder that you want to expose to the person using your app.
+    ///
     /// In iOS, this directory is within the app’s sandbox directory. In macOS, it’s within the app’s sandbox directory for sandboxed apps, or in the current user’s home directory (~/Documents) if the app isn’t sandboxed.
-    ///
-    /// - Important: Stores user-generated documents only.
-    ///
-    /// - Warning: Contents are persisted and included in backups.
-    ///
-    /// - Note: Disk space used is reported in the storage settings.
-    ///
-    /// - Note: Contents are visible in “Files” application and can be found via spotlight.
     ///
     /// - Experiment: The "Inbox" sub-directory name is unavailable.
     @inlinable
@@ -230,12 +212,6 @@ public extension FinderItem {
     /// - Important: This directory is different across launches of the app.
     ///
     /// - Warning: Remember to delete the contents when no longer needed to free up space.
-    ///
-    /// - Experiment: Contents are removed when the device reboots.
-    ///
-    /// - Note: Contents are **not** included in backups.
-    ///
-    /// - Note: Disk space used is **not** reported in the storage settings.
     static let temporaryDirectory: FinderItem = {
         let tempDir = FinderItem(_url: FileManager.default.temporaryDirectory).appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try? tempDir.makeDirectory()
