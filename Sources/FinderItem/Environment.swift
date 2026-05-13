@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 
 public extension FinderItem {
@@ -18,7 +19,6 @@ public extension FinderItem {
             let url = try FileManager.default.url(for: directory, in: mask, appropriateFor: appropriateFor?.url, create: create)
             return FinderItem(_url: url)
         } catch {
-            dump(error)
             throw FileError.parse(error)
         }
     }
@@ -214,7 +214,12 @@ public extension FinderItem {
     /// - Warning: Remember to delete the contents when no longer needed to free up space.
     static let temporaryDirectory: FinderItem = {
         let tempDir = FinderItem(_url: FileManager.default.temporaryDirectory).appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        try? tempDir.makeDirectory()
+        do {
+            try tempDir.makeDirectory()
+        } catch {
+            let logger = Logger(subsystem: "FinderItem", category: "temporaryDirectory")
+            logger.error("Failed to create temporary directory[error=\(error.localizedDescription)]")
+        }
         return tempDir
     }()
     
@@ -230,19 +235,7 @@ public extension FinderItem {
     @available(*, deprecated, renamed: "temporaryDirectory")
     @inlinable
     static func temporaryDirectory(intent: TemporaryDirectoryIntent) throws -> FinderItem {
-        let directory = FinderItem(_url: FileManager.default.temporaryDirectory)
-        switch intent {
-        case .general:
-            return directory
-        case .discardable:
-            if let identifier = Bundle.main.bundleIdentifier {
-                let directory = directory.appending(path: "\(identifier).discardable", directoryHint: .isDirectory)
-                try directory.makeDirectory()
-                return directory
-            } else {
-                preconditionFailure("A bundle identifier cannot be identified. Hence the unique ownership of temporary directory cannot be determined.")
-            }
-        }
+        return .temporaryDirectory
     }
     
     /// The intent for creating a temporary directory.
