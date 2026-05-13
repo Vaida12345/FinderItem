@@ -11,11 +11,6 @@ import Foundation
 import DetailedDescription
 
 
-let source = FinderItem(at: "/Users/vaida/DataBase/Swift")
-for child in try source.children(range: .enumeration) {
-    guard let string = try? child.load(.string) else { continue }
-    if string.contains("NSTemporaryDirectory") {
-        print(child)
-    }
-}
+print(FinderItem.temporaryDirectory)
+print(try FinderItem.itemReplacementDirectory)
 #endif

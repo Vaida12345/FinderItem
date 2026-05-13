@@ -10,6 +10,7 @@
 import AppKit
 #endif
 import UniformTypeIdentifiers
+import OSLog
 
 
 /// Abstractions over which you interact with file system.
@@ -591,30 +592,17 @@ public extension FinderItem {
     /// - Experiment: The file is moved before return.
     func move(to destination: URL) throws(FileError) {
         guard destination != self.url else { return }
+        
+#if DEBUG
+        if self.path.hasPrefix("/var/folders/"), FinderItem(at: destination).exists {
+            let logger = Logger(subsystem: "FinderItem", category: "move(to:)")
+            logger.warning("You are calling `move(to:)` to replace an existing file with a temporary file. Please use `replace` to ensure atomic file operations.")
+        }
+#endif
+        
         do {
             try FileManager.default.moveItem(at: self.url, to: destination)
             self.url = destination
-        } catch {
-            throw FileError.parse(error)
-        }
-    }
-    
-    /// Replaces the contents of the item at the specified path in a manner that ensures no data loss occurs..
-    ///
-    /// By default, the creation date, permissions, Finder label and color, and Spotlight comments of the original item are preserved on the new item.
-    ///
-    /// This method works only when the two files are located on the same volume.
-    ///
-    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
-    ///
-    /// - SeeAlso: ``itemReplacementDirectory(in:)``
-    func replace(_ original: FinderItem) throws(FileError) {
-        guard original.url != self.url else { return }
-        do {
-            guard let url = try FileManager.default.replaceItemAt(original.url, withItemAt: self.url) else {
-                throw FileError(code: .unknown, source: self)
-            }
-            self.url = url
         } catch {
             throw FileError.parse(error)
         }
@@ -667,6 +655,27 @@ public extension FinderItem {
         }
         
         try self.move(to: self.enclosingFolder.appending(path: newName + extensionName).url)
+    }
+    
+    /// Replaces the contents of the item at the specified path in a manner that ensures no data loss occurs..
+    ///
+    /// By default, the creation date, permissions, Finder label and color, and Spotlight comments of the original item are preserved on the new item.
+    ///
+    /// This method works only when the two files are located on the same volume.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
+    ///
+    /// - SeeAlso: ``itemReplacementDirectory(in:)``
+    func replace(_ original: FinderItem) throws(FileError) {
+        guard original.url != self.url else { return }
+        do {
+            guard let url = try FileManager.default.replaceItemAt(original.url, withItemAt: self.url) else {
+                throw FileError(code: .unknown, source: self)
+            }
+            self.url = url
+        } catch {
+            throw FileError.parse(error)
+        }
     }
     
     
