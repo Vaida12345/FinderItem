@@ -409,7 +409,7 @@ public extension FinderItem {
     ///
     /// - SeeAlso: To generate the directory *smartly*, use ``generateDirectory()``
     @inlinable
-    func makeDirectory() throws(FileError) {
+    func makeDirectory(attributes: [FileAttributeKey : Any]? = nil) throws(FileError) {
         guard !self.exists else {
             if self.isFile {
                 throw FileError(code: .cannotWrite(reason: .fileExists), source: self)
@@ -419,11 +419,18 @@ public extension FinderItem {
         }
         
         do {
-            try FileManager.default.createDirectory(at: self.url, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: self.url, withIntermediateDirectories: true, attributes: attributes)
             // no need for the loops, `withIntermediateDirectories` does all the works
         } catch {
             throw FileError.parse(error)
         }
+    }
+    
+    /// Creates a file with the specified content and attributes at the given location.
+    @inlinable
+    func createFile(contents: Data? = nil, attributes: [FileAttributeKey : Any]? = nil) throws(FileError) {
+        let bool = FileManager.default.createFile(atPath: self.path, contents: contents, attributes: attributes)
+        guard bool else { throw FileError(code: .cannotWrite(reason: .unknown), source: self) }
     }
     
     /// Generates the desired folders at the path, context-aware.

@@ -135,7 +135,7 @@ extension FinderItem {
 }
 
 
-public extension FinderItem.LoadableContent {
+public extension FinderItem.LoadableContent where Result == FileWrapper {
     
     /// Creates a file wrapper instance whose kind is determined by the type of file-system node located by the URL.
     ///
@@ -150,41 +150,7 @@ public extension FinderItem.LoadableContent {
     
 }
 
-
-#if canImport(AVFoundation)
-import AVFoundation
-
-public extension FinderItem.AsyncLoadableContent {
-    
-    /// Loads the `AVAsset` at the source.
-    @inlinable
-    static var avAsset: FinderItem.AsyncLoadableContent<AVURLAsset, any Error> {
-        .init { source in
-            let asset = AVURLAsset(url: source.url)
-            guard try await asset.load(.isReadable) else { throw AVAssetLoadError.notReadable(name: source.name) }
-            return asset
-        }
-    }
-    
-    
-    enum AVAssetLoadError: GenericError {
-        case notReadable(name: String)
-        
-        @inlinable
-        public var message: String {
-            switch self {
-            case .notReadable(let name):
-                "The media \(name) is not readable."
-            }
-        }
-        
-    }
-    
-}
-#endif
-
-
-public extension FinderItem.LoadableContent {
+public extension FinderItem.LoadableContent where Result == Data {
     
     /// Loads the data at the source.
     @inlinable
@@ -205,7 +171,7 @@ public extension FinderItem.LoadableContent {
     
 }
 
-public extension FinderItem.LoadableContent {
+public extension FinderItem.LoadableContent where Result == String {
     
     /// Loads the string at the source.
     @inlinable
@@ -224,7 +190,7 @@ public extension FinderItem.LoadableContent {
 }
 
 
-public extension FinderItem.AsyncLoadableContent {
+public extension FinderItem.AsyncLoadableContent where Result == URL.AsyncBytes {
     
     /// Loads the data at source as async bytes.
     @inlinable
@@ -233,6 +199,10 @@ public extension FinderItem.AsyncLoadableContent {
             source.url.resourceBytes
         }
     }
+    
+}
+
+public extension FinderItem.AsyncLoadableContent where Result == AsyncLineSequence<URL.AsyncBytes> {
     
     /// Loads the data at source as async lines.
     @inlinable

@@ -11,5 +11,11 @@ import Foundation
 import DetailedDescription
 
 
-print(FileManager.default.componentsToDisplay(forPath: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/Shared"))
+let source = FinderItem(at: "/Users/vaida/DataBase/Swift")
+for child in try source.children(range: .enumeration) {
+    guard let string = try? child.load(.string) else { continue }
+    if string.contains("NSTemporaryDirectory") {
+        print(child)
+    }
+}
 #endif

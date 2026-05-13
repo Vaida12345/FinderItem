@@ -16,7 +16,7 @@ extension FinderItem {
     ///
     /// You can also define your own keys that can be inserted using this method, see ``InsertableAttributeKey``.
     @inlinable
-    public func insertAttribute<T, E: Error>(_ attribute: InsertableAttributeKey<T, E>, _ value: T) throws (E) {
+    public func insertAttribute<T, E: Error>(_ attribute: InsertableAttributeKey<T, E>, _ value: T) throws(E) {
         try attribute.insertTo(self, value)
     }
     
@@ -29,7 +29,7 @@ extension FinderItem {
     ///
     /// You can also define your own keys that can be inserted using this method, see ``InsertableAttributeKey``.
     @inlinable
-    public func insertAttribute<E: Error>(_ attribute: InsertableAttributeKey<Bool, E>) throws (E) {
+    public func insertAttribute<E: Error>(_ attribute: InsertableAttributeKey<Bool, E>) throws(E) {
         try attribute.insertTo(self, true)
     }
     
