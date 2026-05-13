@@ -573,6 +573,27 @@ public extension FinderItem {
         }
     }
     
+    /// Replaces the contents of the item at the specified path in a manner that ensures no data loss occurs..
+    ///
+    /// By default, the creation date, permissions, Finder label and color, and Spotlight comments of the original item are preserved on the new item.
+    ///
+    /// This method works only when the two files are located on the same volume.
+    ///
+    /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.
+    ///
+    /// - SeeAlso: ``itemReplacementDirectory(in:)``
+    func replace(_ original: FinderItem) throws(FileError) {
+        guard original.url != self.url else { return }
+        do {
+            guard let url = try FileManager.default.replaceItemAt(original.url, withItemAt: self.url) else {
+                throw FileError(code: .unknown, source: self)
+            }
+            self.url = url
+        } catch {
+            throw FileError.parse(error)
+        }
+    }
+    
     /// Move the current item to `path`.
     ///
     /// This is a file operation. As a ``FinderItem`` is linked to the item it references, the internal representation (``url``) is changed to `destination` upon the function's return.

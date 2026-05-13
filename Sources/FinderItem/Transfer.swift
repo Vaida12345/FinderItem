@@ -20,8 +20,7 @@ extension FinderItem: Transferable {
             guard !received.isOriginalFile else {
                 return FinderItem(_url: received.file)
             }
-            let copy = try FinderItem.temporaryDirectory(intent: .discardable).appending(path: received.file.lastPathComponent)
-            try copy.removeIfExists()
+            let copy = FinderItem.temporaryDirectory.appending(path: received.file.lastPathComponent).generateUniquePath()
             
             // must use file manager, otherwise bad access
             try FileManager.default.copyItem(at: received.file, to: copy.url)

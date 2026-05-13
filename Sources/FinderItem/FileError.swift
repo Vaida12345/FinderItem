@@ -104,9 +104,7 @@ extension FinderItem {
             /// The error code indicating the an intermediate file does not exist.
             case intermediateFileNotExist
             
-            /// The error code indicating failure in parsing such value.
-            ///
-            /// In this case, the `source` is always the home directory.
+            /// The error code indicating an unknown error.
             case unknown
             
             

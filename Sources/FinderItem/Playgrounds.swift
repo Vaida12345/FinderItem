@@ -21,7 +21,7 @@ import Playgrounds
 import SwiftUI
 
 #Playground {
-    let item = try FinderItem.temporaryDirectory(intent: .general)
+    let item = FinderItem.temporaryDirectory
     print(item)
 }
 #endif
