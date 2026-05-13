@@ -44,6 +44,7 @@ public extension FinderItem {
     ///
     /// This method would attempt to replace user home directory with "~", and iCloud drive with "iCloud Drive"
     @inlinable
+    @available(*, deprecated, renamed: "displayPath")
     var userFriendlyDescription: String {
         let path = self.path
         let userPath = "/" + FileManager.default.homeDirectoryForCurrentUser.path(percentEncoded: false).split(separator: "/")[0..<2].joined(separator: "/")
@@ -81,6 +82,24 @@ public extension FinderItem {
     @inlinable
     var path: String {
         self.url.path(percentEncoded: false)
+    }
+    
+    /// Returns the display name of the file or directory at a specified path.
+    ///
+    /// The name of the file or directory at path in a localized form appropriate for presentation to the user. If there is no file or directory at path, or if an error occurs, returns path as is.
+    ///
+    /// Display names are user-friendly names for files. They are typically used to localize standard file and directory names according to the user’s language settings. They may also reflect other modifications, such as the removal of filename extensions. Such modifications are used only when displaying the file or directory to the user and do not reflect the actual path to the item in the file system. For example, if the current user’s preferred language is French, the following code fragment logs the name Bibliothèque and not the name Library, which is the actual name of the directory.
+    @inlinable
+    var displayName: String {
+        FileManager.default.displayName(atPath: self.path)
+    }
+    
+    /// Returns the display path of the file or directory at a specified path.
+    ///
+    /// The name of the file or directory at path in a localized form appropriate for presentation to the user. If there is no file or directory at path, or if an error occurs, returns path as is.
+    @inlinable
+    var displayPath: String {
+        FileManager.default.componentsToDisplay(forPath: self.path)?.joined(separator: "/") ?? self.path
     }
     
     /// The full name of the file.

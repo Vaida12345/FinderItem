@@ -11,9 +11,5 @@ import Foundation
 import DetailedDescription
 
 
-do {
-    try print(FileManager.default.url(for: .documentationDirectory, in: .userDomainMask, appropriateFor: .homeDirectory, create: true).standardizedFileURL)
-} catch {
-    dump(error)
-}
+print(FileManager.default.componentsToDisplay(forPath: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/Shared"))
 #endif
