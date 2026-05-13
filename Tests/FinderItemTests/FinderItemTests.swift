@@ -11,6 +11,7 @@
 import FinderItem
 import Testing
 import Foundation
+import CoreTransferable
 
 
 extension Tag {
@@ -26,9 +27,6 @@ struct FinderItemTests {
         #expect(FinderItem(at: "/Users/vaida/Desktop").description == "/Users/vaida/Desktop/")
         #expect((FinderItem(at: "/Users/vaida/Desktop").path == "/Users/vaida/Desktop/"))
         
-        #expect((FinderItem(at: "/Users/vaida/Desktop").userFriendlyDescription == "~/Desktop/"))
-        #expect((FinderItem(at: "/Users/vaida/Library/Mobile Documents/com~apple~CloudDocs/DataBase").userFriendlyDescription == "iCloud Drive/DataBase/"))
-        
         #expect((FinderItem(at: "/Users/vaida/Desktop").enclosingFolder.path == FinderItem(at: "/Users/vaida/").path))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop").name == "Desktop"))
@@ -43,7 +41,7 @@ struct FinderItemTests {
     
     @Test("Test File Wrapper")
     func testFileWrapper() async throws {
-        let item = FinderItem.desktopDirectory
+        let item = try FinderItem.desktopDirectory
         let itemProvider = NSItemProvider(at: item)!
         let _dest = try await FinderItem(from: itemProvider).path
         #expect((item.path == _dest))
@@ -63,7 +61,7 @@ struct FinderItemTests {
     
     @Test("Test Folders")
     func folders() async throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -120,7 +118,7 @@ struct FinderItemTests {
     
     @Test("Test File Operations", .tags(.fileOperations))
     func fileOperations() async throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -151,7 +149,7 @@ struct FinderItemTests {
     
     @Test("Test More File Operations", .tags(.fileOperations))
     func moreFileOperations() async throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         defer { try! folder.remove() }
         
         let file = folder.appending(path: "A/B/C/D/.E/.file.txt")
@@ -179,7 +177,7 @@ struct FinderItemTests {
     //FIXME: implement moving, rename, edit stem.
     @Test("Test File Moving Operations", .tags(.fileOperations))
     func fileMovingOperations() async throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -202,7 +200,7 @@ struct FinderItemTests {
     
     @Test("Test File Relative Paths")
     func fileRelativePath() throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -214,7 +212,7 @@ struct FinderItemTests {
     
     @Test
     func immediateRemoval() throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -228,7 +226,7 @@ struct FinderItemTests {
     
     @Test
     func immediateMove() throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -243,7 +241,7 @@ struct FinderItemTests {
     
     @Test
     func contentsEqual() throws {
-        let folder = try FinderItem.temporaryDirectory(intent: .general).appending(path: UUID().description)
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
         try folder.makeDirectory()
         defer { try! folder.remove() }
         
@@ -267,13 +265,20 @@ struct FinderItemTests {
     
     @Test
     func nameTest() throws {
-        let file = try FinderItem.temporaryDirectory(intent: .general)/".hidden"
+        let file = FinderItem.temporaryDirectory/".hidden"
         #expect(file.stem == ".hidden")
         #expect(file.extension.isEmpty)
         
-        let file2 = try FinderItem.temporaryDirectory(intent: .general)/".hidden.tar.gz"
+        let file2 = FinderItem.temporaryDirectory/".hidden.tar.gz"
         #expect(file2.stem == ".hidden.tar")
         #expect(file2.extension == "gz")
+    }
+    
+    @Test
+    @available(macOS 15.2, *)
+    func transferableTest() async throws {
+        #expect(FinderItem.exportedContentTypes() == [.url, .fileURL])
+        #expect(FinderItem.importedContentTypes() == [.url, .fileURL, .data])
     }
     
 }
