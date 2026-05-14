@@ -59,7 +59,10 @@ extension FinderItem.Attributes {
         }
         
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
-        getxattr(self.parent.path, name, buffer.baseAddress, size, 0, 0)
+        let status = getxattr(self.parent.path, name, buffer.baseAddress, size, 0, 0)
+        if status == -1 {
+            throw Errno(rawValue: errno)
+        }
         
         return Data(bytesNoCopy: buffer.baseAddress!, count: size, deallocator: .free)
     }
@@ -84,11 +87,17 @@ extension FinderItem.Attributes {
     }
     
     /// Returns whether the file has a custom icon.
+    ///
+    /// - Returns: `false` if the attribute is not found.
     @inlinable
     public var hasCustomIcon: Bool {
         get throws(Errno) {
-            let info = try self.xattr("com.apple.FinderInfo")
-            return info[8] & 0x04 != 0
+            do {
+                let info = try self.xattr("com.apple.FinderInfo")
+                return info[8] & 0x04 != 0
+            } catch .attributeNotFound {
+                return false
+            }
         }
     }
     
@@ -177,7 +186,7 @@ extension FinderItem.Attributes {
     
     /// The icon attribute, read from `xattr`.
     ///
-    /// - Experiment: This method updates the `Finder` database alright, but it is not reflected on GUI.
+    /// - Experiment: This method updates the `Finder` database alright, but it is not reflected in the Finder app.
     @inlinable
     public var xattrIcon: XAttributeIcon? {
         get throws(Errno) {
