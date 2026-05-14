@@ -153,6 +153,7 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == FinderItem
 }
 #endif
 
+#if os(macOS)
 extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : Any]? {
     
     /// The quarantine properties as defined in `LSQuarantine.h`.
@@ -167,3 +168,4 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : 
     }
     
 }
+#endif

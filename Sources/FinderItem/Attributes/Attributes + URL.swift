@@ -109,6 +109,7 @@ extension FinderItem.Attributes {
         }
     }
     
+    #if os(macOS)
     /// The quarantine properties as defined in `LSQuarantine.h`.
     @inlinable
     public var quarantine: [String : Any]? {
@@ -116,7 +117,7 @@ extension FinderItem.Attributes {
             try _read(_URLResourceKey: .quarantinePropertiesKey, keyPath: \.quarantineProperties)
         }
     }
-    
+    #endif
 }
 
 
