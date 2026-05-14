@@ -85,7 +85,7 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
         
         /// The optional to show the extended attributes associated with `self`.
         ///
-        /// - Tip: To obtain the attribute, see ``FinderItem/XAttributeKey/xattr(_:)``.
+        /// - Tip: To obtain the attribute, see ``FinderItem/Attributes/xattr``.
         public static let showExtendedAttributes = DescriptionConfiguration(rawValue: 1 << 1)
     }
     

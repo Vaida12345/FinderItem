@@ -11,7 +11,7 @@ A set of predefined directories whose path is different for each project.
 | ``FinderItem/itemReplacementDirectory`` | yes | no | no | replacing files |
 
 
-- Purgeable: Eligible for automatic purging when app isn't running or when reboot
+- Purgeable: Eligible for automatic purging when the app isn't running or after a reboot.
 - Backup: The system backs up files when performing an iCloud backup.
 - Reported: Disk space used is reported in the storage settings.
 

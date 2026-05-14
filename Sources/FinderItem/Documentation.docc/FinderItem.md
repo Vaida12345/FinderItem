@@ -29,7 +29,7 @@ let best = midis/"favorite.mid"
 ```
 
 ### Accessing Content
-To access the contents of file, use the unified ``load(_:)`` method.
+To access file contents, use the unified ``load(_:)`` method.
 ```swift
 let text = try file.load(.string())
 ```
@@ -96,7 +96,7 @@ File operations will change the location of the actual file it represents.
 - ``children(range:)``
 - ``ChildrenRange``
 - ``FinderItemChildren``
-- ``makeDirectory()``
+- ``makeDirectory(attributes:)``
 - ``generateDirectory()``
 
 ### Working with Environment-Dependent Directories
@@ -106,8 +106,9 @@ File operations will change the location of the actual file it represents.
 - <doc:securescope>
 
 ### File Attributes
-- ``load(_:)``
-- ``insertAttribute(_:_:)``
+- ``attributes``
+- ``Attributes``
+- ``Attributes/update(_:to:)``
 
 ### Integrations
 Technology-specific implementations.

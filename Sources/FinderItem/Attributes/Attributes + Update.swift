@@ -10,7 +10,7 @@ import Foundation
 
 extension FinderItem.Attributes {
     
-    /// Inserts and replaces existing attributes.
+    /// Inserts or replaces an attribute value.
     @inlinable
     public func update<T, E: Error>(_ attribute: InsertableAttributeKey<T, E>, to value: T) throws(E) {
         try attribute.insertTo(self.parent, value)
@@ -18,6 +18,7 @@ extension FinderItem.Attributes {
     
     public struct InsertableAttributeKey<Value, E: Error> {
         
+        /// Writes `value` to `item`.
         @usableFromInline
         let insertTo: (_ item: FinderItem, _ value: Value) throws(E) -> Void
         
@@ -102,9 +103,9 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == [String] {
 
 extension FinderItem.Attributes.InsertableAttributeKey where Value == String {
     
-    /// The file (download) where from.
+    /// The source URL recorded for a downloaded file.
     ///
-    /// - SeeAlso: ``dateDownloaded``
+    /// - SeeAlso: ``downloadDate``
     @inlinable
     public static var origin: FinderItem.Attributes.InsertableAttributeKey<String, any Error> {
         .init("com.apple.metadata:kMDItemWhereFroms", properlyListSerializing: { [$0] })
@@ -126,7 +127,7 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == String {
         .init("com.apple.metadata:kMDItemDescription", properlyListSerializing: { $0 })
     }
     
-    /// Application used to convert the original content into it's current form.
+    /// The application used to convert the original content into its current form.
     ///
     /// For example, a PDF file might have an encoding application set to "Distiller"
     @inlinable
@@ -137,7 +138,7 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == String {
 
 extension FinderItem.Attributes.InsertableAttributeKey where Value == FinderItem.Attributes.XAttributeIcon {
     
-    /// Inserts the icon attribute, read from `xattr`.
+    /// Inserts the icon attribute stored in `xattr`.
     public static var xattrIcon: FinderItem.Attributes.InsertableAttributeKey<FinderItem.Attributes.XAttributeIcon, any Error> {
         .init { item, value in
             let code = try value.data.withUnsafeBytes { bytes in

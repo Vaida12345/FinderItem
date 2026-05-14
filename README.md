@@ -1,27 +1,26 @@
 # The FinderItem
 
-The FinderItem Package.
+A Swift package for ergonomic, strongly typed file-system access.
 
 ## Overview
 
-The ``FinderItem/FinderItem`` provides a great abstraction over the ways in which you can interact with the file system.
-
-It abstracts over many structures, including `FileManager`, `URL`, `FilePath`, and more.
+`FinderItem` provides a single API surface for common file-system tasks.
+It bridges `FileManager`, `URL`, `FilePath`, and platform-specific integrations.
 
 ### Highlights
 - Load contents using [``load(_:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/load(_:)-97hgq/).
 - Inspect if file [``exists``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/exists) or [``isDirectory``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/isdirectory).
 - Inspect file [``stem``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/stem) & [``extension``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/extension).
-- Gets [``contentType``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/contenttype).
+- Get [``contentType``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/contenttype).
 - File operations including [``copy(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/copy(to:)),  [``move(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/move(to:)-5oihl), [``remove()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/remove()).
-- [``open(configuration:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/open(configuration:)) or [``reveal()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/reveal()) files
+- [``open(configuration:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/open(configuration:)) or [``reveal()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/reveal()) files.
 - Get sorted children as a stream using [``children(range:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/children(range:)).
 - [Typed throws](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/fileerror)
 
 
 ## Getting Started
 
-`FinderItem` uses [Swift Package Manager](https://www.swift.org/documentation/package-manager/) as its build tool. If you want to import in your own project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
+`FinderItem` uses [Swift Package Manager](https://www.swift.org/documentation/package-manager/). Add a dependency in `Package.swift`:
 ```swift
 dependencies: [
     .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "1.2.0")

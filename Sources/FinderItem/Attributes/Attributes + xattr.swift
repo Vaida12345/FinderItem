@@ -14,11 +14,11 @@ import System
 // Cannot use `FileManager` xattr, as certain values are omitted.
 extension FinderItem.Attributes {
     
-    /// Returns all of extended attribute keys associated with `self`.
+    /// Returns all extended-attribute keys associated with this item.
     ///
-    /// - throws: Error in retrieval process.
+    /// - Throws: An error if retrieval fails.
     ///
-    /// - Returns: `[]` when there aren't any attributes associated with `self`.
+    /// - Returns: `[]` when no extended attributes are present.
     @inlinable
     public var xattr: [String] {
         get throws(Errno) {
@@ -48,11 +48,11 @@ extension FinderItem.Attributes {
     /// > detailedPrint(file, configuration: .showExtendedAttributes)
     /// > ```
     ///
-    /// - throws: Error in retrieval process.
+    /// - Throws: An error if retrieval fails.
     ///
     /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     ///
-    /// - Returns: Empty data when there aren't any value associated with `name`.
+    /// - Returns: Empty data when no value is associated with `name`.
     @inlinable
     public func xattr(_ name: String) throws(Errno) -> Data {
         let size = getxattr(self.parent.path, name, nil, 0, 0, 0)
@@ -78,11 +78,11 @@ extension FinderItem.Attributes {
     /// > detailedPrint(file, configuration: .showExtendedAttributes)
     /// > ```
     ///
-    /// - throws: Error in retrieval process.
+    /// - Throws: An error if retrieval fails.
     ///
     /// - SeeAlso: Use ``xattr(_:)`` to read the value as it is.
     ///
-    /// - returns: `nil` only when data is not a `String`.
+    /// - Returns: `nil` when the attribute data is not valid UTF-8 text.
     @inlinable
     public func xattr<T>(_ name: String, as type: T.Type = String.self) throws(Errno) -> String? {
         let raw = try self.xattr(name)
@@ -118,9 +118,9 @@ extension FinderItem.Attributes {
         }
     }
     
-    /// The file (download) where from.
+    /// The source URL recorded for a downloaded file.
     ///
-    /// - SeeAlso: ``dateDownloaded``
+    /// - SeeAlso: ``downloadDate``
     @inlinable
     public var origin: String? {
         get throws(Errno) {
@@ -164,7 +164,7 @@ extension FinderItem.Attributes {
         }
     }
     
-    /// Application used to convert the original content into it's current form.
+    /// The application used to convert the original content into its current form.
     ///
     /// For example, a PDF file might have an encoding application set to "Distiller"
     @inlinable
@@ -212,7 +212,7 @@ extension FinderItem.Attributes {
         /// See `SF Symbols` for details.
         case systemImage(String)
         
-        /// An emoji
+        /// An emoji.
         case emoji(String)
         
         

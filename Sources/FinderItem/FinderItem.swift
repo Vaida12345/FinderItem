@@ -275,7 +275,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - path: The absolute path. A `/` should be added to the end as an indication of being a folder.
-    ///   - directoryHint: An indication of whether the given path is an directory. This would effect the `hasDirectoryPath` value of the underlining ``url``.
+    ///   - directoryHint: Indicates whether the given path is a directory. This affects the `hasDirectoryPath` value of the underlying ``url``.
     @inlinable
     convenience init(at path: String, directoryHint: URL.DirectoryHint = .inferFromPath) {
         self.init(at: URL(filePath: path, directoryHint: directoryHint).standardizedFileURL)
@@ -417,7 +417,7 @@ public extension FinderItem {
     ///
     /// - throws: When cannot create a directory, or a file with the same name exists.
     ///
-    /// - SeeAlso: To generate the directory *smartly*, use ``generateDirectory()``
+    /// - SeeAlso: To generate the directory contextually, use ``generateDirectory()``.
     @inlinable
     func makeDirectory(attributes: [FileAttributeKey : Any]? = nil) throws(FileError) {
         guard !self.exists else {
@@ -445,7 +445,7 @@ public extension FinderItem {
     
     /// Generates the desired folders at the path, context-aware.
     ///
-    /// This function should be employed only when there is uncertainty about whether a folder should be generated for its ``enclosingFolder`` or for the folder itself. A simple parser will be utilized to determine its nature. If this is not the case, the ``makeDirectory()`` function should be used instead.
+    /// This function should be employed only when there is uncertainty about whether a folder should be generated for its ``enclosingFolder`` or for the folder itself. A simple parser will be utilized to determine its nature. If this is not the case, the ``makeDirectory(attributes:)`` function should be used instead.
     ///
     /// The nature is determined using `hasDirectoryPath` as indicated in ``init(at:directoryHint:)``.
     @inlinable
@@ -700,7 +700,7 @@ public extension FinderItem {
     /// >
     /// > ```swift
     /// > let item = FinderItem(at: "file.txt")
-    /// > item.exits // true
+    /// > item.exists // true
     /// > item.generateOutputPath()
     /// > item // file 2.txt
     /// > ```
@@ -715,7 +715,7 @@ public extension FinderItem {
     ///
     /// ```swift
     /// let item = FinderItem(at: "file.txt")
-    /// item.exits // true
+    /// item.exists // true
     /// item.createUniquePath() // file 2.txt
     /// ```
     ///
@@ -723,7 +723,7 @@ public extension FinderItem {
     ///
     /// ```swift
     /// let item = FinderItem(at: "music 324.m4a")
-    /// item.exits // true
+    /// item.exists // true
     /// item.createUniquePath() // music 325.m4a
     /// ```
     @inlinable
@@ -791,7 +791,7 @@ public extension FinderItem {
     ///
     /// - Parameters:
     ///   - path: The relative path. A `/` should be added to the end as an indication of being a folder.
-    ///   - directoryHint: An indication of whether the given path is an directory. This would effect the `hasDirectoryPath` value of the underlining ``url``.
+    ///   - directoryHint: Indicates whether the given path is a directory. This affects the `hasDirectoryPath` value of the underlying ``url``.
     ///
     /// - Returns: A new instance with the path of its child.
     @inlinable
@@ -808,7 +808,7 @@ public extension FinderItem {
     
     /// Returns a new instance with the path by replacing the extension with the new value.
     ///
-    /// The is a file path operation. A new instance of ``FinderItem`` is generated upon return.
+    /// This is a file-path operation. A new instance of ``FinderItem`` is returned.
     ///
     /// ```swift
     /// let item = FinderItem(at: "file.txt")
@@ -827,7 +827,7 @@ public extension FinderItem {
     
     /// Returns a new instance with the path by replacing the stem with the new value.
     ///
-    /// The is a file path operation. A new instance of ``FinderItem`` is generated upon return.
+    /// This is a file-path operation. A new instance of ``FinderItem`` is returned.
     ///
     /// ```swift
     /// let item = FinderItem(at: "file.txt")

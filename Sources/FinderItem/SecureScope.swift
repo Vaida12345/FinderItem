@@ -19,13 +19,14 @@ extension FinderItem {
     
     /// In an app that has adopted App Sandbox, makes the resource pointed to by a security-scoped URL available to the app.
     ///
-    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessingSecurityScopedResource()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
+    /// Call ``stopAccessingSecurityScopedResource()`` as soon as you finish using the resource.
+    /// Access calls must be balanced per resource.
     ///
     /// - SeeAlso: ``withAccessingSecurityScopedResource(perform:)``
     ///
-    /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
+    /// - Throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)`` with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission`` when access cannot be started.
     ///
-    /// You need to obtain security scope for items that are created using ``FinderItem/init(from:configuration:)``.
+    /// This is typically needed for items restored from security-scoped bookmarks.
     @inlinable
     public func startAccessingSecurityScopedResource() throws(FileError) {
         guard self.url.startAccessingSecurityScopedResource() else { throw FinderItem.FileError(code: .cannotRead(reason: .noPermission), source: self) }
@@ -39,16 +40,17 @@ extension FinderItem {
         self.url.stopAccessingSecurityScopedResource()
     }
     
-    /// Access and performs `action` on the resource that is outside the sandbox of the App.
+    /// Starts security-scope access, runs `action`, then always relinquishes access.
     ///
-    /// Given a `FinderItem` created by resolving a bookmark data created with security scope, make the resource referenced by the `item` accessible to the process.
+    /// Given a `FinderItem` created by resolving security-scoped bookmark data,
+    /// this makes the resource accessible for the duration of `action`.
     ///
-    /// - throws: *Cannot access Security Scoped Resource* error if access denied, or whatever is thrown by the `action`.
-    ///
-    /// - Returns: Whatever is returned by the `action`.
+    /// - Throws: A permission-related ``FinderItem/FileError`` if access cannot start, or any error thrown by `action`.
     ///
     /// - Parameters:
-    ///   - action: The action which is performed. The `source` of the closure is exactly the same as the `source` passed, the value is provided to prevent capture.
+    ///   - action: The operation to perform while security-scope access is active.
+    ///
+    /// - Returns: The value returned by `action`.
     @inlinable
     public func withAccessingSecurityScopedResource<Result>(perform action: (_ source: FinderItem) throws -> Result) throws -> Result {
         try self.startAccessingSecurityScopedResource()
@@ -62,7 +64,7 @@ extension FinderItem {
     
     /// Returns bookmark data for the URL, created with specified options.
     ///
-    /// - Note: You only need to uses this method when you choose to handle bookmarks manually, otherwise encode and decode with `withSecurityScope` configuration is sufficient.
+    /// - Note: You only need this method when handling bookmarks manually. Otherwise, encoding and decoding with `withSecurityScope` is sufficient.
     @inlinable
     public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws -> Data {
         try self.url.bookmarkData(options: options)
@@ -70,10 +72,10 @@ extension FinderItem {
     
     /// Creates a URL that refers to a location specified by resolving bookmark data.
     ///
-    /// - Note: You only need to uses this method when you choose to handle bookmarks manually, otherwise encode and decode with `withSecurityScope` configuration is sufficient.
+    /// - Note: You only need this method when handling bookmarks manually. Otherwise, encoding and decoding with `withSecurityScope` is sufficient.
     ///
     /// - Parameters:
-    ///   - resolvingBookmarkData: The bookmark data
+    ///   - resolvingBookmarkData: The bookmark data.
     ///   - options: The options for resolving such data, `.withSecurityScope` for default.
     ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
     @inlinable
@@ -82,7 +84,7 @@ extension FinderItem {
         self.init(_url: url)
     }
     
-    /// The default option for bookmark resolve.
+    /// The default options for bookmark resolution.
     ///
     /// On macOS, it is `withSecurityScope`; `[]` otherwise.
     @inlinable
@@ -94,7 +96,7 @@ extension FinderItem {
 #endif
     }
     
-    /// The default option for bookmark creation.
+    /// The default options for bookmark creation.
     ///
     /// On macOS, it is `withSecurityScope`; `[]` otherwise.
     @inlinable
@@ -109,15 +111,13 @@ extension FinderItem {
 
 
 extension Sequence<FinderItem> {
-    /// In an app that has adopted App Sandbox, makes the resource pointed to by a security-scoped URL available to the app.
-    ///
-    /// If this method returns true, then you must relinquish access as soon as you finish using the resource. Call the ``stopAccessingSecurityScopedResource()`` method to relinquish access. You must balance each call to a given resource. When you make the last balanced call, you immediately lose access to the resource.
+    /// Starts security-scope access for every item in the sequence.
     ///
     /// - SeeAlso: ``FinderItem/withAccessingSecurityScopedResource(perform:)``
     ///
-    /// - throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)``, with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission``.
+    /// - Throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)`` with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission`` when any item fails.
     ///
-    /// You need to obtain security scope for items that are created using ``FinderItem/init(from:configuration:)``.
+    /// This is typically needed for items restored from security-scoped bookmarks.
     @inlinable
     public func startAccessingSecurityScopedResource() throws(FinderItem.FileError) {
         for i in self {

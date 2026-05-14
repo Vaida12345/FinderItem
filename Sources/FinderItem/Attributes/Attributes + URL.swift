@@ -21,17 +21,17 @@ extension FinderItem.Attributes {
 
     /// Returns whether the resource is an application.
     @inlinable
-    var isApplication: Bool? {
+    public var isApplication: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isApplicationKey, keyPath: \.isApplication)
         }
     }
     
-    /// Returns `true` if the resource is a Finder alias file or a symlink, `false` otherwise
+    /// Returns whether the resource is a Finder alias file.
     ///
-    /// - note: Only applicable to regular files.
+    /// - Note: Only applicable to regular files.
     @inlinable
-    var isAliasFile: Bool? {
+    public var isAliasFile: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isAliasFileKey, keyPath: \.isAliasFile)
         }
@@ -39,7 +39,7 @@ extension FinderItem.Attributes {
     
     /// Returns whether the resource is a file package.
     @inlinable
-    var isPackage: Bool? {
+    public var isPackage: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isPackageKey, keyPath: \.isPackage)
         }
@@ -47,7 +47,7 @@ extension FinderItem.Attributes {
     
     /// A Boolean value that indicates whether you can execute the file resource or search a directory resource.
     @inlinable
-    var isExecutable: Bool? {
+    public var isExecutable: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isExecutableKey, keyPath: \.isExecutable)
         }
@@ -55,15 +55,15 @@ extension FinderItem.Attributes {
     
     /// Returns `true` for resources normally not displayed to users.
     @inlinable
-    var isHidden: Bool? {
+    public var isHidden: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isHiddenKey, keyPath: \.isHidden)
         }
     }
     
-    /// Returns whether the resource is a symbolic link
+    /// Returns whether the resource is a symbolic link.
     @inlinable
-    var isSymbolicLink: Bool? {
+    public var isSymbolicLink: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isSymbolicLinkKey, keyPath: \.isSymbolicLink)
         }
@@ -71,7 +71,7 @@ extension FinderItem.Attributes {
     
     /// Determines whether the file is writable.
     @inlinable
-    var writable: Bool? {
+    public var writable: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isWritableKey, keyPath: \.isWritable)
         }
@@ -79,7 +79,7 @@ extension FinderItem.Attributes {
     
     /// Determines whether the file is readable.
     @inlinable
-    var readable: Bool? {
+    public var readable: Bool? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .isReadableKey, keyPath: \.isReadable)
         }
@@ -87,7 +87,7 @@ extension FinderItem.Attributes {
     
     /// The date the resource was last accessed.
     @inlinable
-    var accessDate: Date? {
+    public var accessDate: Date? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .contentAccessDateKey, keyPath: \.contentAccessDate)
         }
@@ -95,7 +95,7 @@ extension FinderItem.Attributes {
     
     /// The user-visible label text.
     @inlinable
-    var label: String? {
+    public var label: String? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .localizedLabelKey, keyPath: \.localizedLabel)
         }
@@ -103,7 +103,7 @@ extension FinderItem.Attributes {
     
     /// User-visible type or “kind” description.
     @inlinable
-    var displayType: String? {
+    public var displayType: String? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .localizedTypeDescriptionKey, keyPath: \.localizedTypeDescription)
         }
@@ -111,7 +111,7 @@ extension FinderItem.Attributes {
     
     /// The quarantine properties as defined in `LSQuarantine.h`.
     @inlinable
-    var quarantine: [String : Any]? {
+    public var quarantine: [String : Any]? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .quarantinePropertiesKey, keyPath: \.quarantineProperties)
         }
@@ -125,25 +125,25 @@ import AppKit
 
 extension FinderItem.Attributes {
     
-    /// The icon stored with the resource
+    /// The icon stored with the resource.
     @inlinable
-    var customIcon: NSImage? {
+    public var customIcon: NSImage? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .customIconKey, keyPath: \.customIcon)
         }
     }
     
-    /// The resource’s normal icon
+    /// The resource’s normal icon.
     @inlinable
-    var effectiveIcon: NSImage? {
+    public var effectiveIcon: NSImage? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .effectiveIconKey, keyPath: \.effectiveIcon) as? NSImage
         }
     }
     
-    /// The resource’s label color
+    /// The resource’s label color.
     @inlinable
-    var labelColor: NSColor? {
+    public var labelColor: NSColor? {
         get throws(FinderItem.FileError) {
             try _read(_URLResourceKey: .labelColorKey, keyPath: \.labelColor)
         }

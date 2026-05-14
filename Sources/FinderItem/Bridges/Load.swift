@@ -96,6 +96,7 @@ extension FinderItem {
     /// ```
     public struct LoadableContent<Result, Failure> where Failure: Error {
         
+        /// The loading closure executed by ``FinderItem/load(_:)-1vmco``.
         public let contentLoader: (FinderItem) throws(Failure) -> Result
         
         
@@ -122,6 +123,7 @@ extension FinderItem {
     /// ```
     public struct AsyncLoadableContent<Result, Failure> where Failure: Error {
         
+        /// The loading closure executed by ``FinderItem/load(_:)-7spks``.
         public let contentLoader: (FinderItem) async throws(Failure) -> Result
         
         

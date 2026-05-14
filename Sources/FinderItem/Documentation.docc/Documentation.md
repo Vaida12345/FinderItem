@@ -1,23 +1,22 @@
 # ``FinderItem``
 
-The FinderItem Package.
+The FinderItem package.
 
 ## Overview
 
-The ``FinderItem/FinderItem`` provides a great abstraction over the ways in which you can interact with the file system.
-
-It abstracts over many structures, including `FileManager`, `URL`, `FilePath`, and more.
+``FinderItem/FinderItem`` provides one cohesive API for file-system work.
+It bridges `FileManager`, `URL`, `FilePath`, and related system APIs.
 
 ### Highlights
 - Load contents using ``FinderItem/FinderItem/load(_:)-7spks``.
 - Inspect if file ``FinderItem/FinderItem/exists`` or ``FinderItem/FinderItem/isDirectory``.
 - Inspect file ``FinderItem/FinderItem/stem`` & ``FinderItem/FinderItem/extension``.
-- Gets ``FinderItem/FinderItem/contentType``.
+- Get ``FinderItem/FinderItem/contentType``.
 - File operations including ``FinderItem/FinderItem/copy(to:)``,  ``FinderItem/FinderItem/move(to:)-3wp1t``, ``FinderItem/FinderItem/remove()``.
-- ``FinderItem/FinderItem/open()`` or ``FinderItem/FinderItem/reveal()`` files
+- ``FinderItem/FinderItem/open()`` or ``FinderItem/FinderItem/reveal()`` files.
 - Get sorted children as a stream using ``FinderItem/FinderItem/children(range:)``.
 - [Typed throws](``FinderItem/FinderItem/FileError``).
-- Get and insert attributes: ``FinderItem/load(_:)``, ``FinderItem/insertAttribute(_:_:)``.
+- Read and update attributes: ``FinderItem/attributes``, ``FinderItem/Attributes/update(_:to:)``.
 
 
 ## Getting Started

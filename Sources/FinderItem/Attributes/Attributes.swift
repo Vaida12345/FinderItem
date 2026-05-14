@@ -10,14 +10,16 @@ import Foundation
 
 extension FinderItem {
     
+    /// A cached snapshot of file metadata for a specific item.
     public struct Attributes: @unchecked Sendable {
         
-        /// stores common properties.
+        /// Stores common file attributes fetched through `FileManager`.
         ///
         /// As these attributes are obtained together using `stat` under the hood, caching it is better.
         @usableFromInline
         let _fm_attributes: [FileAttributeKey : Any]
         
+        /// The item that owns these attributes.
         @usableFromInline
         let parent: FinderItem
         
@@ -35,9 +37,9 @@ extension FinderItem {
 
 extension FinderItem {
     
-    /// Returns the attributes collection of the given item.
+    /// Returns the attribute snapshot for this item.
     ///
-    /// - Note: To improve performance and reduce file read, retain this value.
+    /// - Note: To improve performance and reduce file reads, retain this value.
     @inlinable
     public var attributes: Attributes {
         get throws(FileError) {

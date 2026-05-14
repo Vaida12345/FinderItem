@@ -24,11 +24,13 @@ public struct FinderItemChildren: Sequence, Sendable {
     ///
     /// This methods only works when `options` is `contentsOfDirectory.withSystemHidden` on selected file systems, as it uses `URLResource` under the hood, freeing the need of iterating over the directory.
     @available(macOS 14.0, iOS 17.0, tvOS 17.0, watchOS 10.0, *)
+    /// Returns the directory entry count when available for the current enumeration mode.
     public var count: Int? {
         guard options == .contentsOfDirectory.withSystemHidden else { return nil }
         return try? self.parent.url.resourceValues(forKeys: [.directoryEntryCountKey]).directoryEntryCount
     }
     
+    /// Creates an iterator for the children sequence.
     public func makeIterator() -> Iterator {
         Iterator(item: self.parent, range: self.options)
     }
@@ -45,6 +47,7 @@ public struct FinderItemChildren: Sequence, Sendable {
     
     public typealias Element = FinderItem
     
+    /// Iterator over a directory stream created by `fts`.
     public final class Iterator: IteratorProtocol {
         
         private let options: FinderItem.ChildrenRange
@@ -72,11 +75,13 @@ public struct FinderItemChildren: Sequence, Sendable {
             fts_close(stream)
         }
         
+        /// The depth of the current node in the traversal.
         public var level: Int {
             Int(current?.pointee.fts_level ?? 0)
         }
         
         
+        /// Returns the next child item in the traversal, or `nil` when exhausted.
         public func next() -> FinderItem? {
             self.current = fts_read(stream)
             guard let current else { return nil }

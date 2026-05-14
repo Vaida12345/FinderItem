@@ -34,6 +34,8 @@ public extension Array where Element == FinderItem {
     }
     
     /// Returns the inputs with their children flatten for directories.
+    ///
+    /// Directory inputs are expanded using ``FinderItem/children(range:)`` with `.enumeration`.
     @inlinable
     init(flatten: [FinderItem]) throws {
         var results: [FinderItem] = []
@@ -56,7 +58,7 @@ public extension Array where Element == FinderItem {
 public extension Array where Element == FinderItem {
     
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-    /// Reveals the files in finder.
+    /// Reveals the items in Finder.
     @inlinable
     func revealInFinder() {
         NSWorkspace.shared.activateFileViewerSelecting(self.map(\.url))
@@ -64,5 +66,4 @@ public extension Array where Element == FinderItem {
 #endif
     
 }
-
 

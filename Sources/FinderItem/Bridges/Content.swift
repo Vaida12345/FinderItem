@@ -29,6 +29,7 @@ public extension FinderItem {
 
 public extension FileWrapper {
     
+    /// Initializes a file wrapper from a `FinderItem` location.
     @inlinable
     convenience init(at source: FinderItem) throws {
         try self.init(url: source.url)
@@ -39,6 +40,7 @@ public extension FileWrapper {
 
 public extension NSItemProvider {
     
+    /// Creates an item provider for a file-system item.
     @inlinable
     convenience init?(at source: FinderItem) {
         self.init(contentsOf: source.url)
@@ -87,7 +89,7 @@ public extension String {
         try self.write(to: destination.url, atomically: true, encoding: encoding)
     }
     
-    /// Initialize with the content on disk
+    /// Initializes a string with file contents on disk.
     @inlinable
     init(at source: FinderItem, encoding: Encoding = .utf8) throws {
         try self.init(contentsOf: source.url, encoding: encoding)

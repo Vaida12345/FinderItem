@@ -46,7 +46,7 @@ extension FinderItem.Attributes {
         self._fm_attributes[.ownerAccountName] as? String
     }
     
-    /// Group name of the file’s owner.
+    /// The group name of the file’s owner.
     @inlinable
     public var groupOwner: String? {
         self._fm_attributes[.groupOwnerAccountName] as? String
@@ -58,7 +58,7 @@ extension FinderItem.Attributes {
         self._fm_attributes[.immutable] as? Bool ?? false
     }
     
-    /// Whether the file is append Only.
+    /// Whether the file is append-only.
     @inlinable
     public var appendOnly: Bool {
         self._fm_attributes[.appendOnly] as? Bool ?? false

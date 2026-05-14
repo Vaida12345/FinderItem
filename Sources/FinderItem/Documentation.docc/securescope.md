@@ -1,12 +1,14 @@
 # Secure Scope
 
-Work with Secure Scopes
+Work with security-scoped resources and bookmarks.
 
 ## Overview
 
-When a user-selected file needs to be retained for future use, the permission to read it is typically revoked. To work around this issue, a bookmark is necessary. 
+When a user-selected file needs to be retained for future use, direct access is typically revoked.
+To regain access later, persist a bookmark and resolve it when needed.
 
-`FinderItem` facilitates this process through the `CodableWithConfiguration` system. Instead of employing the standard encoding approach used with `Codable`, one should utilize `configuration`.
+`FinderItem` facilitates this process through `CodableWithConfiguration`.
+Instead of standard `Codable` calls, encode and decode with a bookmark configuration.
                                                     
 ```swift
 // To encode:
@@ -16,22 +18,19 @@ try container.encode(item, configuration: [.withSecurityScope])
 try container.decode(FinderItem.self, configuration: [.withSecurityScope])
 ```
 
-You would still need to call ``FinderItem/startAccessingSecurityScopedResource()`` prior to accessing the file.
+You still need to call ``FinderItem/startAccessingSecurityScopedResource()`` before accessing the file, or use ``FinderItem/withAccessingSecurityScopedResource(perform:)``.
 
-- Experiment: It seems you can only call ``FinderItem/startAccessingSecurityScopedResource()`` on the *original* file, not the ones derived using, for example, ``FinderItem/appending(path:directoryHint:)``. This means, to access a child folder, you need to access the security scope of its parent.
-
-Certain folders are write-only, for example, even with `com.apple.security.files.downloads.read-write`, there is no way to access the contents of Downloads folder using ``FinderItem/downloadsDirectory``, you need to use a dialog to ask for permission. Then, you can access the contents by persisting its bookmark data.
-
-However, with `com.apple.security.files.downloads.read-write`, it seems you do not need to start security scope to access its contents. However, you would still need the bookmark data obtained from the dialog.
+For user-selected files and folders, request access through a system picker, persist bookmark data, and resolve it when needed.
 
 
 ### Bookmarks
 
-- Note: You only need to uses these methods when you choose to handle bookmarks manually, otherwise encode and decode with `withSecurityScope` configuration is sufficient.
+- Note: You only need these methods when handling bookmarks manually; otherwise encoding and decoding with `withSecurityScope` is sufficient.
 
-To preserve the access to the security scope, you need to use ``FinderItem/bookmarkData(options:)``. This function returns the bookmark data that can be used to create the url with the security scope.
+To preserve access, use ``FinderItem/bookmarkData(options:)``. The returned bookmark data can later be resolved into a security-scoped URL.
 
-To create `FinderItem` from the bookmark, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``. On return, `bookmarkDataIsStale` serves as an indicator of whether the persisted bookmark data needs to be updated.
+To create a `FinderItem` from persisted data, use ``FinderItem/init(resolvingBookmarkData:options:bookmarkDataIsStale:)``.
+On return, `bookmarkDataIsStale` indicates whether the stored bookmark should be refreshed.
 
 
 ## Topics
