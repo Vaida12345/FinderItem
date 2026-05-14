@@ -42,16 +42,16 @@ extension FinderItem {
         public override func transformedValue(_ value: Any?) -> Any? {
             let item = value as! FinderItem
             
-            return try! item.withAccessingSecurityScopedResource { source in
+            return try? item.withAccessingSecurityScopedResource { source in
                 try source.bookmarkData()
             }
         }
         
         @inlinable
         public override func reverseTransformedValue(_ value: Any?) -> Any? {
-            let data = (value as! Data)
-            var dataIsStable = false
-            return try! FinderItem(resolvingBookmarkData: data, bookmarkDataIsStale: &dataIsStable)
+            guard let data = value as? Data else { return nil }
+            var isStale = false
+            return try? FinderItem(resolvingBookmarkData: data, bookmarkDataIsStale: &isStale)
         }
         
         @inlinable

@@ -11,6 +11,7 @@ import AppKit
 #endif
 import UniformTypeIdentifiers
 import OSLog
+import System
 
 
 /// Abstractions over which you interact with file system.
@@ -347,13 +348,13 @@ public extension FinderItem {
         
         let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
             var s = stat()
-            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: self) }
+            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
             return s
         }
         
         let otherInfo = try other.url.withUnsafeFileSystemRepresentation { rep in
             var s = stat()
-            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: other) }
+            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
             return s
         }
         
@@ -371,10 +372,10 @@ public extension FinderItem {
             guard myInfo.st_size == otherInfo.st_size else { return false }
             
             return try self.url.withUnsafeFileSystemRepresentation { myPath in
-                guard let myPath else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: self) }
+                guard let myPath else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
                 
                 return try other.url.withUnsafeFileSystemRepresentation { otherPath in
-                    guard let otherPath else { throw FileError(code: .cannotRead(reason: .posix(code: errno)), source: other) }
+                    guard let otherPath else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
                     
                     let myfd = Darwin.open(myPath, O_RDONLY)
                     let otherfd = Darwin.open(otherPath, O_RDONLY)
@@ -383,11 +384,17 @@ public extension FinderItem {
                         close(otherfd)
                     }
                     
+                    guard myfd >= 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
+                    guard otherfd >= 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
+                    
                     _ = fcntl(myfd, F_NOCACHE) // hints
                     _ = fcntl(otherfd, F_NOCACHE)
                     
                     let myMap = mmap(nil, Int(myInfo.st_size), PROT_READ, MAP_PRIVATE, myfd, 0)
                     let otherMap = mmap(nil, Int(otherInfo.st_size), PROT_READ, MAP_PRIVATE, otherfd, 0)
+                    
+                    guard myMap != MAP_FAILED else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
+                    guard otherMap != MAP_FAILED else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
                     
                     defer {
                         munmap(myMap, Int(myInfo.st_size))
@@ -400,10 +407,10 @@ public extension FinderItem {
         } else if (myInfo.st_mode & S_IFMT) == S_IFLNK {
             return try FileManager.default.destinationOfSymbolicLink(atPath: self.path) == FileManager.default.destinationOfSymbolicLink(atPath: other.path)
         } else if (myInfo.st_mode & S_IFMT) == S_IFDIR {
-            fatalError("contentsEqual(to:) should not be called on a folder")
+            throw FileError(code: .cannotRead(reason: .posix(.isDirectory)), source: self)
         }
         
-        fatalError("Unknown file type 0x\(String(myInfo.st_mode, radix: 16)) for file \(self.path)")
+        throw FileError(code: .cannotRead(reason: .posix(.badFileTypeOrFormat)), source: self)
     }
     
     /// Generates the desired folder at the given path.
@@ -467,11 +474,11 @@ public extension FinderItem {
     /// - Returns: The relative path to other item; `nil` otherwise. The leading `/` is trimmed.
     @inlinable
     func relativePath(to item: FinderItem) -> String? {
-        let selfPath = self.url.path(percentEncoded: false)
-        let itemPath = item.url.path(percentEncoded: false)
-        guard selfPath.hasPrefix(itemPath) else { return nil }
+        let child = self.url.path(percentEncoded: false)
+        let base = item.url.path(percentEncoded: false)
+        guard child == base || child.hasPrefix(base) else { return nil }
         
-        var value = selfPath.dropFirst(itemPath.count)
+        var value = child.dropFirst(base.count)
         if value.hasPrefix("/") {
             value.removeFirst()
         }

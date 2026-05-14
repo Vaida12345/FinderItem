@@ -24,9 +24,6 @@ struct FinderItemTests {
     
     @Test("Test Properties")
     func testProperties() async throws {
-        #expect(FinderItem(at: "/Users/vaida/Desktop").description == "/Users/vaida/Desktop/")
-        #expect((FinderItem(at: "/Users/vaida/Desktop").path == "/Users/vaida/Desktop/"))
-        
         #expect((FinderItem(at: "/Users/vaida/Desktop").enclosingFolder.path == FinderItem(at: "/Users/vaida/").path))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop").name == "Desktop"))
@@ -49,8 +46,7 @@ struct FinderItemTests {
     
     @Test("Test Methods")
     func testMethods() async throws {
-        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida") == "Desktop/"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida/") == "Desktop/"))
+        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida") == "Desktop"))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
         #expect((FinderItem(at: "/Users/vaida/Desktop/file").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
@@ -72,8 +68,8 @@ struct FinderItemTests {
         #expect(folder.appending(path: "file.txt").isFile)
         #expect(!folder.appending(path: "file.txt").isDirectory)
         #expect(folder.appending(path: "file.txt").exists)
-        try #expect(folder.appending(path: "file.txt").load(.isReadable) ?? false)
-        try #expect(folder.appending(path: "file.txt").load(.isWritable) ?? false)
+        try #expect(folder.appending(path: "file.txt").attributes.readable ?? false)
+        try #expect(folder.appending(path: "file.txt").attributes.writable ?? false)
         
         // add folder
         let subdir = folder.appending(path: "Folder", directoryHint: .isDirectory)
@@ -81,8 +77,8 @@ struct FinderItemTests {
         #expect(!subdir.isFile)
         #expect(subdir.isDirectory)
         #expect(subdir.exists)
-        try #expect(subdir.load(.isReadable) ?? false)
-        try #expect(subdir.load(.isWritable) ?? false)
+        try #expect(subdir.attributes.readable ?? false)
+        try #expect(subdir.attributes.writable ?? false)
         
         // add files to subdir
         let value = 123

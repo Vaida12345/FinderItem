@@ -78,7 +78,6 @@ extension FinderItem {
     ///   - bookmarkDataIsStale: On return, if true, the bookmark data is stale. Your app should create a new bookmark using the returned URL and use it in place of any stored copies of the existing bookmark.
     @inlinable
     public convenience init(resolvingBookmarkData: Data, options: URL.BookmarkResolutionOptions = FinderItem.defaultBookmarkResolveOptions, bookmarkDataIsStale: inout Bool) throws {
-        var bookmarkDataIsStale = false
         let url = try URL(resolvingBookmarkData: resolvingBookmarkData, options: options, bookmarkDataIsStale: &bookmarkDataIsStale)
         self.init(_url: url)
     }

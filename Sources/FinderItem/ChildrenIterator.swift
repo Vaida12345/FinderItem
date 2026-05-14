@@ -36,7 +36,7 @@ public struct FinderItemChildren: Sequence, Sendable {
     
     @usableFromInline
     internal init(options: FinderItem.ChildrenRange, parent: FinderItem) throws(FinderItem.FileError) {
-        guard parent.exists else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: parent) }
+        guard try parent.attributes.readable ?? false else { throw FinderItem.FileError(code: .cannotRead(reason: .noSuchFile), source: parent) }
         
         self.options = options
         self.parent = parent

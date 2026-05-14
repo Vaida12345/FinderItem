@@ -63,6 +63,7 @@ extension FinderItem.Attributes {
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
         let status = getxattr(self.parent.path, name, buffer.baseAddress, size, 0, 0)
         if status == -1 {
+            buffer.deallocate()
             throw Errno(rawValue: errno)
         }
         
@@ -96,6 +97,7 @@ extension FinderItem.Attributes {
         get throws(Errno) {
             do {
                 let info = try self.xattr("com.apple.FinderInfo")
+                guard info.count > 8 else { return false }
                 return info[8] & 0x04 != 0
             } catch .attributeNotFound {
                 return false

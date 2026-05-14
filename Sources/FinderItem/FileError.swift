@@ -9,6 +9,7 @@
 import Foundation
 import Darwin
 import Essentials
+import System
 
 
 extension FinderItem {
@@ -109,7 +110,7 @@ extension FinderItem {
             
             
             /// The reason for the failure to unmount.
-            public enum UnmountFailureReason: Sendable {
+            public enum UnmountFailureReason: Sendable, Equatable {
                 /// The volume couldn’t be unmounted because it’s in use.
                 case busy
                 /// The volume couldn't be unmounted, for unknown reasons.
@@ -117,7 +118,7 @@ extension FinderItem {
             }
             
             /// The reason for the failure to read a file.
-            public enum ReadFailureReason: Sendable {
+            public enum ReadFailureReason: Sendable, Equatable {
                 /// Could not read because of a corrupted file, bad format, or similar reason.
                 case corruptFile
                 /// Could not read because the string encoding wasn’t applicable.
@@ -136,22 +137,12 @@ extension FinderItem {
                 case unknownStringEncoding
                 /// Could not read because the specified URL scheme is unsupported.
                 case unsupportedScheme
-                
                 /// Creates a reason based on a POSIX `errno` code.
-                ///
-                /// - Note: A one-to-one matching cannot be not guaranteed, as this structure primarily aims to serve the Swift suite of errors. Notably, `EBADF` is ignored.
-                @inlinable
-                public static func posix(code: Int32) -> ReadFailureReason {
-                    switch code {
-                    case EACCES: .noPermission
-                    case ENAMETOOLONG, ENOENT: .invalidFileName
-                    default: .unknown
-                    }
-                }
+                case posix(Errno)
             }
             
             /// The reason for the failure to write a file.
-            public enum WriteFailureReason: Sendable {
+            public enum WriteFailureReason: Sendable, Equatable {
                 /// Could not perform an operation because the destination file already exists.
                 case fileExists
                 /// Could not write because the string encoding was not applicable.
@@ -168,6 +159,8 @@ extension FinderItem {
                 case unsupportedScheme
                 /// Could not write because the volume is read-only.
                 case volumeReadOnly
+                /// Creates a reason based on a POSIX `errno` code.
+                case posix(Errno)
             }
         }
         
@@ -223,6 +216,8 @@ extension FinderItem {
                     "The file \"\(source)\" employs an unknown string encoding."
                 case .unsupportedScheme:
                     "The file path \"\(source)\" employs an unsupported URL scheme."
+                case .posix(let error):
+                    error.description
                 }
                 
             case let .cannotWrite(reason):
@@ -243,6 +238,8 @@ extension FinderItem {
                     "The file path \"\(source)\" employs an unsupported URL scheme."
                 case .volumeReadOnly:
                     "The volume of file \"\(source)\" is read-only."
+                case .posix(let error):
+                    error.description
                 }
                 
             case .intermediateFileNotExist:
