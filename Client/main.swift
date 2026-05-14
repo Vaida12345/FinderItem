@@ -9,7 +9,7 @@
 import FinderItem
 import Foundation
 import DetailedDescription
+import Darwin
 
 
-print(try FinderItem.applicationSupportDirectory)
 #endif

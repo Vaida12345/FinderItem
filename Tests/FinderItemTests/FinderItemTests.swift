@@ -281,6 +281,32 @@ struct FinderItemTests {
         #expect(FinderItem.importedContentTypes() == [.url, .fileURL, .data])
     }
     
+    @Test("POSIX Permissions Decode")
+    func posixPermissionsDecode() {
+        let permissions = FinderItem.Attributes.Permissions(rawValue: 0o6754)
+        
+        #expect(permissions.owner == .init(read: true, write: true, execute: true))
+        #expect(permissions.group == .init(read: true, write: false, execute: true))
+        #expect(permissions.others == .init(read: true, write: false, execute: false))
+        #expect(permissions.setUserID)
+        #expect(permissions.setGroupID)
+        #expect(!permissions.sticky)
+    }
+    
+    @Test("POSIX Permissions Encode")
+    func posixPermissionsEncode() {
+        let permissions = FinderItem.Attributes.Permissions(
+            owner: .init(read: true, write: true, execute: true),
+            group: .init(read: true, write: false, execute: true),
+            others: .init(read: false, write: false, execute: true),
+            setUserID: false,
+            setGroupID: false,
+            sticky: true
+        )
+        
+        #expect(permissions.rawValue == 0o1751)
+    }
+    
 }
 
 

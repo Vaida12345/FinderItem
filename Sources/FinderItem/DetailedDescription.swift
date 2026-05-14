@@ -16,18 +16,19 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
         using descriptor: DetailedDescription.Descriptor<FinderItem>,
         configuration: DescriptionConfiguration
     ) -> any DescriptionBlockProtocol {
-        let fileSize = configuration.contains(.showFileSize) ? (try? self.load(.fileSize).map { " [\(Int64($0), format: .byteCount(style: .file))]" }) ?? "" : ""
+        let fileSize = configuration.contains(.showFileSize) ? (try? self.attributes.fileSize.map { " [\(Int64($0), format: .byteCount(style: .file))]" }) ?? "" : ""
+        let _attributes = try? self.attributes
         
         return if self.isDirectory,
             let children = try? self.children(range: .contentsOfDirectory.withHidden) {
             if configuration.contains(.showExtendedAttributes) {
                 descriptor.container(self.name + fileSize) {
-                    if let attributes = try? self.load(.xattr) {
+                    if let attributes = try? _attributes?.xattr {
                         descriptor.container("attributes") {
                             descriptor.forEach(attributes) { name in
-                                if let plist = try? self.load(.xattr(name, as: Any?.self)) {
+                                if let plist = try? _attributes?.xattr(name, as: Any?.self) {
                                     descriptor.value(name + " <plist>", of: plist)
-                                } else if let string = try? self.load(.xattr(name, as: String?.self)) {
+                                } else if let string = try? _attributes?.xattr(name, as: String?.self) {
                                     descriptor.value(name, of: string)
                                 } else {
                                     descriptor.constant("\(name): <binary>")
@@ -46,11 +47,11 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
         } else {
             if configuration.contains(.showExtendedAttributes) {
                 descriptor.container(self.name + fileSize) {
-                    if let attributes = try? self.load(.xattr) {
+                    if let attributes = try? _attributes?.xattr {
                         descriptor.forEach(attributes) { name in
-                            if let plist = try? self.load(.xattr(name, as: Any?.self)) {
+                            if let plist = try? _attributes?.xattr(name, as: Any?.self) {
                                 descriptor.value(name + " <plist>", of: plist)
-                            } else if let string = try? self.load(.xattr(name, as: String?.self)) {
+                            } else if let string = try? _attributes?.xattr(name, as: String?.self) {
                                 descriptor.value(name, of: string)
                             } else {
                                 descriptor.constant("\(name): <binary>")
