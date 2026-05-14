@@ -189,6 +189,8 @@ public extension FinderItem {
     /// - returns: `nil` if the system cannot determine a content type for the file.
     ///
     /// - throws: When the system cannot read the file, for example, due to permission issues.
+    ///
+    /// - SeeAlso: ``Attributes/displayType``
     @inlinable
     var contentType: UTType? {
         get throws(FileError) {

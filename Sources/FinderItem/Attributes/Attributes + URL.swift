@@ -10,11 +10,20 @@ import Foundation
 
 extension FinderItem.Attributes {
     
+    @inlinable
+    func _read<T>(_URLResourceKey: URLResourceKey, keyPath: KeyPath<URLResourceValues, T>) throws(FinderItem.FileError) -> T {
+        do {
+            return try self.parent.url.resourceValues(forKeys: [_URLResourceKey])[keyPath: keyPath]
+        } catch {
+            throw .parse(error)
+        }
+    }
+
     /// Returns whether the resource is an application.
     @inlinable
     var isApplication: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isApplicationKey]).isApplication
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isApplicationKey, keyPath: \.isApplication)
         }
     }
     
@@ -23,88 +32,88 @@ extension FinderItem.Attributes {
     /// - note: Only applicable to regular files.
     @inlinable
     var isAliasFile: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isAliasFileKey]).isAliasFile
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isAliasFileKey, keyPath: \.isAliasFile)
         }
     }
     
     /// Returns whether the resource is a file package.
     @inlinable
     var isPackage: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isPackageKey]).isPackage
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isPackageKey, keyPath: \.isPackage)
         }
     }
     
     /// A Boolean value that indicates whether you can execute the file resource or search a directory resource.
     @inlinable
     var isExecutable: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isExecutableKey]).isExecutable
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isExecutableKey, keyPath: \.isExecutable)
         }
     }
     
     /// Returns `true` for resources normally not displayed to users.
     @inlinable
     var isHidden: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isHiddenKey]).isHidden
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isHiddenKey, keyPath: \.isHidden)
         }
     }
     
     /// Returns whether the resource is a symbolic link
     @inlinable
     var isSymbolicLink: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isSymbolicLinkKey, keyPath: \.isSymbolicLink)
         }
     }
     
     /// Determines whether the file is writable.
     @inlinable
     var writable: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isWritableKey]).isWritable
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isWritableKey, keyPath: \.isWritable)
         }
     }
     
     /// Determines whether the file is readable.
     @inlinable
     var readable: Bool? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.isReadableKey]).isReadable
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .isReadableKey, keyPath: \.isReadable)
         }
     }
     
     /// The date the resource was last accessed.
     @inlinable
     var accessDate: Date? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.contentAccessDateKey]).contentAccessDate
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .contentAccessDateKey, keyPath: \.contentAccessDate)
         }
     }
     
     /// The user-visible label text.
     @inlinable
     var label: String? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.localizedLabelKey]).localizedLabel
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .localizedLabelKey, keyPath: \.localizedLabel)
         }
     }
     
     /// User-visible type or “kind” description.
     @inlinable
     var displayType: String? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.localizedTypeDescriptionKey]).localizedTypeDescription
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .localizedTypeDescriptionKey, keyPath: \.localizedTypeDescription)
         }
     }
     
     /// The quarantine properties as defined in `LSQuarantine.h`.
     @inlinable
     var quarantine: [String : Any]? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.quarantinePropertiesKey]).quarantineProperties
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .quarantinePropertiesKey, keyPath: \.quarantineProperties)
         }
     }
     
@@ -119,24 +128,24 @@ extension FinderItem.Attributes {
     /// The icon stored with the resource
     @inlinable
     var customIcon: NSImage? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.customIconKey]).customIcon
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .customIconKey, keyPath: \.customIcon)
         }
     }
     
     /// The resource’s normal icon
     @inlinable
     var effectiveIcon: NSImage? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.effectiveIconKey]).effectiveIcon as? NSImage
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .effectiveIconKey, keyPath: \.effectiveIcon) as? NSImage
         }
     }
     
     /// The resource’s label color
     @inlinable
     var labelColor: NSColor? {
-        get throws {
-            try self.parent.url.resourceValues(forKeys: [.labelColorKey]).labelColor
+        get throws(FinderItem.FileError) {
+            try _read(_URLResourceKey: .labelColorKey, keyPath: \.labelColor)
         }
     }
     

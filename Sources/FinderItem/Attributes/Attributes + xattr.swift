@@ -5,6 +5,8 @@
 //  Created by Vaida on 2026-05-14.
 //
 
+#if canImport(Darwin)
+import Darwin
 import Foundation
 import System
 
@@ -118,17 +120,15 @@ extension FinderItem.Attributes {
     ///
     /// - SeeAlso: ``dateDownloaded``
     @inlinable
-    public var origin: [String]? {
+    public var origin: String? {
         get throws(Errno) {
             let data = try self.xattr("com.apple.metadata:kMDItemWhereFroms")
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            return (properyList as? NSArray)?.compactMap { $0 as? String }
+            return (properyList as? NSArray)?.firstObject as? String
         }
     }
     
     /// Finder comments on this file.
-    ///
-    /// - Experiment: Finder may have a hard time loading the modified comments.
     @inlinable
     public var comments: String? {
         get throws(Errno) {
@@ -166,11 +166,11 @@ extension FinderItem.Attributes {
     ///
     /// For example, a PDF file might have an encoding application set to "Distiller"
     @inlinable
-    public var encodingApplications: [String]? {
+    public var encodingApplications: String? {
         get throws(Errno) {
             let data = try self.xattr("com.apple.metadata:kMDItemEncodingApplications")
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            return (properyList as? NSArray)?.compactMap { $0 as? String }
+            return (properyList as? NSArray)?.firstObject as? String
         }
     }
     
@@ -229,4 +229,4 @@ extension FinderItem.Attributes {
     }
     
 }
-
+#endif

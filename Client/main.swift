@@ -11,5 +11,5 @@ import Foundation
 import DetailedDescription
 import Darwin
 
-try print(FinderItem.desktopDirectory.attributes.hasCustomIcon)
+
 #endif
