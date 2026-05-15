@@ -15,7 +15,7 @@ A set of predefined directories whose path is different for each project.
 - Backup: The system backs up files when performing an iCloud backup.
 - Reported: Disk space used is reported in the storage settings.
 
-- Note: You may not have permission to read / write the returned URL.
+These properties will throw if you do not have permission to access. On return, these directories exist.
 
 
 ## Topics
