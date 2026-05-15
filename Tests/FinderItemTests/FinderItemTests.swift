@@ -36,13 +36,15 @@ struct FinderItemTests {
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.tar.gz").stem == "file.tar"))
     }
     
+    #if os(macOS)
     @Test("Test File Wrapper")
     func testFileWrapper() async throws {
-        let item = try FinderItem.desktopDirectory
+        let item = try FinderItem.documentsDirectory
         let itemProvider = NSItemProvider(at: item)!
         let _dest = try await FinderItem(from: itemProvider).path
         #expect((item.path == _dest))
     }
+    #endif
     
     @Test("Test Methods")
     func testMethods() async throws {
@@ -271,7 +273,7 @@ struct FinderItemTests {
     }
     
     @Test
-    @available(macOS 15.2, *)
+    @available(macOS 15.2, iOS 18.2, *)
     func transferableTest() async throws {
         #expect(FinderItem.exportedContentTypes() == [.url, .fileURL])
         #expect(FinderItem.importedContentTypes() == [.url, .fileURL, .data])
@@ -302,6 +304,22 @@ struct FinderItemTests {
         
         #expect(permissions.rawValue == 0o1751)
     }
+    
+    @Test
+    func assumeURLAndFileManagerReturnsSameEnvironmentDirectories() throws {
+        try #require(FinderItem.url(for: .documentDirectory).url == .documentsDirectory)
+        try #require(FinderItem.url(for: .applicationSupportDirectory).url == .applicationSupportDirectory)
+        try #require(FinderItem.url(for: .cachesDirectory).url == .cachesDirectory)
+        try #require(FinderItem.url(for: .libraryDirectory).url == .libraryDirectory)
+        try #require(FinderItem.url(for: .downloadsDirectory).url == .downloadsDirectory)
+        try #require(FinderItem.url(for: .musicDirectory).url == .musicDirectory)
+        try #require(FinderItem.url(for: .picturesDirectory).url == .picturesDirectory)
+        try #require(FileManager.default.temporaryDirectory == .temporaryDirectory)
+        #if os(macOS)
+        try #require(FinderItem.url(for: .trashDirectory).url == .trashDirectory)
+        #endif
+    }
+    
     
 }
 

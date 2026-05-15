@@ -32,9 +32,7 @@ public extension FinderItem {
     /// - Note: For non-sandboxed macOS app, this returns `~/Library/Application Support`.
     @inlinable
     static var applicationSupportDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .applicationSupportDirectory)
-        }
+        FinderItem(_url: .applicationSupportDirectory)
     }
     
     /// The bundle directory for the current executable.
@@ -52,9 +50,7 @@ public extension FinderItem {
     /// For files that persist longer than temporary files, but are still purgeable, use the caches directory. In the caches directory, store files the app doesn’t require to operate, but that improve performance, such as database cache files and transient, downloadable content.
     @inlinable
     static var cachesDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .cachesDirectory)
-        }
+        FinderItem(_url: .cachesDirectory)
     }
     
     /// The working directory of the current process. Calling this property will issue a `getcwd` syscall.
@@ -78,9 +74,7 @@ public extension FinderItem {
     /// The desktop directory for the current user.
     @inlinable
     static var desktopDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .desktopDirectory)
-        }
+        FinderItem(_url: .desktopDirectory)
     }
 #endif
     
@@ -93,9 +87,7 @@ public extension FinderItem {
     /// - Experiment: The "Inbox" sub-directory name is unavailable.
     @inlinable
     static var documentsDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .documentDirectory)
-        }
+        FinderItem(_url: .documentsDirectory)
     }
     
     /// The downloads directory for the current user.
@@ -105,9 +97,7 @@ public extension FinderItem {
     /// - Important: You need to set the appropriate file access permission in App Sandbox.
     @inlinable
     static var downloadsDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .downloadsDirectory)
-        }
+        FinderItem(_url: .downloadsDirectory)
     }
     
     /// Creates and returns a temporary directory.
@@ -144,9 +134,7 @@ public extension FinderItem {
     /// The library directory for the current app.
     @inlinable
     static var libraryDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .libraryDirectory)
-        }
+        FinderItem(_url: .libraryDirectory)
     }
     
     /// The logs directory for the current app.
@@ -164,9 +152,7 @@ public extension FinderItem {
     /// - Important: You need to set the appropriate file access permission in App Sandbox.
     @inlinable
     static var moviesDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .moviesDirectory)
-        }
+        FinderItem(_url: .moviesDirectory)
     }
     
     /// The music directory for the current user.
@@ -174,9 +160,7 @@ public extension FinderItem {
     /// - Important: You need to set the appropriate file access permission in App Sandbox.
     @inlinable
     static var musicDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .musicDirectory)
-        }
+        FinderItem(_url: .musicDirectory)
     }
     
     /// The pictures directory for the current user.
@@ -184,9 +168,7 @@ public extension FinderItem {
     /// - Important: You need to set the appropriate file access permission in App Sandbox.
     @inlinable
     static var picturesDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .picturesDirectory)
-        }
+        FinderItem(_url: .picturesDirectory)
     }
     
     /// The preferences directory for the current app.
@@ -194,15 +176,17 @@ public extension FinderItem {
     /// The values stored in `@AppStorage` can be found at *bundle identifier*.plist
     @inlinable
     static var preferencesDirectory: FinderItem {
-        FinderItem(_url: .libraryDirectory.appending(path: "Preferences/", directoryHint: .isDirectory))
+        get throws(FileError) {
+            let item = FinderItem(_url: .libraryDirectory.appending(path: "Preferences/", directoryHint: .isDirectory))
+            if !item.exists { try item.makeDirectory() }
+            return item
+        }
     }
     
     /// The trash directory.
     @inlinable
     static var trashDirectory: FinderItem {
-        get throws(FileError) {
-            try FinderItem.url(for: .trashDirectory)
-        }
+        FinderItem(_url: .trashDirectory)
     }
     
     /// The directory for which are temporarily.
@@ -213,7 +197,7 @@ public extension FinderItem {
     ///
     /// - Warning: Remember to delete the contents when no longer needed to free up space.
     static let temporaryDirectory: FinderItem = {
-        let tempDir = FinderItem(_url: FileManager.default.temporaryDirectory).appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let tempDir = FinderItem(_url: .temporaryDirectory).appending(path: UUID().uuidString, directoryHint: .isDirectory)
         do {
             try tempDir.makeDirectory()
         } catch {
