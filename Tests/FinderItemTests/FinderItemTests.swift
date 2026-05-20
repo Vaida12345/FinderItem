@@ -49,6 +49,10 @@ struct FinderItemTests {
     @Test("Test Methods")
     func testMethods() async throws {
         #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida") == "Desktop"))
+        #expect((FinderItem(at: "/Users/vaida/Desktop/").relativePath(to: "/Users/vaida/Desktop/") == ""))
+        #expect((FinderItem(at: "/Users/vaida/Desktop/").relativePath(to: "/Users/vaida/Desktop") == ""))
+        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida/Desktop/") == ""))
+        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida/Desktop") == ""))
         
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
         #expect((FinderItem(at: "/Users/vaida/Desktop/file").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))

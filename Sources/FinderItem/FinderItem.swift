@@ -12,6 +12,7 @@ import AppKit
 import UniformTypeIdentifiers
 import OSLog
 import System
+import Essentials
 
 
 /// Abstractions over which you interact with file system.
@@ -474,9 +475,9 @@ public extension FinderItem {
     /// - Returns: The relative path to other item; `nil` otherwise. The leading `/` is trimmed.
     @inlinable
     func relativePath(to item: FinderItem) -> String? {
-        let child = self.url.path(percentEncoded: false)
-        let base = item.url.path(percentEncoded: false)
-        guard child == base || child.hasPrefix(base) else { return nil }
+        let child = self.url.path(percentEncoded: false).dropLast(while: { $0 == "/" })
+        let base = item.url.path(percentEncoded: false).dropLast(while: { $0 == "/" })
+        guard child.hasPrefix(base) else { return nil }
         
         var value = child.dropFirst(base.count)
         if value.hasPrefix("/") {
