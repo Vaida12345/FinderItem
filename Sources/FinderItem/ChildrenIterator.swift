@@ -64,7 +64,7 @@ public struct FinderItemChildren: Sequence, Sendable {
                 defer { ps.deallocate() }
                 ps.initialize(to: UnsafeMutablePointer(mutating: fsRep))
                 ps.advanced(by: 1).initialize(to: nil)
-                return fts_cmp_open(ps, FTS_PHYSICAL | FTS_XDEV | FTS_NOCHDIR | FTS_NOSTAT, options.contains(.reference.noOrder) ? 1 : 0)
+                return fts_cmp_open(ps, FTS_PHYSICAL | FTS_XDEV | FTS_NOCHDIR | FTS_NOSTAT, options.contains(.reference.noOrder) ? 0 : 1)
             }!
             
             self.stream = _stream

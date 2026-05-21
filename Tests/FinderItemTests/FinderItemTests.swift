@@ -324,6 +324,23 @@ struct FinderItemTests {
         #endif
     }
     
+    @Test
+    func testFileOrder() throws {
+        let temp = FinderItem.temporaryDirectory.appending(path: UUID().uuidString)
+        try temp.makeDirectory()
+        defer { try? temp.remove() }
+        
+        try Data().write(to: temp/"1")
+        try Data().write(to: temp/"2")
+        try Data().write(to: temp/"10")
+        try Data().write(to: temp/"100")
+        try Data().write(to: temp/"00101")
+        try Data().write(to: temp/"00000")
+        
+        #expect(try temp.children(range: .contentsOfDirectory).map(\.stem) == ["00000", "1", "2", "10", "100", "00101"])
+        #expect(try temp.children(range: .enumeration).map(\.stem) == ["00000", "1", "2", "10", "100", "00101"])
+    }
+    
     
 }
 
