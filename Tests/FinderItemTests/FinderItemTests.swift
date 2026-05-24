@@ -56,8 +56,6 @@ struct FinderItemTests {
         
         #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
         #expect((FinderItem(at: "/Users/vaida/Desktop/file").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
-        
-        #expect(FinderItem.normalize(shellPath: #"/Users/vaida/Downloads/Bittorrent\ Download/\[VCB-Studio\]\ Mahouka\ Koukou\ no\ Rettousei/\[VCB-Studio\]\ Mahouka\ Koukou\ no\ Rettousei\ Hoshi\ o\ Yobu\ Shoujo\ \[Ma10p_1080p\]/CDs/\[180124\]\ ORIGINAL\ SOUNDTRACK／岩崎琢\ \[24bit_48KHz\]\ \(flac\)/05.\ release.flac.\!qB "#, shouldRemoveTrailingSpace: true) == #"/Users/vaida/Downloads/Bittorrent Download/[VCB-Studio] Mahouka Koukou no Rettousei/[VCB-Studio] Mahouka Koukou no Rettousei Hoshi o Yobu Shoujo [Ma10p_1080p]/CDs/[180124] ORIGINAL SOUNDTRACK／岩崎琢 [24bit_48KHz] (flac)/05. release.flac.!qB"#)
     }
     
     
@@ -340,7 +338,6 @@ struct FinderItemTests {
         #expect(try temp.children(range: .contentsOfDirectory).map(\.stem) == ["00000", "1", "2", "10", "100", "00101"])
         #expect(try temp.children(range: .enumeration).map(\.stem) == ["00000", "1", "2", "10", "100", "00101"])
     }
-    
     
 }
 

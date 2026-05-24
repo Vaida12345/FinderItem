@@ -54,14 +54,14 @@ extension FinderItem.Attributes {
     
     /// Whether the file is immutable.
     @inlinable
-    public var readOnly: Bool {
-        self._fm_attributes[.immutable] as? Bool ?? false
+    public var readOnly: Bool? {
+        self._fm_attributes[.immutable] as? Bool
     }
     
     /// Whether the file is append-only.
     @inlinable
-    public var appendOnly: Bool {
-        self._fm_attributes[.appendOnly] as? Bool ?? false
+    public var appendOnly: Bool? {
+        self._fm_attributes[.appendOnly] as? Bool
     }
     
     /// Whether the file’s extension is hidden.

@@ -139,6 +139,8 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == String {
 extension FinderItem.Attributes.InsertableAttributeKey where Value == FinderItem.Attributes.XAttributeIcon {
     
     /// Inserts the icon attribute stored in `xattr`.
+    ///
+    /// - Experiment: This method updates the `Finder` database alright, but it is not reflected in the Finder app.
     public static var xattrIcon: FinderItem.Attributes.InsertableAttributeKey<FinderItem.Attributes.XAttributeIcon, any Error> {
         .init { item, value in
             let code = try value.data.withUnsafeBytes { bytes in
@@ -153,6 +155,9 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == FinderItem
 }
 #endif
 
+
+// MARK: - URL
+
 #if os(macOS)
 extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : Any]? {
     
@@ -163,6 +168,19 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : 
         .init { item, value in
             var resourceValues = URLResourceValues()
             resourceValues.quarantineProperties = value
+            try item.url.setResourceValues(resourceValues)
+        }
+    }
+    
+}
+
+extension FinderItem.Attributes.InsertableAttributeKey where Value == Bool {
+    
+    /// Returns `true` for resources normally not displayed to users.
+    public static var isHidden: FinderItem.Attributes.InsertableAttributeKey<Bool, any Error> {
+        .init { item, value in
+            var resourceValues = URLResourceValues()
+            resourceValues.isHidden = value
             try item.url.setResourceValues(resourceValues)
         }
     }

@@ -39,7 +39,7 @@ extension FinderItem {
     
     /// Returns the attribute snapshot for this item.
     ///
-    /// - Note: To improve performance and reduce file reads, retain this value.
+    /// - Tip: To improve performance and reduce file reads, retain this value.
     @inlinable
     public var attributes: Attributes {
         get throws(FileError) {

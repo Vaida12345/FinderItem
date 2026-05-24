@@ -52,12 +52,17 @@ extension FinderItem.Attributes {
     ///
     /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     ///
-    /// - Returns: Empty data when no value is associated with `name`.
+    /// - Returns: `nil` when the key `name` does not exist.
     @inlinable
-    public func xattr(_ name: String) throws(Errno) -> Data {
+    public func xattr(_ name: String) throws(Errno) -> Data? {
         let size = getxattr(self.parent.path, name, nil, 0, 0, 0)
         if size == -1 {
-            throw Errno(rawValue: errno)
+            let errno = Errno(rawValue: errno)
+            if errno == .attributeNotFound {
+                return nil
+            } else {
+                throw errno
+            }
         }
         
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
@@ -85,26 +90,9 @@ extension FinderItem.Attributes {
     /// - Returns: `nil` when the attribute data is not valid UTF-8 text.
     @inlinable
     public func xattr<T>(_ name: String, as type: T.Type = String.self) throws(Errno) -> String? {
-        let raw = try self.xattr(name)
+        guard let raw = try self.xattr(name) else { return nil }
         return String(bytes: raw, encoding: .utf8)
     }
-    
-    /// Returns whether the file has a custom icon.
-    ///
-    /// - Returns: `false` if the attribute is not found.
-    @inlinable
-    public var hasCustomIcon: Bool {
-        get throws(Errno) {
-            do {
-                let info = try self.xattr("com.apple.FinderInfo")
-                guard info.count > 8 else { return false }
-                return info[8] & 0x04 != 0
-            } catch .attributeNotFound {
-                return false
-            }
-        }
-    }
-    
     
     /// The downloaded date.
     ///
@@ -112,7 +100,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var downloadDate: Date? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemDownloadedDate")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemDownloadedDate") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? Date
         }
@@ -124,7 +112,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var origin: String? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemWhereFroms")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemWhereFroms") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? String
         }
@@ -134,7 +122,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var comments: String? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemFinderComment")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemFinderComment") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return properyList as? String
         }
@@ -146,7 +134,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var keywords: [String]? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemKeywords")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemKeywords") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.compactMap { $0 as? String }
         }
@@ -158,7 +146,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var fileDescription: String? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemDescription")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemDescription") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return properyList as? String
         }
@@ -170,7 +158,7 @@ extension FinderItem.Attributes {
     @inlinable
     public var encodingApplications: String? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:kMDItemEncodingApplications")
+            guard let data = try self.xattr("com.apple.metadata:kMDItemEncodingApplications") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? String
         }
@@ -180,19 +168,17 @@ extension FinderItem.Attributes {
     @inlinable
     public var tags: [String]? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.metadata:_kMDItemUserTags")
+            guard let data = try self.xattr("com.apple.metadata:_kMDItemUserTags") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.compactMap { $0 as? String }
         }
     }
     
     /// The icon attribute, read from `xattr`.
-    ///
-    /// - Experiment: This method updates the `Finder` database alright, but it is not reflected in the Finder app.
     @inlinable
     public var xattrIcon: XAttributeIcon? {
         get throws(Errno) {
-            let data = try self.xattr("com.apple.icon.folder#S")
+            guard let data = try self.xattr("com.apple.icon.folder#S") else { return nil }
             
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String : String] else { return nil }
             if let value = json["sym"] {
