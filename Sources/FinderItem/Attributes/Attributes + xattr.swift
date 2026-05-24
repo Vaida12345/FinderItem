@@ -192,7 +192,7 @@ extension FinderItem.Attributes {
     }
     
     /// The icon attribute, read from `xattr`.
-    public enum XAttributeIcon {
+    public enum XAttributeIcon: Equatable {
         /// A system-defined image.
         ///
         /// See `SF Symbols` for details.

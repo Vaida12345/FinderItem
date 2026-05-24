@@ -16,6 +16,104 @@ import AppKit
 @Suite
 struct AttributeTests {
     
+    private func withTemporaryFile(
+        _ body: (FinderItem) throws -> Void
+    ) throws {
+        let temp = FinderItem.temporaryDirectory.appending(path: UUID().uuidString)
+        try temp.makeDirectory()
+        defer { try? temp.remove() }
+        
+        let file = temp/"FILE"
+        try Data("contents".utf8).write(to: file)
+        try body(file)
+    }
+    
+    @Test func fileManagerAttributes() throws {
+        try withTemporaryFile { file in
+            let created = Date(timeIntervalSince1970: 1_700_000_000)
+            let modified = Date(timeIntervalSince1970: 1_700_000_100)
+            try FileManager.default.setAttributes([
+                .creationDate: created,
+                .modificationDate: modified,
+                .posixPermissions: 0o640
+            ], ofItemAtPath: file.path)
+            
+            let attributes = try file.attributes
+            #expect(attributes.fileSize == 8)
+            #expect(attributes.creationDate == created)
+            #expect(attributes.modificationDate == modified)
+            #expect(attributes.referenceCount ?? 0 >= 1)
+            #expect(attributes.owner != nil)
+            #expect(attributes.groupOwner != nil)
+            #expect(attributes.readOnly == false)
+            #expect(attributes.appendOnly == false)
+            #expect(attributes.extensionHidden == false)
+            #expect(attributes.permissions?.rawValue == 0o640)
+        }
+    }
+    
+    @Test func urlResourceAttributes() throws {
+        try withTemporaryFile { file in
+            let attributes = try file.attributes
+            try #expect(attributes.isApplication == false)
+            try #expect(attributes.isAliasFile == false)
+            try #expect(attributes.isPackage == false)
+            try #expect(attributes.isExecutable == false)
+            try #expect(attributes.isHidden == false)
+            try #expect(attributes.isSymbolicLink == false)
+            try #expect(attributes.writable == true)
+            try #expect(attributes.readable == true)
+            try #expect(attributes.accessDate != nil)
+            try #expect(attributes.displayType != nil)
+        }
+    }
+    
+    @Test func xattrAttributes() throws {
+        try withTemporaryFile { file in
+            let raw = Data("raw value".utf8)
+            try file.attributes.update(.xattr("dev.vaida.finderitem.test"), to: raw)
+            try file.attributes.update(.downloadDate, to: Date(timeIntervalSince1970: 1_700_001_000))
+            try file.attributes.update(.origin, to: "https://example.com/file")
+            try file.attributes.update(.comments, to: "comment")
+            try file.attributes.update(.keywords, to: ["alpha", "beta"])
+            try file.attributes.update(.fileDescription, to: "description")
+            try file.attributes.update(.encodingApplications, to: "FinderItemTests")
+            try file.attributes.update(.tags, to: ["red", "blue"])
+            try file.attributes.update(.xattrIcon, to: .systemImage("doc"))
+            
+            let attributes = try file.attributes
+            try #expect(attributes.xattr.contains("dev.vaida.finderitem.test"))
+            try #expect(attributes.xattr("dev.vaida.finderitem.test") == raw)
+            try #expect(attributes.xattr("dev.vaida.finderitem.test", as: String.self) == "raw value")
+            try #expect(attributes.downloadDate == Date(timeIntervalSince1970: 1_700_001_000))
+            try #expect(attributes.origin == "https://example.com/file")
+            try #expect(attributes.comments == "comment")
+            try #expect(attributes.keywords == ["alpha", "beta"])
+            try #expect(attributes.fileDescription == "description")
+            try #expect(attributes.encodingApplications == "FinderItemTests")
+            try #expect(attributes.tags == ["red", "blue"])
+            try #expect(attributes.xattrIcon == .systemImage("doc"))
+        }
+    }
+    
+#if os(macOS)
+    @Test func quarantineAttribute() throws {
+        try withTemporaryFile { file in
+            let quarantine = [
+                "LSQuarantineAgentName": "FinderItemTests",
+                "LSQuarantineType": "LSQuarantineTypeOtherDownload"
+            ]
+            try file.attributes.update(.quarantine, to: quarantine)
+            
+            let attributes = try file.attributes.quarantine
+            #expect(attributes?["LSQuarantineAgentName"] as? String == "FinderItemTests")
+            #expect(attributes?["LSQuarantineType"] as? String == "LSQuarantineTypeOtherDownload")
+            
+            try file.attributes.update(.quarantine, to: nil)
+        }
+    }
+#endif
+    
     @Test func emptyFile() async throws {
         let temp = FinderItem.temporaryDirectory.appending(path: UUID().uuidString)
         try temp.makeDirectory()

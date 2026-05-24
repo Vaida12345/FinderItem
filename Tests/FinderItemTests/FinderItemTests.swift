@@ -22,18 +22,48 @@ extension Tag {
 @Suite("FinderItem Tests")
 struct FinderItemTests {
     
+    private func withTemporaryDirectory(
+        _ body: (FinderItem) throws -> Void
+    ) throws {
+        let folder = FinderItem.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        try folder.makeDirectory()
+        defer { try? folder.remove() }
+        try body(folder)
+    }
+    
     @Test("Test Properties")
     func testProperties() async throws {
-        #expect((FinderItem(at: "/Users/vaida/Desktop").enclosingFolder.path == FinderItem(at: "/Users/vaida/").path))
+        try withTemporaryDirectory { folder in
+            let file = folder.appending(path: "file.txt")
+            let archive = folder.appending(path: "file.tar.gz")
+            let extensionlessFile = folder.appending(path: "file")
+            
+            #expect(file.enclosingFolder.path == folder.path)
+            #expect(folder.path.hasSuffix("/"))
+            #expect(folder.enclosingFolder.appending(path: folder.name).path == folder.path.dropLast())
+            
+            #expect(folder.name == folder.url.lastPathComponent)
+            #expect(file.name == "file.txt")
+            #expect(folder.extension == "")
+            #expect(file.extension == "txt")
+            #expect(extensionlessFile.extension == "")
+            
+            #expect(folder.stem == folder.name)
+            #expect(file.stem == "file")
+            #expect(archive.stem == "file.tar")
+            #expect(extensionlessFile.stem == "file")
+        }
+    }
+    
+    @Test("Test Hidden File Names")
+    func hiddenFileNames() {
+        let file = FinderItem.temporaryDirectory/".hidden"
+        #expect(file.stem == ".hidden")
+        #expect(file.extension.isEmpty)
         
-        #expect((FinderItem(at: "/Users/vaida/Desktop").name == "Desktop"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").name == "file.txt"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop").extension == ""))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").extension == "txt"))
-        
-        #expect((FinderItem(at: "/Users/vaida/Desktop").stem == "Desktop"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").stem == "file"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file.tar.gz").stem == "file.tar"))
+        let file2 = FinderItem.temporaryDirectory/".hidden.tar.gz"
+        #expect(file2.stem == ".hidden.tar")
+        #expect(file2.extension == "gz")
     }
     
     #if os(macOS)
@@ -48,14 +78,22 @@ struct FinderItemTests {
     
     @Test("Test Methods")
     func testMethods() async throws {
-        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida") == "Desktop"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/").relativePath(to: "/Users/vaida/Desktop/") == ""))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/").relativePath(to: "/Users/vaida/Desktop") == ""))
-        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida/Desktop/") == ""))
-        #expect((FinderItem(at: "/Users/vaida/Desktop").relativePath(to: "/Users/vaida/Desktop") == ""))
-        
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file.txt").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
-        #expect((FinderItem(at: "/Users/vaida/Desktop/file").replacingExtension(with: "png").path == "/Users/vaida/Desktop/file.png"))
+        try withTemporaryDirectory { folder in
+            let child = folder.appending(path: "child", directoryHint: .isDirectory)
+            let nestedFile = child.appending(path: "file.txt")
+            let fileWithoutExtension = child.appending(path: "file")
+            
+            #expect(child.relativePath(to: folder) == "child")
+            #expect(nestedFile.relativePath(to: folder) == "child/file.txt")
+            #expect(child.relativePath(to: child) == "")
+            #expect(FinderItem(at: child.path + "/").relativePath(to: child) == "")
+            #expect(child.relativePath(to: FinderItem.temporaryDirectory.appending(path: UUID().uuidString)) == nil)
+            
+            #expect(nestedFile.replacingExtension(with: "png").path == child.appending(path: "file.png").path)
+            #expect(fileWithoutExtension.replacingExtension(with: "png").path == child.appending(path: "file.png").path)
+            #expect(nestedFile.replacingExtension(with: "").path == fileWithoutExtension.path)
+            #expect(nestedFile.replacingStem(with: "image").path == child.appending(path: "image.txt").path)
+        }
     }
     
     
@@ -103,17 +141,21 @@ struct FinderItemTests {
         try string.write(to: hiddendir.appending(path: ".file.txt"))
         
         // check children
-        try #expect(Array(folder.children(range: .contentsOfDirectory)).count == 2)
-        try #expect(Array(folder.children(range: .contentsOfDirectory.withHidden)).count == 4)
-        try #expect(Array(folder.children(range: .contentsOfDirectory.withSystemHidden)).count == 4) // without DS_Store
-        try #expect(Array(folder.children(range: .enumeration)).count == 3)
-        try #expect(Array(folder.children(range: .enumeration.withHidden)).count == 6)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in true }))).count == 3)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { $0.name == "Folder" }))).count == 3)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }))).count == 2)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in true }).withHidden)).count == 6)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { $0.name == "Folder" }).withHidden)).count == 5)
-        try #expect(Array(folder.children(range: .exploreDescendants(on: { _ in false }).withHidden)).count == 4)
+        func paths(_ range: FinderItem.ChildrenRange) throws -> [String] {
+            try folder.children(range: range).map { try #require($0.relativePath(to: folder)) }
+        }
+        
+        try #expect(paths(.contentsOfDirectory) == ["file.txt", "Folder"])
+        try #expect(paths(.contentsOfDirectory.withHidden) == [".hidden", ".image.txt", "file.txt", "Folder"])
+        try #expect(paths(.contentsOfDirectory.withSystemHidden) == [".hidden", ".image.txt", "file.txt", "Folder"]) // without DS_Store
+        try #expect(paths(.enumeration) == ["file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.enumeration.withHidden) == [".hidden", ".hidden/.file.txt", ".image.txt", "file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.exploreDescendants(on: { _ in true })) == ["file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.exploreDescendants(on: { $0.name == "Folder" })) == ["file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.exploreDescendants(on: { _ in false })) == ["file.txt", "Folder"])
+        try #expect(paths(.exploreDescendants(on: { _ in true }).withHidden) == [".hidden", ".hidden/.file.txt", ".image.txt", "file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.exploreDescendants(on: { $0.name == "Folder" }).withHidden) == [".hidden", ".image.txt", "file.txt", "Folder", "Folder/data"])
+        try #expect(paths(.exploreDescendants(on: { _ in false }).withHidden) == [".hidden", ".image.txt", "file.txt", "Folder"])
     }
     
     @Test("Test File Operations", .tags(.fileOperations))
@@ -174,7 +216,6 @@ struct FinderItemTests {
         #expect(file4.name == ".file 4.txt")
     }
     
-    //FIXME: implement moving, rename, edit stem.
     @Test("Test File Moving Operations", .tags(.fileOperations))
     func fileMovingOperations() async throws {
         let folder = FinderItem.temporaryDirectory.appending(path: UUID().description)
@@ -191,11 +232,23 @@ struct FinderItemTests {
         #expect(!folder.appending(path: "file.txt").exists)
         #expect(destination.exists)
         #expect(destination.url == target.url)
+        #expect(target.name == "destination.txt")
         
-        try target.rename(with: "file.txt")
+        try target.rename(with: "renamed")
         #expect(!destination.exists)
-        #expect(target.exists)
-        #expect(target.url == folder.appending(path: "file.txt").url)
+        #expect(folder.appending(path: "renamed").exists)
+        #expect(target.url == folder.appending(path: "renamed").url)
+        #expect(target.name == "renamed")
+        
+        try target.rename(with: "file", keepExtension: true)
+        #expect(folder.appending(path: "file").exists)
+        #expect(target.url == folder.appending(path: "file").url)
+        
+        let typedFile = folder.appending(path: "typed.data")
+        try Data("typed".utf8).write(to: typedFile)
+        try typedFile.rename(with: "typed-renamed", keepExtension: true)
+        #expect(typedFile.url == folder.appending(path: "typed-renamed.data").url)
+        #expect(typedFile.exists)
     }
     
     @Test("Test File Relative Paths")
@@ -261,17 +314,6 @@ struct FinderItemTests {
         try data.write(to: destination2)
         
         #expect(try !source.contentsEqual(to: destination2))
-    }
-    
-    @Test
-    func nameTest() throws {
-        let file = FinderItem.temporaryDirectory/".hidden"
-        #expect(file.stem == ".hidden")
-        #expect(file.extension.isEmpty)
-        
-        let file2 = FinderItem.temporaryDirectory/".hidden.tar.gz"
-        #expect(file2.stem == ".hidden.tar")
-        #expect(file2.extension == "gz")
     }
     
     @Test

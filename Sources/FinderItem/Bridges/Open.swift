@@ -18,13 +18,12 @@ public extension FinderItem {
     /// - Parameters:
     ///   - image: The image indicating the new icon for the item.
     ///
-    /// - Note: The work is dispatched to a shared working thread and returns immediately. This ensures it is non-blocking and the underlying function is called on one thread at any given time, which is required.
+    /// - Note: The work is performed on a shared working thread. This ensures the underlying function is called on one thread at any given time, which is required.
     func setIcon(image: NSImage) {
         guard self.exists else { return }
-        let work = DispatchWorkItem {
+        _ = FinderItem.workingThread.sync {
             NSWorkspace.shared.setIcon(image, forFile: self.path, options: .init())
         }
-        FinderItem.workingThread.async(execute: work)
     }
     
     private static let workingThread = DispatchQueue(label: "FinderItem.DispatchWorkingThread")
