@@ -5,6 +5,7 @@
 //  Created by Vaida on 2026-05-25.
 //
 
+#if os(macOS)
 import CoreServices
 
 
@@ -23,3 +24,4 @@ extension FinderItem.Attributes {
     }
     
 }
+#endif
