@@ -23,7 +23,7 @@ It bridges `FileManager`, `URL`, `FilePath`, and platform-specific integrations.
 `FinderItem` uses [Swift Package Manager](https://www.swift.org/documentation/package-manager/). Add a dependency in `Package.swift`:
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "1.2.0")
+    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "2.1.0")
 ]
 ```
 and then adding the appropriate module to your target dependencies.
