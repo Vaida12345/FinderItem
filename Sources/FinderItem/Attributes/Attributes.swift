@@ -11,13 +11,13 @@ import Foundation
 extension FinderItem {
     
     /// A cached snapshot of file metadata for a specific item.
-    public struct Attributes: @unchecked Sendable {
+    public final class Attributes: @unchecked Sendable {
         
         /// Stores common file attributes fetched through `FileManager`.
         ///
         /// As these attributes are obtained together using `stat` under the hood, caching it is better.
         @usableFromInline
-        let _fm_attributes: [FileAttributeKey : Any]
+        lazy var _fm_attributes: [FileAttributeKey : Any] = (try? FileManager.default.attributesOfItem(atPath: parent.path)) ?? [:]
         
         /// The item that owns these attributes.
         @usableFromInline
@@ -27,7 +27,6 @@ extension FinderItem {
         @usableFromInline
         init(parent: FinderItem) throws {
             self.parent = parent
-            self._fm_attributes = try FileManager.default.attributesOfItem(atPath: parent.path)
         }
         
     }

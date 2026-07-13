@@ -31,7 +31,7 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
                                 } else if let string = try? _attributes?.xattr(name, as: String?.self) {
                                     descriptor.value(name, of: string)
                                 } else {
-                                    descriptor.constant("\(name): <binary>")
+                                    descriptor.raw("\(name): <binary>")
                                 }
                             }
                         }
@@ -54,13 +54,13 @@ extension FinderItem: DetailedStringConvertibleWithConfiguration {
                             } else if let string = try? _attributes?.xattr(name, as: String?.self) {
                                 descriptor.value(name, of: string)
                             } else {
-                                descriptor.constant("\(name): <binary>")
+                                descriptor.raw("\(name): <binary>")
                             }
                         }
                     }
                 }
             } else {
-                descriptor.constant(self.name + fileSize)
+                descriptor.raw(self.name + fileSize)
             }
         }
     }
