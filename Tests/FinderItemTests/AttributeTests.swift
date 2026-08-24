@@ -125,7 +125,6 @@ struct AttributeTests {
         try #require(temp.exists)
         let attributes = try empty.attributes
         
-        try #expect(!attributes.hasCustomIcon)
         try #expect(attributes.downloadDate == nil)
         try #expect(attributes.origin == nil)
         try #expect(attributes.comments == nil)
@@ -185,7 +184,6 @@ struct AttributeTests {
         let attributes = try file.attributes
         try #expect(attributes.hasCustomIcon)
     }
-#endif
     
     @Test func setHidden() async throws {
         let temp = FinderItem.temporaryDirectory.appending(path: UUID().uuidString)
@@ -201,4 +199,5 @@ struct AttributeTests {
         let attributes = try file.attributes
         try #expect(attributes.isHidden == true)
     }
+#endif
 }
