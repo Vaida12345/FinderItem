@@ -84,6 +84,8 @@ public extension DataFrame {
 public extension String {
     
     /// Writes the string to `destination` using the given `encoding`.
+    ///
+    /// If the destination file already exists, the file is replaced atomically.
     @inlinable
     func write(to destination: FinderItem, encoding: Encoding = .utf8) throws {
         try self.write(to: destination.url, atomically: true, encoding: encoding)

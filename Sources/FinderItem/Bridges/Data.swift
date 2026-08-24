@@ -15,6 +15,8 @@ public extension Data {
     
     /// Writes the contents of the data buffer to a location.
     ///
+    /// If the destination file already exists, the file is replaced atomically.
+    ///
     /// - Parameters:
     ///   - destination: The item representing the location to which the data is saved.
     ///   - mode: The mode for writing
@@ -29,8 +31,8 @@ public extension Data {
             } else {
                 fallthrough
             }
-        case .normal:
-            try self.write(to: destination.url)
+        default:
+            try self.write(to: destination.url, options: .atomic)
         }
     }
     
