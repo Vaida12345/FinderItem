@@ -165,7 +165,7 @@ public extension FinderItem.LoadableContent where Result == Data {
     /// - Parameters:
     ///   - options: Options for loading data.
     @inlinable
-    static func data(options: NSData.ReadingOptions = []) -> FinderItem.LoadableContent<Data, any Error> {
+    static func data(options: NSData.ReadingOptions = [.mappedIfSafe]) -> FinderItem.LoadableContent<Data, any Error> {
         .init { source in
             try Data(contentsOf: source.url, options: options)
         }
