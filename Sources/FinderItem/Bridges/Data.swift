@@ -19,20 +19,8 @@ public extension Data {
     ///
     /// - Parameters:
     ///   - destination: The item representing the location to which the data is saved.
-    @available(*, deprecated, renamed: "write(to:options:)")
     @inlinable
-    func write(to destination: FinderItem) throws {
-        try self.write(to: destination, options: .atomic)
-    }
-    
-    /// Writes the contents of the data buffer to a location.
-    ///
-    /// If the destination file already exists, the file is replaced atomically.
-    ///
-    /// - Parameters:
-    ///   - destination: The item representing the location to which the data is saved.
-    @inlinable
-    func write(to destination: FinderItem, options: NSData.WritingOptions) throws {
+    func write(to destination: FinderItem, options: NSData.WritingOptions = [.atomic]) throws {
         try self.write(to: destination.url, options: options)
     }
     
