@@ -33,7 +33,7 @@ public extension Encodable {
     ///   - format: The format used.
     @inlinable
     func write(to destination: FinderItem, format: Data.CodingFormat) throws {
-        try self.data(using: format).write(to: destination)
+        try self.data(using: format).write(to: destination, options: .atomic)
     }
     
 }
