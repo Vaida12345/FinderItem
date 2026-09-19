@@ -13,7 +13,7 @@ let package = Package(
     ], products: [
         .library(name: "FinderItem", targets: ["FinderItem"])
     ], dependencies: [
-        .package(url: "https://github.com/Vaida12345/Essentials.git", from: "1.2.4"),
+        .package(url: "https://github.com/Vaida12345/Essentials.git", from: "1.3.1"),
         .package(url: "https://github.com/Vaida12345/DetailedDescription.git", from: "2.2.0"),
     ], targets: [
         .target(name: "CComponent"),
