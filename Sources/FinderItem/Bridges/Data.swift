@@ -19,6 +19,7 @@ public extension Data {
     ///
     /// - Parameters:
     ///   - destination: The item representing the location to which the data is saved.
+    ///   - options: Options for writing the data. Default value is `[.atomic]`.
     @inlinable
     func write(to destination: FinderItem, options: NSData.WritingOptions = [.atomic]) throws {
         try self.write(to: destination.url, options: options)
@@ -28,7 +29,7 @@ public extension Data {
     ///
     /// - Parameters:
     ///   - source: The `FinderItem` representing the location of the asset.
-    ///   - options: Options for loading data.
+    ///   - options: Options for loading data. Default value is `[.mappedIfSafe]`.
     @inlinable
     init(at source: FinderItem, options: NSData.ReadingOptions = [.mappedIfSafe]) throws {
         try self.init(contentsOf: source.url, options: options)

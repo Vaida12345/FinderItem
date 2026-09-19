@@ -29,7 +29,7 @@ let best = midis/"favorite.mid"
 ```
 
 ### Accessing Content
-To access file contents, use the unified ``load(_:)`` method.
+To access file contents, use the unified ``load(_:)-(FinderItem.LoadableContent<T,E>)`` method.
 ```swift
 let text = try file.load(.string())
 ```
