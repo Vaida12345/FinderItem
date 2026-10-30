@@ -16,11 +16,10 @@ extension FinderItem.Attributes {
     /// - Returns: `false` if the attribute is not found.
     @inlinable
     public var hasCustomIcon: Bool {
-        get throws(FinderItem.FileError) {
-            guard let metadata = MDItemCreate(nil, parent.path as CFString) else { throw FinderItem.FileError(code: .cannotRead(reason: .unknown), source: self.parent) }
-            guard let flags = MDItemCopyAttribute(metadata, "kMDItemFSFinderFlags" as CFString) as? UInt16 else { return false }
-            return flags & 0x0400 != 0
-        }
+        guard let metadata = MDItemCreate(nil, parent.path as CFString),
+              let flags = MDItemCopyAttribute(metadata, "kMDItemFSFinderFlags" as CFString) as? UInt16 else { return false }
+        
+        return flags & 0x0400 != 0
     }
     
 }

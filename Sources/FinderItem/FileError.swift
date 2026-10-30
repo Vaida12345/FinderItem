@@ -211,7 +211,7 @@ extension FinderItem {
                 case .tooLarge:
                     "The file \"\(source)\" is too large."
                 case .unknown:
-                    "Unknown reason for file \"\(source)\"."
+                    "Cannot read file \"\(source)\"."
                 case .unknownStringEncoding:
                     "The file \"\(source)\" employs an unknown string encoding."
                 case .unsupportedScheme:
@@ -233,7 +233,7 @@ extension FinderItem {
                 case .outOfSpace:
                     "Insufficient disk space to write to file \(source)."
                 case .unknown:
-                    "Unknown reason for file \"\(source)\"."
+                    "Cannot write file \"\(source)\"."
                 case .unsupportedScheme:
                     "The file path \"\(source)\" employs an unsupported URL scheme."
                 case .volumeReadOnly:
