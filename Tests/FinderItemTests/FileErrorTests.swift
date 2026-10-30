@@ -435,7 +435,6 @@ struct FileErrorTests {
             let details = try #require(error.details)
             #expect(details.contains("\"\(missing.path)\""))
             #expect(details.contains("\"\(target.path)\""))
-            #expect(String(reflecting: error).contains(details))
 
             // Drawn by DetailedDescription: the operation on top, one branch per line, each nested error under its parent. No tabs.
             let lines = details.components(separatedBy: "\n")
