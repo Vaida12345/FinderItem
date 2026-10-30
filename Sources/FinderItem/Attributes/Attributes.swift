@@ -25,7 +25,7 @@ extension FinderItem {
         
         
         @usableFromInline
-        init(parent: FinderItem) throws {
+        init(parent: FinderItem) {
             self.parent = parent
         }
         
@@ -38,16 +38,12 @@ extension FinderItem {
     
     /// Returns the attribute snapshot for this item.
     ///
+    /// Taking the snapshot does not read the file. Attributes are read when they are accessed, and the ones that can fail throw a ``FileError``.
+    ///
     /// - Tip: To improve performance and reduce file reads, retain this value.
     @inlinable
     public var attributes: Attributes {
-        get throws(FileError) {
-            do {
-                return try Attributes(parent: self)
-            } catch {
-                throw FileError.parse(error)
-            }
-        }
+        Attributes(parent: self)
     }
     
 }

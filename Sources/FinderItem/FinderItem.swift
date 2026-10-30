@@ -196,10 +196,8 @@ public extension FinderItem {
     @inlinable
     var contentType: UTType? {
         get throws(FileError) {
-            do {
-                return try url.resourceValues(forKeys: [.contentTypeKey]).contentType
-            } catch {
-                throw FileError.parse(error)
+            try FileError.wrapping(source: self) {
+                try self.url.resourceValues(forKeys: [.contentTypeKey]).contentType
             }
         }
     }
@@ -310,10 +308,8 @@ public extension FinderItem {
     ///   - item: The file URL at which to create the new symbolic link. The last path component of the URL issued as the name of the link.
     @inlinable
     func createSymbolicLink(at item: FinderItem) throws(FileError) {
-        do {
+        try FileError.wrapping(source: self, destination: item, intent: .writing) {
             try FileManager.default.createSymbolicLink(at: item.url, withDestinationURL: self.url)
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -322,12 +318,10 @@ public extension FinderItem {
     /// - Note: This is done by enumerating and deleting each child.
     @inlinable
     func clear() throws(FileError) {
-        do {
+        try FileError.wrapping(source: self, intent: .writing) {
             for child in try self.children(range: .contentsOfDirectory.withSystemHidden) {
                 try child.remove()
             }
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -342,76 +336,83 @@ public extension FinderItem {
     /// - Parameters:
     ///   - other: The path of a file to compare with `self`.
     @inlinable
-    func contentsEqual(to other: FinderItem) throws -> Bool {
+    func contentsEqual(to other: FinderItem) throws(FileError) -> Bool {
         guard self.path != other.path else { return true }
-        guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
-        guard other.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: other) }
-        
-        let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
-            var s = stat()
-            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
-            return s
-        }
-        
-        let otherInfo = try other.url.withUnsafeFileSystemRepresentation { rep in
-            var s = stat()
-            guard let rep, lstat(rep, &s) == 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
-            return s
-        }
-        
-        /* check for being hard links */
-        if myInfo.st_dev == otherInfo.st_dev && myInfo.st_ino == otherInfo.st_ino {
-            return true
-        }
-        
-        /* check for being same type */
-        if mode_t(myInfo.st_mode) & S_IFMT != mode_t(otherInfo.st_mode) & S_IFMT {
-            return false
-        }
-        
-        if (myInfo.st_mode & S_IFMT) == S_IFREG {
-            guard myInfo.st_size == otherInfo.st_size else { return false }
-            
-            return try self.url.withUnsafeFileSystemRepresentation { myPath in
-                guard let myPath else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
-                
-                return try other.url.withUnsafeFileSystemRepresentation { otherPath in
-                    guard let otherPath else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
-                    
-                    let myfd = Darwin.open(myPath, O_RDONLY)
-                    let otherfd = Darwin.open(otherPath, O_RDONLY)
-                    defer {
-                        close(myfd)
-                        close(otherfd)
-                    }
-                    
-                    guard myfd >= 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
-                    guard otherfd >= 0 else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
-                    
-                    _ = fcntl(myfd, F_NOCACHE) // hints
-                    _ = fcntl(otherfd, F_NOCACHE)
-                    
-                    let myMap = mmap(nil, Int(myInfo.st_size), PROT_READ, MAP_PRIVATE, myfd, 0)
-                    let otherMap = mmap(nil, Int(otherInfo.st_size), PROT_READ, MAP_PRIVATE, otherfd, 0)
-                    
-                    guard myMap != MAP_FAILED else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: self) }
-                    guard otherMap != MAP_FAILED else { throw FileError(code: .cannotRead(reason: .posix(Errno(rawValue: errno))), source: other) }
-                    
-                    defer {
-                        munmap(myMap, Int(myInfo.st_size))
-                        munmap(otherMap, Int(otherInfo.st_size))
-                    }
-                    
-                    return memcmp(myMap, otherMap, Int(myInfo.st_size)) == 0
-                }
+        guard self.exists else { throw FileError(.noSuchFile, source: self) }
+        guard other.exists else { throw FileError(.noSuchFile, source: other) }
+
+        return try FileError.wrapping(source: self, destination: other) {
+            let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
+                guard let rep else { throw FileError(.invalidName, source: self) }
+                var s = stat()
+                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: self) }
+                return s
             }
-        } else if (myInfo.st_mode & S_IFMT) == S_IFLNK {
-            return try FileManager.default.destinationOfSymbolicLink(atPath: self.path) == FileManager.default.destinationOfSymbolicLink(atPath: other.path)
-        } else if (myInfo.st_mode & S_IFMT) == S_IFDIR {
-            throw FileError(code: .cannotRead(reason: .posix(.isDirectory)), source: self)
+
+            let otherInfo = try other.url.withUnsafeFileSystemRepresentation { rep in
+                guard let rep else { throw FileError(.invalidName, source: other) }
+                var s = stat()
+                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: other) }
+                return s
+            }
+
+            /* check for being hard links */
+            if myInfo.st_dev == otherInfo.st_dev && myInfo.st_ino == otherInfo.st_ino {
+                return true
+            }
+
+            /* check for being same type */
+            if mode_t(myInfo.st_mode) & S_IFMT != mode_t(otherInfo.st_mode) & S_IFMT {
+                return false
+            }
+
+            if (myInfo.st_mode & S_IFMT) == S_IFREG {
+                guard myInfo.st_size == otherInfo.st_size else { return false }
+                guard myInfo.st_size > 0 else { return true } // `mmap` rejects empty mappings
+
+                return try self.url.withUnsafeFileSystemRepresentation { myPath in
+                    guard let myPath else { throw FileError(.invalidName, source: self) }
+
+                    return try other.url.withUnsafeFileSystemRepresentation { otherPath in
+                        guard let otherPath else { throw FileError(.invalidName, source: other) }
+
+                        // `errno` is read right after each call, as the next call may overwrite it.
+                        let myfd = Darwin.open(myPath, O_RDONLY)
+                        let myOpenError = errno
+                        let otherfd = Darwin.open(otherPath, O_RDONLY)
+                        let otherOpenError = errno
+                        defer {
+                            if myfd >= 0 { close(myfd) }
+                            if otherfd >= 0 { close(otherfd) }
+                        }
+
+                        guard myfd >= 0 else { throw FileError(Errno(rawValue: myOpenError), source: self) }
+                        guard otherfd >= 0 else { throw FileError(Errno(rawValue: otherOpenError), source: other) }
+
+                        _ = fcntl(myfd, F_NOCACHE) // hints
+                        _ = fcntl(otherfd, F_NOCACHE)
+
+                        let myMap = mmap(nil, Int(myInfo.st_size), PROT_READ, MAP_PRIVATE, myfd, 0)
+                        let myMapError = errno
+                        guard myMap != MAP_FAILED else { throw FileError(Errno(rawValue: myMapError), source: self) }
+                        defer { munmap(myMap, Int(myInfo.st_size)) }
+
+                        let otherMap = mmap(nil, Int(otherInfo.st_size), PROT_READ, MAP_PRIVATE, otherfd, 0)
+                        let otherMapError = errno
+                        guard otherMap != MAP_FAILED else { throw FileError(Errno(rawValue: otherMapError), source: other) }
+                        defer { munmap(otherMap, Int(otherInfo.st_size)) }
+
+                        return memcmp(myMap, otherMap, Int(myInfo.st_size)) == 0
+                    }
+                }
+            } else if (myInfo.st_mode & S_IFMT) == S_IFLNK {
+                return try FileManager.default.destinationOfSymbolicLink(atPath: self.path) == FileManager.default.destinationOfSymbolicLink(atPath: other.path)
+            } else if (myInfo.st_mode & S_IFMT) == S_IFDIR {
+                throw FileError(.isDirectory, source: self)
+            }
+
+            throw FileError(Errno.badFileTypeOrFormat, source: self)
         }
-        
-        throw FileError(code: .cannotRead(reason: .posix(.badFileTypeOrFormat)), source: self)
     }
     
     /// Generates the desired folder at the given path.
@@ -423,25 +424,32 @@ public extension FinderItem {
     func makeDirectory(attributes: [FileAttributeKey : Any]? = nil) throws(FileError) {
         guard !self.exists else {
             if self.isFile {
-                throw FileError(code: .cannotWrite(reason: .fileExists), source: self)
+                throw FileError(.fileExists, source: self, intent: .writing)
             } else {
                 return // must be directory, return.
             }
         }
-        
-        do {
+
+        try FileError.wrapping(source: self, intent: .writing) {
             try FileManager.default.createDirectory(at: self.url, withIntermediateDirectories: true, attributes: attributes)
             // no need for the loops, `withIntermediateDirectories` does all the works
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
     /// Creates a file with the specified content and attributes at the given location.
+    ///
+    /// If a file already exists at the location, it is replaced atomically, so a reader never sees a partial file and a read-only file does not stop it.
+    ///
+    /// - Throws: A ``FileError``. This includes when an attribute cannot be applied, which `FileManager.createFile` ignores. The file has been written by then.
     @inlinable
     func createFile(contents: Data? = nil, attributes: [FileAttributeKey : Any]? = nil) throws(FileError) {
-        let bool = FileManager.default.createFile(atPath: self.path, contents: contents, attributes: attributes)
-        guard bool else { throw FileError(code: .cannotWrite(reason: .unknown), source: self) }
+        // `FileManager.createFile` only reports success as a `Bool`, so the reason for a failure would be lost.
+        try FileError.wrapping(source: self, intent: .writing) {
+            try (contents ?? Data()).write(to: self.url, options: .atomic)
+            if let attributes {
+                try FileManager.default.setAttributes(attributes, ofItemAtPath: self.path)
+            }
+        }
     }
     
     /// Generates the desired folders at the path, context-aware.
@@ -500,10 +508,8 @@ public extension FinderItem {
     /// - Experiment: The file is removed on return.
     @inlinable
     func remove() throws(FileError) {
-        do {
+        try FileError.wrapping(source: self, intent: .writing) {
             try FileManager.default.removeItem(at: self.url)
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -537,10 +543,8 @@ public extension FinderItem {
     /// This method doesn’t support the `withSecurityScope` option.
     @inlinable
     func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
-        do {
-            return try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
-        } catch {
-            throw FileError.parse(error)
+        try FileError.wrapping(source: self) {
+            try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
         }
     }
     
@@ -561,14 +565,12 @@ public extension FinderItem {
     ///   - destination: The ``FinderItem`` where the current item is copied to.
     @inlinable
     func copy(to destination: FinderItem) throws(FileError) {
-        do {
+        try FileError.wrapping(source: self, destination: destination, intent: .writing) {
             if !destination.enclosingFolder.exists {
                 try destination.enclosingFolder.makeDirectory()
             }
             
             try FileManager.default.copyItem(at: self.url, to: destination.url)
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -579,13 +581,11 @@ public extension FinderItem {
     ///
     /// - Experiment: The file is moved before return.
     func moveToTrash() throws(FileError) {
-        do {
+        try FileError.wrapping(source: self, intent: .writing) {
             var newURL: NSURL?
             try FileManager.default.trashItem(at: self.url, resultingItemURL: &newURL)
             guard let url = newURL else { return }
             self.url = url as URL
-        } catch {
-            throw FileError.parse(error)
         }
     }
 #endif
@@ -610,11 +610,9 @@ public extension FinderItem {
         }
 #endif
         
-        do {
+        try FileError.wrapping(source: self, destination: FinderItem(_url: destination), intent: .writing) {
             try FileManager.default.moveItem(at: self.url, to: destination)
             self.url = destination
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -678,13 +676,11 @@ public extension FinderItem {
     /// - SeeAlso: ``itemReplacementDirectory(in:)``
     func replace(_ original: FinderItem) throws(FileError) {
         guard original.url != self.url else { return }
-        do {
+        try FileError.wrapping(source: self, destination: original, intent: .writing) {
             guard let url = try FileManager.default.replaceItemAt(original.url, withItemAt: self.url) else {
-                throw FileError(code: .unknown, source: self)
+                throw FileError(.other, source: self, destination: original, intent: .writing)
             }
             self.url = url
-        } catch {
-            throw FileError.parse(error)
         }
     }
     
@@ -880,7 +876,7 @@ public extension FinderItem {
     ///
     /// - Returns: The ``FinderItem`` for the resource file or `nil` if the file could not be located.
     @inlinable
-    static func bundleItem(forResource name: String?, withExtension ext: String?, subdirectory: String? = nil, in bundle: Bundle = .main) throws -> FinderItem {
+    static func bundleItem(forResource name: String?, withExtension ext: String?, subdirectory: String? = nil, in bundle: Bundle = .main) throws(FileError) -> FinderItem {
         guard let url = bundle.url(forResource: name, withExtension: ext, subdirectory: subdirectory) else {
             var path = ""
             if let subdirectory {
@@ -893,7 +889,7 @@ public extension FinderItem {
                 path += "." + ext
             }
             
-            throw FileError(code: .cannotRead(reason: .noSuchFile), source: .bundleDirectory/path)
+            throw FileError(.noSuchFile, source: .bundleDirectory/path)
         }
         return FinderItem(at: url)
     }

@@ -38,7 +38,7 @@ struct AttributeTests {
                 .posixPermissions: 0o640
             ], ofItemAtPath: file.path)
             
-            let attributes = try file.attributes
+            let attributes = file.attributes
             #expect(attributes.fileSize == 8)
             #expect(attributes.creationDate == created)
             #expect(attributes.modificationDate == modified)
@@ -54,7 +54,7 @@ struct AttributeTests {
     
     @Test func urlResourceAttributes() throws {
         try withTemporaryFile { file in
-            let attributes = try file.attributes
+            let attributes = file.attributes
             try #expect(attributes.isApplication == false)
             try #expect(attributes.isAliasFile == false)
             try #expect(attributes.isPackage == false)
@@ -81,7 +81,7 @@ struct AttributeTests {
             try file.attributes.update(.tags, to: ["red", "blue"])
             try file.attributes.update(.xattrIcon, to: .systemImage("doc"))
             
-            let attributes = try file.attributes
+            let attributes = file.attributes
             try #expect(attributes.xattr.contains("dev.vaida.finderitem.test"))
             try #expect(attributes.xattr("dev.vaida.finderitem.test") == raw)
             try #expect(attributes.xattr("dev.vaida.finderitem.test", as: String.self) == "raw value")
@@ -123,7 +123,7 @@ struct AttributeTests {
         try Data().write(to: empty)
         
         try #require(temp.exists)
-        let attributes = try empty.attributes
+        let attributes = empty.attributes
         
         try #expect(attributes.downloadDate == nil)
         try #expect(attributes.origin == nil)
@@ -147,7 +147,7 @@ struct AttributeTests {
         try file.attributes.update(.keywords, to: [])
         try file.attributes.update(.tags, to: [])
         
-        let attributes = try file.attributes
+        let attributes = file.attributes
         try #expect(attributes.keywords == [])
         try #expect(attributes.tags == [])
     }
@@ -164,7 +164,7 @@ struct AttributeTests {
         try file.attributes.update(.keywords, to: ["a", "b", "b"])
         try file.attributes.update(.tags, to: ["1", "2", "3"])
         
-        let attributes = try file.attributes
+        let attributes = file.attributes
         try #expect(attributes.keywords == ["a", "b", "b"])
         try #expect(attributes.tags == ["1", "2", "3"])
     }
@@ -181,7 +181,7 @@ struct AttributeTests {
         try #require(file.exists)
         file.setIcon(image: NSImage(named: NSImage.applicationIconName)!)
         
-        let attributes = try file.attributes
+        let attributes = file.attributes
         try #expect(attributes.hasCustomIcon)
     }
     
@@ -196,7 +196,7 @@ struct AttributeTests {
         try #require(file.exists)
         try file.attributes.update(.isHidden, to: true)
         
-        let attributes = try file.attributes
+        let attributes = file.attributes
         try #expect(attributes.isHidden == true)
     }
 #endif

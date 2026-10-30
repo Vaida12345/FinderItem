@@ -15,7 +15,7 @@ It bridges `FileManager`, `URL`, `FilePath`, and related system APIs.
 - File operations including ``FinderItem/FinderItem/copy(to:)``,  ``FinderItem/FinderItem/move(to:)-3wp1t``, ``FinderItem/FinderItem/remove()``.
 - ``FinderItem/FinderItem/open()`` or ``FinderItem/FinderItem/reveal()`` files.
 - Get sorted children as a stream using ``FinderItem/FinderItem/children(range:)``.
-- [Typed throws](``FinderItem/FinderItem/FileError``).
+- [Typed throws](``FinderItem/FinderItem/FileError``), with <doc:errors>.
 - Read and update attributes: ``FinderItem/attributes``, ``FinderItem/Attributes/update(_:to:)``.
 
 
@@ -24,7 +24,7 @@ It bridges `FileManager`, `URL`, `FilePath`, and related system APIs.
 `FinderItem` uses [Swift Package Manager](https://www.swift.org/documentation/package-manager/) as its build tool. If you want to import in your own project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "1.2.0")
+    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "2.4.0")
 ]
 ```
 and then adding the appropriate module to your target dependencies.

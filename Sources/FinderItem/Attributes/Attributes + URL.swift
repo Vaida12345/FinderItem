@@ -11,11 +11,9 @@ import Foundation
 extension FinderItem.Attributes {
     
     @inlinable
-    func _read<T>(_URLResourceKey: URLResourceKey, keyPath: KeyPath<URLResourceValues, T>) throws(FinderItem.FileError) -> T {
-        do {
-            return try self.parent.url.resourceValues(forKeys: [_URLResourceKey])[keyPath: keyPath]
-        } catch {
-            throw .parse(error)
+    func _read<T>(_URLResourceKey: URLResourceKey, keyPath: KeyPath<URLResourceValues, T>, operation: StaticString = #function) throws(FinderItem.FileError) -> T {
+        try FinderItem.FileError.wrapping(source: self.parent, operation: operation) {
+            try self.parent.url.resourceValues(forKeys: [_URLResourceKey])[keyPath: keyPath]
         }
     }
 
