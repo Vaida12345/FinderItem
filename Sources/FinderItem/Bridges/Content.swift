@@ -31,8 +31,12 @@ public extension FileWrapper {
     
     /// Initializes a file wrapper from a `FinderItem` location.
     @inlinable
-    convenience init(at source: FinderItem) throws {
-        try self.init(url: source.url)
+    convenience init(at source: FinderItem) throws(FinderItem.FileError) {
+        do {
+            try self.init(url: source.url)
+        } catch {
+            throw FinderItem.FileError(error, source: source)
+        }
     }
     
 }
@@ -87,14 +91,18 @@ public extension String {
     ///
     /// If the destination file already exists, the file is replaced atomically.
     @inlinable
-    func write(to destination: FinderItem, encoding: Encoding = .utf8) throws {
-        try self.write(to: destination.url, atomically: true, encoding: encoding)
+    func write(to destination: FinderItem, encoding: Encoding = .utf8) throws(FinderItem.FileError) {
+        try FinderItem.FileError.wrapping(source: destination, intent: .writing) {
+            try self.write(to: destination.url, atomically: true, encoding: encoding)
+        }
     }
     
     /// Initializes a string with file contents on disk.
     @inlinable
-    init(at source: FinderItem, encoding: Encoding = .utf8) throws {
-        try self.init(contentsOf: source.url, encoding: encoding)
+    init(at source: FinderItem, encoding: Encoding = .utf8) throws(FinderItem.FileError) {
+        self = try FinderItem.FileError.wrapping(source: source) {
+            try String(contentsOf: source.url, encoding: encoding)
+        }
     }
     
 }

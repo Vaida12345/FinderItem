@@ -15,7 +15,7 @@ It bridges `FileManager`, `URL`, `FilePath`, and platform-specific integrations.
 - File operations including [``copy(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/copy(to:)),  [``move(to:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/move(to:)-5oihl), [``remove()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/remove()).
 - [``open(configuration:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/open(configuration:)) or [``reveal()``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/reveal()) files.
 - Get sorted children as a stream using [``children(range:)``](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/children(range:)).
-- [Typed throws](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/fileerror)
+- [Typed throws](https://vaida12345.github.io/FinderItem/documentation/finderitem/finderitem/fileerror), with [classified, localized errors](https://vaida12345.github.io/FinderItem/documentation/finderitem/errors).
 
 
 ## Getting Started
@@ -23,7 +23,7 @@ It bridges `FileManager`, `URL`, `FilePath`, and platform-specific integrations.
 `FinderItem` uses [Swift Package Manager](https://www.swift.org/documentation/package-manager/). Add a dependency in `Package.swift`:
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "2.1.0")
+    .package(url: "https://github.com/Vaida12345/FinderItem.git", from: "2.4.0")
 ]
 ```
 and then adding the appropriate module to your target dependencies.

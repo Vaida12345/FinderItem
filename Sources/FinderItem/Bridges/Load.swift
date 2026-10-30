@@ -19,7 +19,7 @@ public extension FinderItem {
     ///
     /// You can also define your own keys that can be loaded using this method, see ``AsyncLoadableContent``.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Code/ReadFailureReason/corruptFile``).
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Reason/corruptFile``).
     @inlinable
     nonisolated func load<T, E>(_ type: FinderItem.AsyncLoadableContent<T, E>) async throws(E) -> T where E: Error {
         try await type.contentLoader(self)
@@ -29,7 +29,7 @@ public extension FinderItem {
     ///
     /// You can also define your own keys that can be loaded using this method, see ``LoadableContent``.
     ///
-    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Code/ReadFailureReason/corruptFile``).
+    /// - Returns: The return value would never be optional; if the original API chose to return `nil` on failure, it should throw [corruptFile](``FileError/Reason/corruptFile``).
     ///
     /// ## Topics
     ///
@@ -144,9 +144,11 @@ public extension FinderItem.LoadableContent where Result == FileWrapper {
     /// - Parameters:
     ///   - options: Option flags for reading the node located at url.
     @inlinable
-    static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper, any Error> {
-        .init { source in
-            try FileWrapper(url: source.url, options: options)
+    static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper, FinderItem.FileError> {
+        .init { source throws(FinderItem.FileError) in
+            try FinderItem.FileError.wrapping(source: source) {
+                try FileWrapper(url: source.url, options: options)
+            }
         }
     }
     
@@ -156,7 +158,7 @@ public extension FinderItem.LoadableContent where Result == Data {
     
     /// Loads the data at the source.
     @inlinable
-    static var data: FinderItem.LoadableContent<Data, any Error> {
+    static var data: FinderItem.LoadableContent<Data, FinderItem.FileError> {
         Self.data()
     }
     
@@ -165,9 +167,9 @@ public extension FinderItem.LoadableContent where Result == Data {
     /// - Parameters:
     ///   - options: Options for loading data.
     @inlinable
-    static func data(options: NSData.ReadingOptions = [.mappedIfSafe]) -> FinderItem.LoadableContent<Data, any Error> {
-        .init { source in
-            try Data(contentsOf: source.url, options: options)
+    static func data(options: NSData.ReadingOptions = [.mappedIfSafe]) -> FinderItem.LoadableContent<Data, FinderItem.FileError> {
+        .init { source throws(FinderItem.FileError) in
+            try Data(at: source, options: options)
         }
     }
     
@@ -177,14 +179,14 @@ public extension FinderItem.LoadableContent where Result == String {
     
     /// Loads the string at the source.
     @inlinable
-    static var string: FinderItem.LoadableContent<String, any Error> {
+    static var string: FinderItem.LoadableContent<String, FinderItem.FileError> {
         Self.string()
     }
     
     /// Loads the string at the source.
     @inlinable
-    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, any Error> {
-        .init { source in
+    static func string(encoding: String.Encoding = .utf8) -> FinderItem.LoadableContent<String, FinderItem.FileError> {
+        .init { source throws(FinderItem.FileError) in
             try String(at: source, encoding: encoding)
         }
     }

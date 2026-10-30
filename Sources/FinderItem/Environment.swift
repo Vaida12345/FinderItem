@@ -8,18 +8,21 @@
 
 import Foundation
 import OSLog
+import System
 
 
 public extension FinderItem {
     
     /// Locates and optionally creates the specified common directory in a domain.
+    ///
+    /// - Throws: A ``FileError``. As no item is known when this fails, its ``FileError/source`` is `appropriateFor`, else the item the system blames, else ``homeDirectory``.
     @inlinable
     static func url(for directory: FileManager.SearchPathDirectory, in mask: FileManager.SearchPathDomainMask = .userDomainMask, appropriateFor: FinderItem? = nil, create: Bool = true) throws(FileError) -> FinderItem {
         do {
             let url = try FileManager.default.url(for: directory, in: mask, appropriateFor: appropriateFor?.url, create: create)
             return FinderItem(_url: url)
         } catch {
-            throw FileError.parse(error)
+            throw FileError(error, source: appropriateFor ?? FileError.failingItem(in: error) ?? .homeDirectory, intent: create ? .writing : .reading)
         }
     }
     
@@ -70,8 +73,7 @@ public extension FinderItem {
     /// - SeeAlso: ``currentDirectory``
     @inlinable
     static func updateCurrentDirectory(to item: FinderItem) throws(FileError) {
-        let bool = FileManager.default.changeCurrentDirectoryPath(item.path)
-        guard bool else { throw FileError(code: .unknown, source: item) }
+        guard chdir(item.path) == 0 else { throw FileError(Errno(rawValue: errno), source: item) }
     }
     
 #if os(macOS)
@@ -152,7 +154,7 @@ public extension FinderItem {
     /// The logs directory for the current app.
     @inlinable
     static var logsDirectory: FinderItem {
-        get throws {
+        get throws(FileError) {
             let item = FinderItem(_url: .libraryDirectory.appending(path: "Logs/", directoryHint: .isDirectory))
             if !item.exists { try item.makeDirectory() }
             return item

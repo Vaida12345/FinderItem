@@ -16,17 +16,17 @@ extension FinderItem.Attributes {
     
     /// Returns all extended-attribute keys associated with this item.
     ///
-    /// - Throws: An error if retrieval fails.
+    /// - Throws: A ``FinderItem/FileError`` if retrieval fails.
     ///
     /// - Returns: `[]` when no extended attributes are present.
     @inlinable
     public var xattr: [String] {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             let bufferSize = listxattr(self.parent.path, nil, 0, 0)
             if bufferSize == 0 {
                 return []
             } else if bufferSize == -1 {
-                throw Errno(rawValue: errno)
+                throw FinderItem.FileError(Errno(rawValue: errno), source: self.parent)
             }
             
             let namebuf = [CChar](unsafeUninitializedCapacity: bufferSize) { buffer, initializedCount in
@@ -48,28 +48,29 @@ extension FinderItem.Attributes {
     /// > detailedPrint(file, configuration: .showExtendedAttributes)
     /// > ```
     ///
-    /// - Throws: An error if retrieval fails.
+    /// - Throws: A ``FinderItem/FileError`` if retrieval fails.
     ///
     /// - SeeAlso: Use ``xattr(_:as:)`` to parse as `String?` or property list (`Any?`).
     ///
     /// - Returns: `nil` when the key `name` does not exist.
     @inlinable
-    public func xattr(_ name: String) throws(Errno) -> Data? {
+    public func xattr(_ name: String) throws(FinderItem.FileError) -> Data? {
         let size = getxattr(self.parent.path, name, nil, 0, 0, 0)
         if size == -1 {
             let errno = Errno(rawValue: errno)
             if errno == .attributeNotFound {
                 return nil
             } else {
-                throw errno
+                throw FinderItem.FileError(errno, source: self.parent)
             }
         }
         
         let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: size)
         let status = getxattr(self.parent.path, name, buffer.baseAddress, size, 0, 0)
         if status == -1 {
+            let error = Errno(rawValue: errno)
             buffer.deallocate()
-            throw Errno(rawValue: errno)
+            throw FinderItem.FileError(error, source: self.parent)
         }
         
         return Data(bytesNoCopy: buffer.baseAddress!, count: size, deallocator: .free)
@@ -83,13 +84,13 @@ extension FinderItem.Attributes {
     /// > detailedPrint(file, configuration: .showExtendedAttributes)
     /// > ```
     ///
-    /// - Throws: An error if retrieval fails.
+    /// - Throws: A ``FinderItem/FileError`` if retrieval fails.
     ///
     /// - SeeAlso: Use ``xattr(_:)`` to read the value as it is.
     ///
     /// - Returns: `nil` when the attribute data is not valid UTF-8 text.
     @inlinable
-    public func xattr<T>(_ name: String, as type: T.Type = String.self) throws(Errno) -> String? {
+    public func xattr<T>(_ name: String, as type: T.Type = String.self) throws(FinderItem.FileError) -> String? {
         guard let raw = try self.xattr(name) else { return nil }
         return String(bytes: raw, encoding: .utf8)
     }
@@ -99,7 +100,7 @@ extension FinderItem.Attributes {
     /// - SeeAlso: ``origin``
     @inlinable
     public var downloadDate: Date? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemDownloadedDate") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? Date
@@ -111,7 +112,7 @@ extension FinderItem.Attributes {
     /// - SeeAlso: ``downloadDate``
     @inlinable
     public var origin: String? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemWhereFroms") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? String
@@ -121,7 +122,7 @@ extension FinderItem.Attributes {
     /// Finder comments on this file.
     @inlinable
     public var comments: String? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemFinderComment") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return properyList as? String
@@ -133,7 +134,7 @@ extension FinderItem.Attributes {
     /// - Experiment: Finder may show the keywords in a reversed order.
     @inlinable
     public var keywords: [String]? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemKeywords") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.compactMap { $0 as? String }
@@ -145,7 +146,7 @@ extension FinderItem.Attributes {
     /// The description may include an abstract, table of contents, reference to a graphical representation of content or a free-text account of the content.
     @inlinable
     public var fileDescription: String? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemDescription") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return properyList as? String
@@ -157,7 +158,7 @@ extension FinderItem.Attributes {
     /// For example, a PDF file might have an encoding application set to "Distiller"
     @inlinable
     public var encodingApplications: String? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:kMDItemEncodingApplications") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.firstObject as? String
@@ -167,7 +168,7 @@ extension FinderItem.Attributes {
     /// Tags set by user.
     @inlinable
     public var tags: [String]? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.metadata:_kMDItemUserTags") else { return nil }
             let properyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             return (properyList as? NSArray)?.compactMap { $0 as? String }
@@ -177,7 +178,7 @@ extension FinderItem.Attributes {
     /// The icon attribute, read from `xattr`.
     @inlinable
     public var xattrIcon: XAttributeIcon? {
-        get throws(Errno) {
+        get throws(FinderItem.FileError) {
             guard let data = try self.xattr("com.apple.icon.folder#S") else { return nil }
             
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String : String] else { return nil }

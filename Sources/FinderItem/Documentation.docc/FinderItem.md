@@ -77,6 +77,7 @@ File operations will change the location of the actual file it represents.
 
 ### Error Reporting
 - ``FileError``
+- <doc:errors>
 
 ### File Path Operations
 - ``/(_:_:)``

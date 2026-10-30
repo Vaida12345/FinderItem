@@ -49,7 +49,7 @@ public extension FinderItem {
     /// - Warning: For bookmarked or user selected files, you might need to consider the security scope for macOS.
     @inlinable
     nonisolated func reveal() async throws(FileError) {
-        guard self.exists else { throw FileError(code: .cannotRead(reason: .noSuchFile), source: self) }
+        guard self.exists else { throw FileError(.noSuchFile, source: self) }
         NSWorkspace.shared.activateFileViewerSelecting([self.url])
     }
     

@@ -50,7 +50,7 @@ extension FinderItem.Attributes.InsertableAttributeKey where E == any Error {
                 setxattr(item.path, key, bytes.baseAddress, bytes.count, 0, 0)
             }
             guard code == 0 else {
-                throw Errno(rawValue: errno)
+                throw FinderItem.FileError(Errno(rawValue: errno), source: item, intent: .writing)
             }
         }
     }
@@ -61,13 +61,13 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == Data {
     
     /// Inserts an extended attribute with the given `name`.
     @inlinable
-    public static func xattr(_ name: String) -> FinderItem.Attributes.InsertableAttributeKey<Data, Errno> {
-        .init { item, value throws(Errno) in
+    public static func xattr(_ name: String) -> FinderItem.Attributes.InsertableAttributeKey<Data, FinderItem.FileError> {
+        .init { item, value throws(FinderItem.FileError) in
             let code = value.withUnsafeBytes { bytes in
                 setxattr(item.path, name, bytes.baseAddress, bytes.count, 0, 0)
             }
             guard code == 0 else {
-                throw Errno(rawValue: errno)
+                throw FinderItem.FileError(Errno(rawValue: errno), source: item, intent: .writing)
             }
         }
     }
@@ -147,7 +147,7 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == FinderItem
                 setxattr(item.path, "com.apple.icon.folder#S", bytes.baseAddress, bytes.count, 0, 0)
             }
             guard code == 0 else {
-                throw Errno(rawValue: errno)
+                throw FinderItem.FileError(Errno(rawValue: errno), source: item, intent: .writing)
             }
         }
     }
@@ -164,11 +164,13 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : 
     /// The quarantine properties as defined in `LSQuarantine.h`.
     ///
     /// Set this value to `nil` to remove quarantine.
-    public static var quarantine: FinderItem.Attributes.InsertableAttributeKey<[String : Any]?, any Error> {
-        .init { item, value in
-            var resourceValues = URLResourceValues()
-            resourceValues.quarantineProperties = value
-            try item.url.setResourceValues(resourceValues)
+    public static var quarantine: FinderItem.Attributes.InsertableAttributeKey<[String : Any]?, FinderItem.FileError> {
+        .init { item, value throws(FinderItem.FileError) in
+            try FinderItem.FileError.wrapping(source: item, intent: .writing) {
+                var resourceValues = URLResourceValues()
+                resourceValues.quarantineProperties = value
+                try item.url.setResourceValues(resourceValues)
+            }
         }
     }
     
@@ -177,11 +179,13 @@ extension FinderItem.Attributes.InsertableAttributeKey where Value == [String : 
 extension FinderItem.Attributes.InsertableAttributeKey where Value == Bool {
     
     /// Returns `true` for resources normally not displayed to users.
-    public static var isHidden: FinderItem.Attributes.InsertableAttributeKey<Bool, any Error> {
-        .init { item, value in
-            var resourceValues = URLResourceValues()
-            resourceValues.isHidden = value
-            try item.url.setResourceValues(resourceValues)
+    public static var isHidden: FinderItem.Attributes.InsertableAttributeKey<Bool, FinderItem.FileError> {
+        .init { item, value throws(FinderItem.FileError) in
+            try FinderItem.FileError.wrapping(source: item, intent: .writing) {
+                var resourceValues = URLResourceValues()
+                resourceValues.isHidden = value
+                try item.url.setResourceValues(resourceValues)
+            }
         }
     }
     

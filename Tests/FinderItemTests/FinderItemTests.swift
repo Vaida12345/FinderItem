@@ -173,7 +173,9 @@ struct FinderItemTests {
         let error = try #require(throws: FinderItem.FileError.self) {
             try file.makeDirectory()
         }
-        #expect(error.code == .cannotWrite(reason: .fileExists))
+        #expect(error.reason == .fileExists)
+        #expect(error.source == file)
+        #expect(error.intent == .writing)
         
         let anotherFile = folder.appending(path: "file Copy.txt")
         

@@ -24,12 +24,12 @@ extension FinderItem {
     ///
     /// - SeeAlso: ``withAccessingSecurityScopedResource(perform:)``
     ///
-    /// - Throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)`` with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission`` when access cannot be started.
+    /// - Throws: ``FinderItem/FileError`` with reason ``FinderItem/FileError/Reason/noPermission`` when access cannot be started.
     ///
     /// This is typically needed for items restored from security-scoped bookmarks.
     @inlinable
     public func startAccessingSecurityScopedResource() throws(FileError) {
-        guard self.url.startAccessingSecurityScopedResource() else { throw FinderItem.FileError(code: .cannotRead(reason: .noPermission), source: self) }
+        guard self.url.startAccessingSecurityScopedResource() else { throw FileError(.noPermission, source: self) }
     }
     
     /// In an app that adopts App Sandbox, revokes access to the resource pointed to by a security-scoped URL.
@@ -66,8 +66,10 @@ extension FinderItem {
     ///
     /// - Note: You only need this method when handling bookmarks manually. Otherwise, encoding and decoding with `withSecurityScope` is sufficient.
     @inlinable
-    public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws -> Data {
-        try self.url.bookmarkData(options: options)
+    public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws(FileError) -> Data {
+        try FileError.wrapping(source: self) {
+            try self.url.bookmarkData(options: options)
+        }
     }
     
     /// Creates a URL that refers to a location specified by resolving bookmark data.
@@ -115,7 +117,7 @@ extension Sequence<FinderItem> {
     ///
     /// - SeeAlso: ``FinderItem/withAccessingSecurityScopedResource(perform:)``
     ///
-    /// - Throws: ``FinderItem/FileError/Code-swift.enum/cannotRead(reason:)`` with reason ``FinderItem/FileError/Code-swift.enum/ReadFailureReason/noPermission`` when any item fails.
+    /// - Throws: ``FinderItem/FileError`` with reason ``FinderItem/FileError/Reason/noPermission`` when any item fails.
     ///
     /// This is typically needed for items restored from security-scoped bookmarks.
     @inlinable

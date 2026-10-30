@@ -7,340 +7,325 @@
 //
 
 import Foundation
-import Darwin
 import Essentials
 import System
+import DetailedDescription
 
 
 extension FinderItem {
     
     /// A file operation error.
     ///
-    /// Although `FileError` is `Equatable`, you should use the error code to determine the nature of the error.
+    /// A `FileError` pairs what the system reported, ``underlyingError``, with where it happened: ``source``, ``destination``, and ``intent``.
+    /// Its ``message`` is the system's own text for that error. It is localized, and for most errors it names the file, so it needs no title.
+    ///
+    /// Use ``reason`` to determine the nature of the error.
     ///
     /// ```swift
-    /// if fileError.code == .cannotRead(reason: .noSuchFile) {
-    ///     ...
+    /// do {
+    ///     try item.remove()
+    /// } catch {
+    ///     if error.reason == .noSuchFile {
+    ///         ...
+    ///     }
     /// }
     /// ```
     ///
-    /// You can also determine the nature of the error without specifying the reason.
-    /// ```swift
-    /// if case .cannotRead = fileError.code {
-    ///     ...
-    /// }
-    /// ```
+    /// The ``reason`` is a best-effort classification. An error that is not recognized is ``Reason/other``, and is still described in full by ``message``, ``details``, and ``underlyingError``.
+    ///
+    /// > Tip:
+    /// > To classify an error that did not come from this package, wrap it: `FinderItem.FileError(error, source: item).reason`.
     ///
     /// ## Topics
-    /// ### Properties
-    /// - ``code``
+    /// ### Context
     /// - ``source``
+    /// - ``destination``
+    /// - ``intent``
+    /// - ``Intent``
     ///
-    /// ### Initializers
-    /// - ``init(code:source:underlyingError:)``
-    /// - ``parse(_:)``
+    /// ### Classification
+    /// - ``reason``
+    /// - ``Reason``
     ///
     /// ### Error Information
-    /// - ``title``
     /// - ``message``
-    public struct FileError: GenericError {
-        
-        /// The error code.
+    /// - ``details``
+    /// - ``underlyingError``
+    /// - ``errno``
+    /// - ``recoverySuggestion``
+    public struct FileError: GenericError, CustomNSError, Sendable {
+
+        /// The item the operation was performed on.
         ///
-        /// You should use the error code to determine the nature of the error.
-        ///
-        /// ```swift
-        /// if fileError.code == .cannotRead(reason: .noSuchFile) {
-        ///     ...
-        /// }
-        /// ```
-        ///
-        /// You can also determine the nature of the error without specifying the reason.
-        /// ```swift
-        /// if case .cannotRead = fileError.code {
-        ///     ...
-        /// }
-        /// ```
-        public let code: Code
-        
-        /// The file that caused the error.
+        /// This is supplied by the operation, never inferred from the error. It is a copy: later changes to the original item, such as moving it, do not affect the error.
         public let source: FinderItem
-        
-        /// The unparsed original error.
-        public let underlyingError: (any Error)?
-        
-        
-        @inlinable
-        public static func == (lhs: FileError, rhs: FileError) -> Bool {
-            lhs.code == rhs.code && lhs.source == rhs.source
-        }
-        
-        
-        /// An error code.
+
+        /// The other end of the operation, for operations such as copy and move.
+        public let destination: FinderItem?
+
+        /// What the operation was doing to the file system.
+        public let intent: Intent
+
+        /// What the system reported, as it was reported.
         ///
-        /// You should use the error code to determine the nature of the error.
+        /// Nothing is dropped: the `userInfo` and the nested errors are all still there. The only addition is the item, when the system left it out: some errors, such as the one for undecodable text, name no file, so `source` is added for the message to name it.
+        public let underlyingError: any Error
+
+        /// The nature of the error.
+        ///
+        /// This is derived from ``underlyingError``. Use it to branch on the error; use ``message`` to present it.
         ///
         /// ```swift
-        /// if fileError.code == .cannotRead(reason: .noSuchFile) {
+        /// if fileError.reason == .noSuchFile {
         ///     ...
         /// }
         /// ```
+        public let reason: Reason
+
+        /// The function that was running, such as `copy(to:)`. Shown in ``details``.
+        let operation: String
+
+
+        /// What an operation was doing to the file system.
         ///
-        /// You can also determine the nature of the error without specifying the reason.
-        /// ```swift
-        /// if case .cannotRead = fileError.code {
-        ///     ...
-        /// }
-        /// ```
-        public enum Code: Equatable, Sendable {
-            /// The error code indicates that the volume cannot be unmounted.
-            case cannotUnmount(reason: UnmountFailureReason)
-            
-            /// The error code indicating the file is unreadable.
-            case cannotRead(reason: ReadFailureReason)
-            
-            /// The error code indicating the file is unwritable.
-            case cannotWrite(reason: WriteFailureReason)
-            
-            /// The error code indicating the an intermediate file does not exist.
-            case intermediateFileNotExist
-            
-            /// The error code indicating an unknown error.
-            case unknown
-            
-            
-            /// The reason for the failure to unmount.
-            public enum UnmountFailureReason: Sendable, Equatable {
-                /// The volume couldn’t be unmounted because it’s in use.
-                case busy
-                /// The volume couldn't be unmounted, for unknown reasons.
-                case unknown
-            }
-            
-            /// The reason for the failure to read a file.
-            public enum ReadFailureReason: Sendable, Equatable {
-                /// Could not read because of a corrupted file, bad format, or similar reason.
-                case corruptFile
-                /// Could not read because the string encoding wasn’t applicable.
-                case inapplicableStringEncoding
-                /// Could not read because of an invalid file name.
-                case invalidFileName
-                /// Could not read because of a permission problem.
-                case noPermission
-                /// Could not read because no such file was found.
-                case noSuchFile
-                /// Could not read because the specified file was too large.
-                case tooLarge
-                /// Could not read, for unknown reasons.
-                case unknown
-                /// Could not read because the string coding of the file couldn’t be determined.
-                case unknownStringEncoding
-                /// Could not read because the specified URL scheme is unsupported.
-                case unsupportedScheme
-                /// Creates a reason based on a POSIX `errno` code.
-                case posix(Errno)
-            }
-            
-            /// The reason for the failure to write a file.
-            public enum WriteFailureReason: Sendable, Equatable {
-                /// Could not perform an operation because the destination file already exists.
-                case fileExists
-                /// Could not write because the string encoding was not applicable.
-                case inapplicableStringEncoding
-                /// Could not write because of an invalid file name.
-                case invalidFileName
-                /// Could not write because of a permission problem.
-                case noPermission
-                /// Could not write because of a lack of disk space.
-                case outOfSpace
-                /// Could not write, for unknown reasons.
-                case unknown
-                /// Could not write because the specified URL scheme is unsupported.
-                case unsupportedScheme
-                /// Could not write because the volume is read-only.
-                case volumeReadOnly
-                /// Creates a reason based on a POSIX `errno` code.
-                case posix(Errno)
-            }
+        /// The system words some errors differently for reading and for writing, such as "you don't have permission to view it" and "you don't have permission to save it". The intent selects the wording of those errors when an error is created from a ``Reason``, or from a bare POSIX error. Errors that the system words only one way, such as ``Reason/tooLarge``, read the same for either intent.
+        public enum Intent: Sendable, Equatable, CaseIterable {
+
+            /// The operation reads from the file system.
+            case reading
+
+            /// The operation changes the file system.
+            case writing
+
         }
-        
-        /// The title of the error.
-        @inlinable
-        public var title: String {
-            switch code {
-            case .cannotUnmount:
-                "Cannot unmount volume \"\(source.name)\""
-            case .cannotRead:
-                "Unable to read \"\(source.name)\""
-            case .cannotWrite:
-                "Unable to write to \"\(source.name)\""
-            case .intermediateFileNotExist:
-                "An intermediate file does not exist"
-            case .unknown:
-                (underlyingError as? NSError)?.localizedDescription ?? "(unknown)"
-            }
-        }
-        
-        @inlinable
-        public var message: String {
-            if let underlyingError = underlyingError as? CocoaError {
-                return underlyingError.localizedDescription
-            }
-            
-            return switch code {
-            case let .cannotUnmount(reason):
-                switch reason {
-                case .busy:
-                    "The volume is in use."
-                case .unknown:
-                    "Unknown reason"
-                }
-                
-            case let .cannotRead(reason):
-                switch reason {
-                case .noSuchFile:
-                    "The file \"\(source)\" does not exist."
-                case .corruptFile:
-                    "The file \"\(source)\" is corrupted or in a bad format."
-                case .inapplicableStringEncoding:
-                    "The file \"\(source)\" employs an inapplicable string encoding."
-                case .invalidFileName:
-                    "The file path \"\(source)\" possesses an invalid filename."
-                case .noPermission:
-                    "You do not have permission to read file \"\(source)\"."
-                case .tooLarge:
-                    "The file \"\(source)\" is too large."
-                case .unknown:
-                    "Cannot read file \"\(source)\"."
-                case .unknownStringEncoding:
-                    "The file \"\(source)\" employs an unknown string encoding."
-                case .unsupportedScheme:
-                    "The file path \"\(source)\" employs an unsupported URL scheme."
-                case .posix(let error):
-                    error.description
-                }
-                
-            case let .cannotWrite(reason):
-                switch reason {
-                case .fileExists:
-                    "The file \"\(source)\" already exists."
-                case .inapplicableStringEncoding:
-                    "The file \"\(source)\" employs an inapplicable string encoding."
-                case .invalidFileName:
-                    "The file path \"\(source)\" possesses an invalid filename."
-                case .noPermission:
-                    "You do not have permission to write to file \"\(source)\"."
-                case .outOfSpace:
-                    "Insufficient disk space to write to file \(source)."
-                case .unknown:
-                    "Cannot write file \"\(source)\"."
-                case .unsupportedScheme:
-                    "The file path \"\(source)\" employs an unsupported URL scheme."
-                case .volumeReadOnly:
-                    "The volume of file \"\(source)\" is read-only."
-                case .posix(let error):
-                    error.description
-                }
-                
-            case .intermediateFileNotExist:
-                "No such file or directory for an intermediate file of \"\(source)\"."
-                
-            case .unknown:
-                "(unknown)"
-            }
-        }
-        
-        
-        @inlinable
-        public init(code: Code, source: FinderItem, underlyingError: Error? = nil) {
-            self.code = code
-            self.source = source
-            self.underlyingError = underlyingError
-        }
-        
-        
-        /// Parses an error, and convert it into a `FileError`
+
+
+        // MARK: - Initializers
+
+        /// Wraps an error reported by the system.
+        ///
+        /// This accepts any error: a `CocoaError`, a `POSIXError`, an `Errno`, a `URLError`, or one of your own. Nothing is lost, the original is kept as the ``underlyingError``. A bare POSIX error is reported the way Foundation reports it: as a Cocoa error that names the file, with the POSIX error nested.
+        ///
+        /// A `FileError` is returned as it is, so that wrapping a nested operation's error does not change where it happened.
         ///
         /// - Parameters:
-        ///   - error: The source error
-        @inlinable
-        public static func parse(_ error: some Error) -> FileError {
-            if let error = error as? FileError { return error }
-            
-            guard let error = error as? CocoaError else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
-            guard let url = (error.userInfo["NSDestinationFilePath"] as? String).map({ URL(fileURLWithPath: $0) }) ?? error.url ?? error.filePath.map({ URL(filePath: $0) }) else { return FileError(code: .unknown, source: .homeDirectory, underlyingError: error) }
-            let source = FinderItem(at: url)
-            
-            return switch error.code {
-                // File Errors
-            case .fileNoSuchFile:
-                FileError(code: .intermediateFileNotExist, source: source, underlyingError: error)
-#if os(macOS)
-            case .fileManagerUnmountBusy:
-                FileError(code: .cannotUnmount(reason: .busy), source: source, underlyingError: error)
-            case .fileManagerUnmountUnknown:
-                FileError(code: .cannotUnmount(reason: .unknown), source: source, underlyingError: error)
-#endif
-                
-                // File Reading Errors
-            case .fileReadCorruptFile:
-                FileError(code: .cannotRead(reason: .corruptFile), source: source, underlyingError: error)
-            case .fileReadInapplicableStringEncoding:
-                FileError(code: .cannotRead(reason: .inapplicableStringEncoding), source: source, underlyingError: error) // , additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String]
-            case .fileReadInvalidFileName:
-                FileError(code: .cannotRead(reason: .invalidFileName), source: source, underlyingError: error)
-            case .fileReadNoPermission:
-                FileError(code: .cannotRead(reason: .noPermission), source: source, underlyingError: error)
-            case .fileReadNoSuchFile:
-                FileError(code: .cannotRead(reason: .noSuchFile), source: source, underlyingError: error)
-            case .fileReadTooLarge:
-                FileError(code: .cannotRead(reason: .tooLarge), source: source, underlyingError: error)
-            case .fileReadUnknown:
-                FileError(code: .cannotRead(reason: .unknown), source: source, underlyingError: error)
-            case .fileReadUnknownStringEncoding:
-                FileError(code: .cannotRead(reason: .unknownStringEncoding), source: source, underlyingError: error)
-            case .fileReadUnsupportedScheme:
-                FileError(code: .cannotRead(reason: .unsupportedScheme), source: source, underlyingError: error)
-                
-                // File Writing Errors
-            case .fileWriteFileExists:
-                FileError(code: .cannotWrite(reason: .fileExists), source: source, underlyingError: error)
-            case .fileWriteInapplicableStringEncoding:
-                FileError(code: .cannotWrite(reason: .inapplicableStringEncoding), source: source, underlyingError: error) // , additionalInfo: [NSStringEncodingErrorKey : error.userInfo[NSStringEncodingErrorKey] as! String]
-            case .fileWriteInvalidFileName:
-                FileError(code: .cannotWrite(reason: .invalidFileName), source: source, underlyingError: error)
-            case .fileWriteNoPermission:
-                FileError(code: .cannotWrite(reason: .noPermission), source: source, underlyingError: error)
-            case .fileWriteOutOfSpace:
-                FileError(code: .cannotWrite(reason: .outOfSpace), source: source, underlyingError: error)
-            case .fileWriteUnknown:
-                FileError(code: .cannotWrite(reason: .unknown), source: source, underlyingError: error)
-            case .fileWriteUnsupportedScheme:
-                FileError(code: .cannotWrite(reason: .unsupportedScheme), source: source, underlyingError: error)
-            case .fileWriteVolumeReadOnly:
-                FileError(code: .cannotWrite(reason: .volumeReadOnly), source: source, underlyingError: error)
-                
-            default:
-                FileError(code: .unknown, source: source, underlyingError: error)
-            }
-        }
-        
-        /// Parses an error, or throw the argument.
-        ///
-        /// - Parameters:
-        ///   - arg: The source error
-        ///
-        /// - throws: The argument when parsing failed.
-        @inlinable
-        public static func parse(orThrow arg: some Error) throws(any Error) -> FileError {
-            let error = parse(arg)
-            if error.code == .unknown {
-                throw arg
+        ///   - error: The error to wrap.
+        ///   - source: The item the operation was performed on.
+        ///   - destination: The other end of the operation, if there is one.
+        ///   - intent: What the operation was doing. It only matters for bare POSIX errors.
+        ///   - operation: The function that was running. It is shown in ``details``.
+        public init(_ error: some Error, source: FinderItem, destination: FinderItem? = nil, intent: Intent = .reading, operation: StaticString = #function) {
+            if let existing = error as? FileError {
+                self = existing
             } else {
-                return error
+                self.init(
+                    resolving: Self.normalize(error, source: source, intent: intent),
+                    source: source,
+                    destination: destination,
+                    intent: intent,
+                    operation: "\(operation)"
+                )
             }
         }
-        
+
+        /// Creates the error that the system would have reported for `reason`.
+        ///
+        /// Use this when your own check fails, rather than the system's. The system composes the message, so it is localized.
+        ///
+        /// ```swift
+        /// guard item.exists else { throw FinderItem.FileError(.noSuchFile, source: item) }
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - reason: The nature of the error.
+        ///   - source: The item the operation was performed on.
+        ///   - destination: The other end of the operation, if there is one.
+        ///   - intent: What the operation was doing. It selects the wording of the message.
+        ///   - operation: The function that was running. It is shown in ``details``.
+        public init(_ reason: Reason, source: FinderItem, destination: FinderItem? = nil, intent: Intent = .reading, operation: StaticString = #function) {
+            self.init(
+                resolving: Self.synthesize(reason, source: source, intent: intent, nested: nil),
+                source: source,
+                destination: destination,
+                intent: intent,
+                operation: "\(operation)"
+            )
+        }
+
+        private init(resolving underlyingError: any Error, source: FinderItem, destination: FinderItem?, intent: Intent, operation: String) {
+            self.source = FinderItem(_url: source.url)
+            self.destination = destination.map { FinderItem(_url: $0.url) }
+            self.intent = intent
+            self.underlyingError = underlyingError
+            self.operation = operation
+            self.reason = Self.classify(Self.chain(of: underlyingError))
+        }
+
+        /// Runs `body`, and reports whatever it throws as a `FileError`.
+        ///
+        /// The `body` is deliberately untyped: a closure literal does not infer a typed throw, so a typed parameter would force `() throws(FileError) in` on every caller.
+        @inlinable
+        internal static func wrapping<T>(
+            source: FinderItem,
+            destination: FinderItem? = nil,
+            intent: Intent = .reading,
+            operation: StaticString = #function,
+            _ body: () throws -> T
+        ) throws(FileError) -> T {
+            do {
+                return try body()
+            } catch {
+                throw FileError(error, source: source, destination: destination, intent: intent, operation: operation)
+            }
+        }
+
+
+        // MARK: - Error Information
+
+        /// The system's description of the error.
+        ///
+        /// This is the text the system uses for the ``underlyingError``, so it is localized. For most errors it names the file; the system leaves the file out of a few, such as text-encoding errors, so use ``source`` when you need it. If the system gives no reason of its own, the nearest nested reason is appended, such as "Is a directory."
+        ///
+        /// Paths are in ``details``.
+        public var message: String {
+            let chain = Self.chain(of: underlyingError)
+            guard let top = chain.first else { return String(describing: underlyingError) }
+
+            var text = top.localizedDescription
+            if top.localizedFailureReason == nil,
+               let nested = chain.dropFirst().lazy.compactMap(\.localizedFailureReason).first(where: { !$0.isEmpty }),
+               !text.contains(nested) {
+                let isCJK = text.last == "。"
+                text += (isCJK ? "" : " ") + nested
+                if let last = nested.last, !last.isPunctuation {
+                    text += isCJK ? "。" : "."
+                }
+            }
+            return text
+        }
+
+        /// Everything about the error, for debugging.
+        ///
+        /// This is the operation, the reason, the intent, the items, and every error in the chain with its `userInfo`, drawn as a tree by DetailedDescription.
+        /// It is attached to the `debugDescription`, and is not shown to users.
+        ///
+        /// ```
+        /// copy(to:)
+        ///  ├─reason: fileExists
+        ///  ├─intent: writing
+        ///  ├─source: "/tmp/a.txt"
+        ///  ├─destination: "/tmp/b.txt"
+        ///  ╰─NSCocoaErrorDomain 516
+        ///    ├─description: "“a.txt” couldn’t be copied to “tmp” because an item with the same name already exists."
+        ///    ├─NSFilePath: "/tmp/a.txt"
+        ///    ╰─NSPOSIXErrorDomain 17
+        ///      ╰─description: "The operation couldn’t be completed. File exists"
+        /// ```
+        public var details: String? {
+            Details(error: self).detailedDescription
+        }
+
+        /// The POSIX error, if one is in the chain of ``underlyingError``.
+        public var errno: Errno? {
+            Self.chain(of: underlyingError)
+                .first(where: { $0.domain == NSPOSIXErrorDomain })
+                .map { Errno(rawValue: Int32(truncatingIfNeeded: $0.code)) }
+        }
+
+        /// The system's suggestion for recovering from the error, if it has one.
+        public var recoverySuggestion: String? {
+            Self.chain(of: underlyingError).first?.localizedRecoverySuggestion
+        }
+
+
+        // MARK: - Bridging
+
+        public static var errorDomain: String {
+            "FinderItem.FileError"
+        }
+
+        public var errorCode: Int {
+            switch reason {
+            case .noSuchFile: 1
+            case .noPermission: 2
+            case .fileExists: 3
+            case .directoryNotEmpty: 4
+            case .outOfSpace: 5
+            case .readOnlyVolume: 6
+            case .invalidName: 7
+            case .isDirectory: 8
+            case .notDirectory: 9
+            case .busy: 10
+            case .differentVolume: 11
+            case .tooLarge: 12
+            case .corruptFile: 13
+            case .unsupportedScheme: 14
+            case .stringEncoding: 15
+            case .cancelled: 16
+            default: 0
+            }
+        }
+
+        public var errorUserInfo: [String : Any] {
+            var userInfo: [String : Any] = [
+                NSUnderlyingErrorKey: underlyingError,
+                NSURLErrorKey: source.url,
+                NSFilePathErrorKey: source.path,
+            ]
+            if let destination {
+                userInfo["NSDestinationFilePath"] = destination.path
+            }
+            return userInfo
+        }
+
+
+        // MARK: - Equatable
+
+        /// Two errors are equal when they are of the same ``reason`` for the same items.
+        ///
+        /// The ``underlyingError`` and the ``intent`` are not compared.
+        public static func == (lhs: FileError, rhs: FileError) -> Bool {
+            lhs.reason == rhs.reason && lhs.source == rhs.source && lhs.destination == rhs.destination
+        }
+
+    }
+
+}
+
+
+// MARK: - Details
+
+extension FinderItem.FileError {
+
+    /// Describes the error as a tree, the way DetailedDescription describes any structure.
+    fileprivate struct Details: DetailedStringConvertible {
+
+        let error: FinderItem.FileError
+
+        func detailedDescription(using descriptor: DetailedDescription.Descriptor<Details>) -> any DescriptionBlockProtocol {
+            descriptor.container(error.operation) {
+                descriptor.value("reason", of: error.reason)
+                descriptor.value("intent", of: error.intent)
+                descriptor.value("source", of: error.source.path)
+                descriptor.optional("destination", of: error.destination?.path)
+                chain(FinderItem.FileError.chain(of: error.underlyingError)[...], using: descriptor)
+            }
+        }
+
+        /// The errors, outermost first, each one containing the next.
+        @DetailedDescription.Builder
+        private func chain(_ errors: ArraySlice<NSError>, using descriptor: DetailedDescription.Descriptor<Details>) -> any DescriptionBlockProtocol {
+            if let current = errors.first {
+                descriptor.container("\(current.domain) \(current.code)") {
+                    descriptor.value("description", of: current.localizedDescription)
+                    descriptor.forEach(current.userInfo.filter { $0.key != NSUnderlyingErrorKey && $0.key != "NSUserStringVariant" }.sorted { $0.key < $1.key }) { entry in
+                        descriptor.value(entry.key, of: entry.value)
+                    }
+                    chain(errors.dropFirst(), using: descriptor)
+                }
+            }
+        }
+
     }
     
 }
