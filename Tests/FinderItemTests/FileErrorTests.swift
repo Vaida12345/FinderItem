@@ -594,6 +594,13 @@ struct FileErrorTests {
         #expect(FileError.failingItem(in: NSError(domain: NSCocoaErrorDomain, code: 4)) == nil)
         #expect(FileError.failingItem(in: URLError(.cancelled)) == nil)
     }
+    
+    @Test("The error message from a directly initialized error")
+    func directConstruction() {
+        let item = FinderItem(at: "/tmp/file.txt")
+        let error = FinderItem.FileError(.noSuchFile, source: item)
+        #expect(error.localizedDescription == "The file “file.txt” doesn’t exist.")
+    }
 
 
     // MARK: - Operations
