@@ -14,6 +14,8 @@ extension FinderItem.Attributes {
     /// Returns whether the file has a custom icon.
     ///
     /// - Returns: `false` if the attribute is not found.
+    ///
+    /// - Experiment: This property can return `false` on files that has custom icons.
     @inlinable
     public var hasCustomIcon: Bool {
         guard let metadata = MDItemCreate(nil, parent.path as CFString),
