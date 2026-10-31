@@ -182,7 +182,7 @@ struct AttributeTests {
         file.setIcon(image: NSImage(named: NSImage.applicationIconName)!)
         
         let attributes = file.attributes
-        try #expect(attributes.hasCustomIcon)
+        #expect(attributes.hasCustomIcon)
     }
     
     @Test func setHidden() async throws {
