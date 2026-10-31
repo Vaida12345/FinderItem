@@ -214,7 +214,7 @@ struct FileErrorTests {
     @Test("The source is a copy, not the live item")
     func sourceIsCopy() {
         let item = FinderItem(at: "/tmp/a.txt")
-        let error = FileError(.noSuchFile, source: item)
+        let error = FileError(.noSuchFile, source: item, intent: .reading)
         item.url = URL(filePath: "/tmp/moved.txt")
 
         #expect(error.source.path == "/tmp/a.txt")
@@ -226,7 +226,7 @@ struct FileErrorTests {
         let a = FinderItem(at: "/tmp/a.txt")
         let b = FinderItem(at: "/tmp/b.txt")
         let inner = FileError(.noSuchFile, source: a, intent: .writing)
-        let outer = FileError(inner, source: b)
+        let outer = FileError(inner, source: b, intent: .reading)
 
         #expect(outer.source == a)
         #expect(outer.intent == .writing)
@@ -238,10 +238,10 @@ struct FileErrorTests {
         let a = FinderItem(at: "/tmp/a.txt")
         let b = FinderItem(at: "/tmp/b.txt")
 
-        #expect(FileError(.noSuchFile, source: a) == FileError(.noSuchFile, source: a, intent: .writing))
-        #expect(FileError(.noSuchFile, source: a) != FileError(.noSuchFile, source: b))
-        #expect(FileError(.noSuchFile, source: a) != FileError(.fileExists, source: a))
-        #expect(FileError(.noSuchFile, source: a) != FileError(.noSuchFile, source: a, destination: b))
+        #expect(FileError(.noSuchFile, source: a, intent: .reading) == FileError(.noSuchFile, source: a, intent: .writing))
+        #expect(FileError(.noSuchFile, source: a, intent: .reading) != FileError(.noSuchFile, source: b, intent: .reading))
+        #expect(FileError(.noSuchFile, source: a, intent: .reading) != FileError(.fileExists, source: a, intent: .reading))
+        #expect(FileError(.noSuchFile, source: a, intent: .reading) != FileError(.noSuchFile, source: a, destination: b, intent: .reading))
     }
 
 
@@ -261,7 +261,7 @@ struct FileErrorTests {
         }
 
         #expect(Set(FileError.Reason.all.map(\.rawValue)).count == FileError.Reason.all.count)
-        #expect(Set(FileError.Reason.all.map { FileError($0, source: item).errorCode }).count == FileError.Reason.all.count)
+        #expect(Set(FileError.Reason.all.map { FileError($0, source: item, intent: .reading).errorCode }).count == FileError.Reason.all.count)
     }
 
     @Test("Wrapping accepts any error")
@@ -281,7 +281,7 @@ struct FileErrorTests {
             (Custom(), .other),
         ]
         for (error, reason) in cases {
-            let wrapped = FileError(error, source: item)
+            let wrapped = FileError(error, source: item, intent: .reading)
             #expect(wrapped.reason == reason, "\(error)")
             #expect(wrapped.source == item, "\(error)")
             #expect(!wrapped.message.isEmpty, "\(error)")
@@ -317,7 +317,7 @@ struct FileErrorTests {
             if let nested {
                 userInfo[NSUnderlyingErrorKey] = NSError(domain: "Nested", code: 1, userInfo: [NSLocalizedFailureReasonErrorKey: nested])
             }
-            return FileError(NSError(domain: "Top", code: 1, userInfo: userInfo), source: item)
+            return FileError(NSError(domain: "Top", code: 1, userInfo: userInfo), source: item, intent: .reading)
         }
 
         #expect(make("Top").message == "Top")
@@ -433,19 +433,24 @@ struct FileErrorTests {
 
             let error = try thrownError { try missing.move(to: target.url) }
             let details = try #require(error.details)
-            #expect(details.contains("\"\(missing.path)\""))
-            #expect(details.contains("\"\(target.path)\""))
-
-            // Drawn by DetailedDescription: the operation on top, one branch per line, each nested error under its parent. No tabs.
-            let lines = details.components(separatedBy: "\n")
-            #expect(lines.first == "move(to:)")
-            #expect(lines.contains(" ├─reason: noSuchFile"))
-            #expect(lines.contains(" ├─intent: writing"))
-            #expect(lines.contains(" ├─source: \"\(missing.path)\""))
-            #expect(lines.contains(" ├─destination: \"\(target.path)\""))
-            #expect(lines.contains(" ╰─NSCocoaErrorDomain 4"))
-            #expect(lines.contains("   ╰─NSPOSIXErrorDomain 2"))
-            #expect(!details.contains("\t"))
+            
+            print(details)
+            
+            let expected = """
+                noSuchFile (writing)
+                 ├─source: "\(missing.path)"
+                 ├─destination: "\(target.path)"
+                 ╰─NSCocoaErrorDomain 4
+                   ├─description: "“missing.txt” couldn’t be moved to “\(folder.name)” because either the former doesn’t exist, or the folder containing the latter doesn’t exist."
+                   ├─NSDestinationFilePath: "\(target.path)"
+                   ├─NSFilePath: "\(missing.path)"
+                   ├─NSSourceFilePathErrorKey: "\(missing.path)"
+                   ├─NSURL: file://\(missing.path)
+                   ╰─NSPOSIXErrorDomain 2
+                     ╰─description: "The operation couldn’t be completed. No such file or directory"
+                """
+            
+            #expect(details == expected)
         }
     }
 
@@ -457,8 +462,8 @@ struct FileErrorTests {
 
             let read = try thrownError { _ = try Data(at: directory) }
             let readDetails = try #require(read.details)
-            #expect(readDetails.hasPrefix("init(at:options:)\n"))
-            #expect(readDetails.contains("├─reason: isDirectory"))
+            #expect(readDetails.hasPrefix("isDirectory (reading)\n"))
+            #expect(readDetails.contains("├─source: \"\(directory.path)\""))
             #expect(readDetails.contains("╰─NSPOSIXErrorDomain 21"))
             #expect(!readDetails.contains("destination"))
 
@@ -489,9 +494,7 @@ struct FileErrorTests {
             // One Foundation error with a POSIX error nested in it.
             let removed = try thrownError { try missing.remove() }
             #expect(removed.details == tree(
-                "remove()",
-                " ├─reason: noSuchFile",
-                " ├─intent: writing",
+                "noSuchFile (writing)",
                 #" ├─source: "\#(missing.path)""#,
                 " ╰─NSCocoaErrorDomain 4",
                 #"   ├─description: "“missing.txt” couldn’t be removed.""#,
@@ -504,9 +507,7 @@ struct FileErrorTests {
             // Two items, and more of what Foundation put in the userInfo.
             let moved = try thrownError { try missing.move(to: target.url) }
             #expect(moved.details == tree(
-                "move(to:)",
-                " ├─reason: noSuchFile",
-                " ├─intent: writing",
+                "noSuchFile (writing)",
                 #" ├─source: "\#(missing.path)""#,
                 #" ├─destination: "\#(target.path)""#,
                 " ╰─NSCocoaErrorDomain 4",
@@ -522,9 +523,7 @@ struct FileErrorTests {
             // A Cocoa error in a Cocoa error, in a POSIX error.
             let replaced = try thrownError { try missing.replace(existing) }
             #expect(replaced.details == tree(
-                "replace(_:)",
-                " ├─reason: noSuchFile",
-                " ├─intent: writing",
+                "noSuchFile (writing)",
                 #" ├─source: "\#(missing.path)""#,
                 #" ├─destination: "\#(existing.path)""#,
                 " ╰─NSCocoaErrorDomain 512",
@@ -543,9 +542,7 @@ struct FileErrorTests {
             // Foundation left the file out of this error, so the item of the operation was added.
             let decoded = try thrownError { _ = try String(at: binary) }
             #expect(decoded.details == tree(
-                "init(at:encoding:)",
-                " ├─reason: corruptFile",
-                " ├─intent: reading",
+                "corruptFile (reading)",
                 #" ├─source: "\#(binary.path)""#,
                 " ╰─NSCocoaErrorDomain 259",
                 #"   ├─description: "The file “binary.txt” couldn’t be opened because it isn’t in the correct format.""#,
@@ -598,7 +595,7 @@ struct FileErrorTests {
     @Test("The error message from a directly initialized error")
     func directConstruction() {
         let item = FinderItem(at: "/tmp/file.txt")
-        let error = FinderItem.FileError(.noSuchFile, source: item)
+        let error = FinderItem.FileError(.noSuchFile, source: item, intent: .reading)
         #expect(error.localizedDescription == "The file “file.txt” doesn’t exist.")
     }
 
