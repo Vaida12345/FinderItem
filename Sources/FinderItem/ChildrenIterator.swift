@@ -38,8 +38,9 @@ public struct FinderItemChildren: Sequence, Sendable {
     
     @usableFromInline
     internal init(options: FinderItem.ChildrenRange, parent: FinderItem) throws(FinderItem.FileError) {
-        guard parent.exists else { throw FinderItem.FileError(.noSuchFile, source: parent) }
-        guard try parent.attributes.readable ?? false else { throw FinderItem.FileError(.noPermission, source: parent) }
+        // MUST check, otherwise fts_read simply returns an empty iterator, without any error.
+        guard parent.exists else { throw FinderItem.FileError(.noSuchFile, source: parent, intent: .reading) }
+        guard try parent.attributes.readable ?? false else { throw FinderItem.FileError(.noPermission, source: parent, intent: .reading) }
         
         self.options = options
         self.parent = parent

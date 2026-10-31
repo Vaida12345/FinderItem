@@ -35,7 +35,7 @@ public extension FileWrapper {
         do {
             try self.init(url: source.url)
         } catch {
-            throw FinderItem.FileError(error, source: source)
+            throw FinderItem.FileError(error, source: source, intent: .reading)
         }
     }
     
@@ -100,7 +100,7 @@ public extension String {
     /// Initializes a string with file contents on disk.
     @inlinable
     init(at source: FinderItem, encoding: Encoding = .utf8) throws(FinderItem.FileError) {
-        self = try FinderItem.FileError.wrapping(source: source) {
+        self = try FinderItem.FileError.wrapping(source: source, intent: .reading) {
             try String(contentsOf: source.url, encoding: encoding)
         }
     }

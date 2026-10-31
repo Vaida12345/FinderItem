@@ -29,7 +29,7 @@ extension FinderItem {
     /// This is typically needed for items restored from security-scoped bookmarks.
     @inlinable
     public func startAccessingSecurityScopedResource() throws(FileError) {
-        guard self.url.startAccessingSecurityScopedResource() else { throw FileError(.noPermission, source: self) }
+        guard self.url.startAccessingSecurityScopedResource() else { throw FileError(.noPermission, source: self, intent: .reading) }
     }
     
     /// In an app that adopts App Sandbox, revokes access to the resource pointed to by a security-scoped URL.
@@ -67,7 +67,7 @@ extension FinderItem {
     /// - Note: You only need this method when handling bookmarks manually. Otherwise, encoding and decoding with `withSecurityScope` is sufficient.
     @inlinable
     public func bookmarkData(options: URL.BookmarkCreationOptions = FinderItem.defaultBookmarkCreationOptions) throws(FileError) -> Data {
-        try FileError.wrapping(source: self) {
+        try FileError.wrapping(source: self, intent: .reading) {
             try self.url.bookmarkData(options: options)
         }
     }

@@ -146,7 +146,7 @@ public extension FinderItem.LoadableContent where Result == FileWrapper {
     @inlinable
     static func fileWrapper(options: FileWrapper.ReadingOptions = []) -> FinderItem.LoadableContent<FileWrapper, FinderItem.FileError> {
         .init { source throws(FinderItem.FileError) in
-            try FinderItem.FileError.wrapping(source: source) {
+            try FinderItem.FileError.wrapping(source: source, intent: .reading) {
                 try FileWrapper(url: source.url, options: options)
             }
         }

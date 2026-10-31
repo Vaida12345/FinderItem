@@ -34,7 +34,7 @@ public extension Data {
     ///   - options: Options for loading data. Default value is `[.mappedIfSafe]`.
     @inlinable
     init(at source: FinderItem, options: NSData.ReadingOptions = [.mappedIfSafe]) throws(FinderItem.FileError) {
-        self = try FinderItem.FileError.wrapping(source: source) {
+        self = try FinderItem.FileError.wrapping(source: source, intent: .reading) {
             try Data(contentsOf: source.url, options: options)
         }
     }

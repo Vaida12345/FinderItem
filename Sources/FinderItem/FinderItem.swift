@@ -196,7 +196,7 @@ public extension FinderItem {
     @inlinable
     var contentType: UTType? {
         get throws(FileError) {
-            try FileError.wrapping(source: self) {
+            try FileError.wrapping(source: self, intent: .reading) {
                 try self.url.resourceValues(forKeys: [.contentTypeKey]).contentType
             }
         }
@@ -338,21 +338,21 @@ public extension FinderItem {
     @inlinable
     func contentsEqual(to other: FinderItem) throws(FileError) -> Bool {
         guard self.path != other.path else { return true }
-        guard self.exists else { throw FileError(.noSuchFile, source: self) }
-        guard other.exists else { throw FileError(.noSuchFile, source: other) }
+        guard self.exists else { throw FileError(.noSuchFile, source: self, intent: .reading) }
+        guard other.exists else { throw FileError(.noSuchFile, source: other, intent: .reading) }
 
-        return try FileError.wrapping(source: self, destination: other) {
+        return try FileError.wrapping(source: self, destination: other, intent: .reading) {
             let myInfo = try self.url.withUnsafeFileSystemRepresentation { rep in
-                guard let rep else { throw FileError(.invalidName, source: self) }
+                guard let rep else { throw FileError(.invalidName, source: self, intent: .reading) }
                 var s = stat()
-                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: self) }
+                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: self, intent: .reading) }
                 return s
             }
 
             let otherInfo = try other.url.withUnsafeFileSystemRepresentation { rep in
-                guard let rep else { throw FileError(.invalidName, source: other) }
+                guard let rep else { throw FileError(.invalidName, source: other, intent: .reading) }
                 var s = stat()
-                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: other) }
+                guard lstat(rep, &s) == 0 else { throw FileError(Errno(rawValue: errno), source: other, intent: .reading) }
                 return s
             }
 
@@ -371,10 +371,10 @@ public extension FinderItem {
                 guard myInfo.st_size > 0 else { return true } // `mmap` rejects empty mappings
 
                 return try self.url.withUnsafeFileSystemRepresentation { myPath in
-                    guard let myPath else { throw FileError(.invalidName, source: self) }
+                    guard let myPath else { throw FileError(.invalidName, source: self, intent: .reading) }
 
                     return try other.url.withUnsafeFileSystemRepresentation { otherPath in
-                        guard let otherPath else { throw FileError(.invalidName, source: other) }
+                        guard let otherPath else { throw FileError(.invalidName, source: other, intent: .reading) }
 
                         // `errno` is read right after each call, as the next call may overwrite it.
                         let myfd = Darwin.open(myPath, O_RDONLY)
@@ -386,20 +386,20 @@ public extension FinderItem {
                             if otherfd >= 0 { close(otherfd) }
                         }
 
-                        guard myfd >= 0 else { throw FileError(Errno(rawValue: myOpenError), source: self) }
-                        guard otherfd >= 0 else { throw FileError(Errno(rawValue: otherOpenError), source: other) }
+                        guard myfd >= 0 else { throw FileError(Errno(rawValue: myOpenError), source: self, intent: .reading) }
+                        guard otherfd >= 0 else { throw FileError(Errno(rawValue: otherOpenError), source: other, intent: .reading) }
 
                         _ = fcntl(myfd, F_NOCACHE) // hints
                         _ = fcntl(otherfd, F_NOCACHE)
 
                         let myMap = mmap(nil, Int(myInfo.st_size), PROT_READ, MAP_PRIVATE, myfd, 0)
                         let myMapError = errno
-                        guard myMap != MAP_FAILED else { throw FileError(Errno(rawValue: myMapError), source: self) }
+                        guard myMap != MAP_FAILED else { throw FileError(Errno(rawValue: myMapError), source: self, intent: .reading) }
                         defer { munmap(myMap, Int(myInfo.st_size)) }
 
                         let otherMap = mmap(nil, Int(otherInfo.st_size), PROT_READ, MAP_PRIVATE, otherfd, 0)
                         let otherMapError = errno
-                        guard otherMap != MAP_FAILED else { throw FileError(Errno(rawValue: otherMapError), source: other) }
+                        guard otherMap != MAP_FAILED else { throw FileError(Errno(rawValue: otherMapError), source: other, intent: .reading) }
                         defer { munmap(otherMap, Int(otherInfo.st_size)) }
 
                         return memcmp(myMap, otherMap, Int(myInfo.st_size)) == 0
@@ -408,10 +408,10 @@ public extension FinderItem {
             } else if (myInfo.st_mode & S_IFMT) == S_IFLNK {
                 return try FileManager.default.destinationOfSymbolicLink(atPath: self.path) == FileManager.default.destinationOfSymbolicLink(atPath: other.path)
             } else if (myInfo.st_mode & S_IFMT) == S_IFDIR {
-                throw FileError(.isDirectory, source: self)
+                throw FileError(.isDirectory, source: self, intent: .reading)
             }
 
-            throw FileError(Errno.badFileTypeOrFormat, source: self)
+            throw FileError(Errno.badFileTypeOrFormat, source: self, intent: .reading)
         }
     }
     
@@ -543,7 +543,7 @@ public extension FinderItem {
     /// This method doesn’t support the `withSecurityScope` option.
     @inlinable
     func resolvingAlias(options: URL.BookmarkResolutionOptions = []) throws(FileError) -> FinderItem {
-        try FileError.wrapping(source: self) {
+        try FileError.wrapping(source: self, intent: .reading) {
             try FinderItem(_url: URL(resolvingAliasFileAt: self.url, options: options))
         }
     }
@@ -889,7 +889,7 @@ public extension FinderItem {
                 path += "." + ext
             }
             
-            throw FileError(.noSuchFile, source: .bundleDirectory/path)
+            throw FileError(.noSuchFile, source: .bundleDirectory/path, intent: .reading)
         }
         return FinderItem(at: url)
     }

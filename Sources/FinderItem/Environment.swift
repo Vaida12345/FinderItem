@@ -73,7 +73,7 @@ public extension FinderItem {
     /// - SeeAlso: ``currentDirectory``
     @inlinable
     static func updateCurrentDirectory(to item: FinderItem) throws(FileError) {
-        guard chdir(item.path) == 0 else { throw FileError(Errno(rawValue: errno), source: item) }
+        guard chdir(item.path) == 0 else { throw FileError(Errno(rawValue: errno), source: item, intent: .reading) }
     }
     
 #if os(macOS)

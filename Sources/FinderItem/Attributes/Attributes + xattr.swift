@@ -26,7 +26,7 @@ extension FinderItem.Attributes {
             if bufferSize == 0 {
                 return []
             } else if bufferSize == -1 {
-                throw FinderItem.FileError(Errno(rawValue: errno), source: self.parent)
+                throw FinderItem.FileError(Errno(rawValue: errno), source: self.parent, intent: .reading)
             }
             
             let namebuf = [CChar](unsafeUninitializedCapacity: bufferSize) { buffer, initializedCount in
@@ -61,7 +61,7 @@ extension FinderItem.Attributes {
             if errno == .attributeNotFound {
                 return nil
             } else {
-                throw FinderItem.FileError(errno, source: self.parent)
+                throw FinderItem.FileError(errno, source: self.parent, intent: .reading)
             }
         }
         
@@ -70,7 +70,7 @@ extension FinderItem.Attributes {
         if status == -1 {
             let error = Errno(rawValue: errno)
             buffer.deallocate()
-            throw FinderItem.FileError(error, source: self.parent)
+            throw FinderItem.FileError(error, source: self.parent, intent: .reading)
         }
         
         return Data(bytesNoCopy: buffer.baseAddress!, count: size, deallocator: .free)

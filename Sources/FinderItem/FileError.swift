@@ -82,9 +82,6 @@ extension FinderItem {
         /// ```
         public let reason: Reason
 
-        /// The function that was running, such as `copy(to:)`. Shown in ``details``.
-        let operation: String
-
 
         /// What an operation was doing to the file system.
         ///
@@ -114,7 +111,7 @@ extension FinderItem {
         ///   - destination: The other end of the operation, if there is one.
         ///   - intent: What the operation was doing. It only matters for bare POSIX errors.
         ///   - operation: The function that was running. It is shown in ``details``.
-        public init(_ error: some Error, source: FinderItem, destination: FinderItem? = nil, intent: Intent = .reading, operation: StaticString = #function) {
+        public init(_ error: some Error, source: FinderItem, destination: FinderItem? = nil, intent: Intent) {
             if let existing = error as? FileError {
                 self = existing
             } else {
@@ -122,8 +119,7 @@ extension FinderItem {
                     resolving: Self.normalize(error, source: source, intent: intent),
                     source: source,
                     destination: destination,
-                    intent: intent,
-                    operation: "\(operation)"
+                    intent: intent
                 )
             }
         }
@@ -142,22 +138,20 @@ extension FinderItem {
         ///   - destination: The other end of the operation, if there is one.
         ///   - intent: What the operation was doing. It selects the wording of the message.
         ///   - operation: The function that was running. It is shown in ``details``.
-        public init(_ reason: Reason, source: FinderItem, destination: FinderItem? = nil, intent: Intent = .reading, operation: StaticString = #function) {
+        public init(_ reason: Reason, source: FinderItem, destination: FinderItem? = nil, intent: Intent) {
             self.init(
                 resolving: Self.synthesize(reason, source: source, intent: intent, nested: nil),
                 source: source,
                 destination: destination,
-                intent: intent,
-                operation: "\(operation)"
+                intent: intent
             )
         }
 
-        private init(resolving underlyingError: any Error, source: FinderItem, destination: FinderItem?, intent: Intent, operation: String) {
+        private init(resolving underlyingError: any Error, source: FinderItem, destination: FinderItem?, intent: Intent) {
             self.source = FinderItem(_url: source.url)
             self.destination = destination.map { FinderItem(_url: $0.url) }
             self.intent = intent
             self.underlyingError = underlyingError
-            self.operation = operation
             self.reason = Self.classify(Self.chain(of: underlyingError))
         }
 
@@ -168,14 +162,13 @@ extension FinderItem {
         internal static func wrapping<T>(
             source: FinderItem,
             destination: FinderItem? = nil,
-            intent: Intent = .reading,
-            operation: StaticString = #function,
+            intent: Intent,
             _ body: () throws -> T
         ) throws(FileError) -> T {
             do {
                 return try body()
             } catch {
-                throw FileError(error, source: source, destination: destination, intent: intent, operation: operation)
+                throw FileError(error, source: source, destination: destination, intent: intent)
             }
         }
 
@@ -303,9 +296,7 @@ extension FinderItem.FileError {
         let error: FinderItem.FileError
 
         func detailedDescription(using descriptor: DetailedDescription.Descriptor<Details>) -> any DescriptionBlockProtocol {
-            descriptor.container(error.operation) {
-                descriptor.value("reason", of: error.reason)
-                descriptor.value("intent", of: error.intent)
+            descriptor.container("\(error.reason) (\(error.intent))") {
                 descriptor.value("source", of: error.source.path)
                 descriptor.optional("destination", of: error.destination?.path)
                 chain(FinderItem.FileError.chain(of: error.underlyingError)[...], using: descriptor)
